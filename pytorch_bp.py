@@ -427,7 +427,13 @@ def calc_forward(x, y, model, loss_fn, is_train):
     with torch.set_grad_enabled(is_train):
         y_pred = model(x)
         loss = loss_fn(y_pred,y)
-    return loss
+        
+        _, predicted = torch.max(y_pred, dim=1)
+        
+    if is_train:
+        return loss
+    else:
+        return loss, predicted
 
 def training_loop(x, y, model, loss_fn=nn.MSELoss(), optimizer=optim.SGD, 
                   n_epochs=5000, learning_rate=1e-2, normalize=True, val_split=True,
@@ -492,19 +498,65 @@ def training_loop(x, y, model, loss_fn=nn.MSELoss(), optimizer=optim.SGD,
     
     return model.parameters()
 
-def seq_model(dim_input, dim_layer_1, dim_output, final_layer=None):
+def training_loop2(dataset, model, loss_fn=nn.MSELoss(), optimizer=optim.SGD, 
+                   n_epochs=5000, learning_rate=1e-2, train=True, batch_size=None):
     
-    if final_layer:
-        model = nn.Sequential(nn.Linear(dim_input, dim_layer_1),
-                          nn.Tanh(),
-                          nn.Linear(dim_layer_1, dim_output),
-                          final_layer)
-    else:
-        model = nn.Sequential(nn.Linear(dim_input, dim_layer_1),
-                              nn.Tanh(),
-                              nn.Linear(dim_layer_1, dim_output))
+    # Instantiating optimizer
+    optimizer = optimizer(model.parameters(), lr=learning_rate)
+    
+    # Storage for plotting efficiency
+    val_losses = []
+    train_losses = []
+    
+    # Loading batches
+    if not batch_size:
+        batch_size = x.shape[0]
+    
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
         
-    return model
+    if train:
+        for epoch in range(n_epochs):
+            
+            # Training
+            for x_batch, y_batch in data_loader:
+                batch_size_actual = x_batch.shape[0] # In case final batchsize overflows remaining amount of samples
+                x_batch = x_batch.view(batch_size_actual, -1) # Reshape img to 1d
+                
+                train_loss = calc_forward(x_batch, y_batch, model, loss_fn, is_train=True) #Forward pass
+                train_losses.append(float(train_loss))
+                
+                # Backward pass / param update
+                optimizer.zero_grad()
+                train_loss.backward() #Backward pass (calculating the derivative)
+                optimizer.step()
+        
+            if epoch % 1 == 0: #000 == 0:
+                print(f'(Epoch {epoch}) Training loss: {float(train_loss):.4f}'.rjust(35)) # Single random batch's loss now!
+            elif epoch % 1001 == 0:
+                print('...\n')
+            if not torch.isfinite(train_loss).all():
+                break
+            
+    # Validation
+    else:
+        correct = 0
+        total = 0
+        for x_batch, y_batch in data_loader:
+            batch_size_actual = x_batch.shape[0] # In case final batchsize overflows remaining amount of samples
+            x_batch = x_batch.view(batch_size_actual, -1)
+            
+            val_loss, predicted = calc_forward(x_batch, y_batch, model, loss_fn, is_train=False)
+            val_losses.append(float(val_loss))
+            print(f'Validation loss: {float(val_loss):.4f}'.rjust(35))
+            
+            total += y_batch.shape[0]
+            correct += int((predicted == y_batch).sum())
+                
+        print(f'Accuracy: {correct / total}')
+    #plot_results(x?, model, normalize=False)
+    plot_losses(train_losses, loss_fn, val_losses=None)
+    
+    return model.parameters()
 
 
 #%%
@@ -617,34 +669,59 @@ cifar2_val = [(img, label_map[label]) for img, label in transformed_cifar10_val 
 
 #%%
 
-cifar2_small = cifar2
+dataset = cifar2
+dataset_val = cifar2_val
 
-x = torch.cat([pair[0].view(-1).unsqueeze(0) for pair in cifar2_small], dim=0)
-y = torch.tensor([pair[1] for pair in cifar2_small])
-loss_fn = nn.NLLLoss()
+x = torch.cat([pair[0].view(-1).unsqueeze(0) for pair in dataset], dim=0)
+y = torch.tensor([pair[1] for pair in dataset])
 
 dim_input = x.shape[1]
 dim_output = len(class_names) #y.unique.shape[0]
-dim_layer_1 = 512
+dim_layer_1 = 1024
+dim_layer_2 = 512
+dim_layer_3 = 128
 
-model = seq_model(dim_input, 
-                  dim_layer_1, 
-                  dim_output, 
-                  final_layer=nn.LogSoftmax(dim=1))
+loss_fn = nn.CrossEntropyLoss() #nn.NLLLoss()
 
-train = True
+#model = nn.Sequential(nn.Linear(dim_input, dim_layer_1),
+#                      nn.Tanh(),
+#                      nn.Linear(dim_layer_1, dim_output),
+#                      nn.LogSoftmax(dim=1))
 
-if train:
-    params = training_loop(
-                    x = x,
-                    y = y,
-                    optimizer = optim.SGD,
-                    learning_rate = 1e-2,
-                    loss_fn = loss_fn,
-                    n_epochs = 100,
-                    normalize = False,
-                    model = model,
-                    val_split=False,
-                    batch_size=1
-                    )
-    
+model = nn.Sequential(nn.Linear(dim_input, dim_layer_1),
+                      nn.Tanh(),
+                      nn.Linear(dim_layer_1, dim_layer_2),
+                      nn.Tanh(),
+                      nn.Linear(dim_layer_2, dim_layer_3),
+                      nn.Tanh(),
+                      nn.Linear(dim_layer_3, dim_output))
+
+params = training_loop2(
+                dataset=dataset,
+                optimizer = optim.SGD,
+                learning_rate = 1e-2,
+                loss_fn = loss_fn,
+                n_epochs = 100,
+                model = model,
+                batch_size=64,
+                train=True
+                )
+
+params = training_loop2(
+                dataset=dataset_val,
+                optimizer = optim.SGD,
+                learning_rate = 1e-2,
+                loss_fn = loss_fn,
+                n_epochs = 100,
+                model = model,
+                batch_size=64,
+                train=False
+                )
+
+#%%
+
+numel_list = [p.numel()
+              for p in model.parameters()
+              if p.requires_grad]
+print(f'Total params: {sum(numel_list)}')
+print(f'Params per layer: {*numel_list,}')
