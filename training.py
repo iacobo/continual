@@ -61,24 +61,22 @@ def clean_plot(i, j, ax=None):
 ######################
 # Loading data into 'stream' of 'experiences' (tasks)
 
-n_timesteps = 15
-n_channels = 8
-pattern_shape = (n_timesteps, n_channels)
-n = 5 # Number of tasks
+n_timesteps = 5
+n_channels = 2
+n_tasks = 5
 
 # Definition of training experiences
-# of form (x:(patients, time_steps, variables), y:(outcome))
-experiences_x = [torch.randn(100, *pattern_shape) for _ in range(n)]
-experiences = [(x, (x.sum(dim=[1,2]) + 1.5*i > 0).long()) for i, x in enumerate(experiences_x)]
+# of form (x:(patients, variables, time_steps), y:(outcome))
 
-# Test experiences
-test_experiences_x = [torch.randn(50, *pattern_shape) for _ in range(n)]
-test_experiences = [(x, (x.sum(dim=[1,2]) + 1.5*i > 0).long()) for i, x in enumerate(test_experiences_x)]
+from data_processing import generate_experiences
+
+experiences = generate_experiences(n_timesteps, n_channels, n_tasks)
+test_experiences = generate_experiences(n_timesteps, n_channels, n_tasks, test=True)
 
 scenario = tensors_benchmark(
     train_tensors=experiences,
     test_tensors=test_experiences,
-    task_labels=[0 for _ in range(n)],  # Task label of each train exp
+    task_labels=[0 for _ in range(n_tasks)],  # Task label of each train exp
     complete_test_set_only=False
 )
 
@@ -98,9 +96,9 @@ print('Simul Data loaded!')
 #####################
 
 cnn = SimpleCNN(n_channels=n_channels)
-mlp = SimpleMLP(input_size=n_timesteps, n_channels=n_channels)
-rnn = SimpleRNN(input_size=n_timesteps, n_channels=n_channels)
-lstm = SimpleLSTM(input_size=n_timesteps, n_channels=n_channels)
+mlp = SimpleMLP(n_channels=n_channels, seq_len=n_timesteps)
+rnn = SimpleRNN(n_channels=n_channels, seq_len=n_timesteps)
+lstm = SimpleLSTM(n_channels=n_channels, seq_len=n_timesteps)
 models = {'MLP':mlp, 'CNN':cnn, 'RNN':rnn, 'LSTM:':lstm}
 
 print('Models defined!')
@@ -158,8 +156,8 @@ def train_method(cl_strategy, scenario):
     return results
 
 # Need to rerun multiple times, take averages, shuffle each task data internally
-strategies = ('Naive', 'EWC')
-kwargs = {'Naive':{}, 'EWC':{'ewc_lambda':0.01}}
+kwargs = {'Naive':{}, 'Joint':{}, 'Replay':{'mem_size':10}, 'EWC':{'ewc_lambda':0.01}}
+strategies = kwargs.keys()
 #models = [model] # Need new instance of each model for each training loop or remembers weights
 fig, axes = plt.subplots(len(models), len(strategies))
 
@@ -181,7 +179,7 @@ handles, labels = axes[0,0].get_legend_handles_labels()
 axes[0,0].get_legend().remove()
 fig.legend(handles, labels, loc='center right')
 
-fig.supxlabel('Epoch')
-fig.supylabel('Accuracy')
+fig.supxlabel(' \n\n\n\nEpoch')
+fig.supylabel('Accuracy\n\n\n\n')
 
 plt.show()
