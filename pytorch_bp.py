@@ -95,7 +95,7 @@ print('Simul Data loaded!')
 #####################
 
 class SimpleRNN(nn.Module):
-    def __init__(self, input_size, output_size, n_vars, hidden_dim=10, n_layers=2):
+    def __init__(self, input_size, n_channels, output_size=2, hidden_dim=10, n_layers=2):
         super(SimpleRNN, self).__init__()
 
         # Defining some parameters
@@ -106,11 +106,11 @@ class SimpleRNN(nn.Module):
         # RNN Layer
         self.rnn = nn.RNN(input_size, hidden_dim, n_layers, batch_first=True)   
         # Fully connected layer
-        self.fc = nn.Linear(n_vars*hidden_dim, output_size)
+        self.fc = nn.Linear(n_channels*hidden_dim, output_size)
     
     def forward(self, x):
         
-        batch_size = x.size(0)
+        batch_size = x.shape[0]
         
         # Initializing hidden state for first input using method defined below
         hidden = self.init_hidden(batch_size)
@@ -130,15 +130,29 @@ class SimpleRNN(nn.Module):
         hidden = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
         return hidden
 
-class SimpleCNN(nn.Module):   
-    def __init__(self, n_vars):
-        super(SimpleCNN, self).__init__()
+class SimpleLSTM(nn.Module):
 
-        self.n_vars = n_vars
+    def __init__(self, input_size, n_channels, hidden_dim=10, output_size=2):
+        super(SimpleLSTM, self).__init__()
+
+        self.lstm = nn.LSTM(input_size, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(n_channels*hidden_dim, output_size)
+
+    def forward(self, x):
+        batch_size = x.size(0)
+
+        x, _ = self.lstm(x)
+        x = x.reshape(batch_size, -1)
+        x = self.fc(x)
+        return x
+
+class SimpleCNN(nn.Module):   
+    def __init__(self, n_channels):
+        super(SimpleCNN, self).__init__()
 
         self.cnn_layers = nn.Sequential(
             # Defining a 2D convolution layer
-            nn.Conv1d(self.n_vars, 4, kernel_size=3, stride=1, padding=1),
+            nn.Conv1d(n_channels, 4, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(4),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=2, stride=2),
@@ -156,17 +170,15 @@ class SimpleCNN(nn.Module):
     # Defining the forward pass    
     def forward(self, x):
         x = self.cnn_layers(x)
-        print(x.shape)
         x = x.view(x.size(0), -1)
-        print(x.shape)
         x = self.linear_layers(x)
         return x
 
-mlp = SimpleMLP(num_classes=2, input_size=np.product(pattern_shape))
-cnn = SimpleCNN(n_vars=pattern_shape[-2])
-#lstm = SimpleLSTM()
-rnn = SimpleRNN(input_size=pattern_shape[-1], n_vars=pattern_shape[-2], output_size=2)
-models = {'CNN':cnn, 'MLP':mlp, 'RNN':rnn}
+mlp = SimpleMLP(input_size=np.product(pattern_shape), num_classes=2)
+cnn = SimpleCNN(n_channels=pattern_shape[-2])
+lstm = SimpleLSTM(input_size=pattern_shape[-1], n_channels=pattern_shape[-2])
+rnn = SimpleRNN(input_size=pattern_shape[-1], n_channels=pattern_shape[-2])
+models = {'MLP':mlp, 'CNN':cnn, 'RNN':rnn, 'LSTM:':lstm}
 
 print('Model defined!')
 
