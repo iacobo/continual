@@ -16,19 +16,19 @@ class SimpleMLP(nn.Module):
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=MLP_HIDDEN_DIM, out_features=MLP_HIDDEN_DIM//2, bias=True),
+            nn.Linear(in_features=MLP_HIDDEN_DIM, out_features=int(0.8*MLP_HIDDEN_DIM), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=MLP_HIDDEN_DIM//2, out_features=MLP_HIDDEN_DIM//4, bias=True),
+            nn.Linear(in_features=int(0.8*MLP_HIDDEN_DIM), out_features=int(0.6*MLP_HIDDEN_DIM), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=MLP_HIDDEN_DIM//4, out_features=MLP_HIDDEN_DIM//8, bias=True),
+            nn.Linear(in_features=int(0.6*MLP_HIDDEN_DIM), out_features=int(0.4*MLP_HIDDEN_DIM), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
             )
-        self.fc = nn.Linear(in_features=MLP_HIDDEN_DIM//8, out_features=output_size, bias=True)
+        self.fc = nn.Linear(in_features=int(0.4*MLP_HIDDEN_DIM), out_features=output_size, bias=True)
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -40,11 +40,13 @@ class SimpleMLP(nn.Module):
 
 
 class SimpleRNN(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_dim=RNN_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=RNN_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2, bidirectional=True):
         super().__init__()
 
-        self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True)   
-        self.fc = nn.Linear(seq_len*hidden_dim, output_size)
+        scalar = 2 if bidirectional else 1
+
+        self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional)
+        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -54,13 +56,16 @@ class SimpleRNN(nn.Module):
         out = self.fc(out)
         return out
 
+
 class SimpleLSTM(nn.Module):
 
-    def __init__(self, n_channels, seq_len, hidden_dim=LSTM_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=LSTM_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2, bidirectional=True):
         super().__init__()
 
-        self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True)
-        self.fc = nn.Linear(seq_len*hidden_dim, output_size)
+        scalar = 2 if bidirectional else 1
+
+        self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional)
+        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
         batch_size = x.shape[0]
