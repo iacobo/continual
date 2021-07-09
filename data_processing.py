@@ -166,19 +166,21 @@ def load_eicu_timeseries():
 
     df_p = load_eicu()
     df_v = pd.read_csv(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr\data\eICU\vitalPeriodic.csv')
-
+    df_v = df_v[['patientunitstayid', 'observationoffset', 'temperature', 'sao2', 'heartrate', 'respiration',
+       'cvp', 'etco2', 'systemicsystolic', 'systemicdiastolic', 'systemicmean',
+       'pasystolic', 'padiastolic', 'pamean', 'st1', 'st2', 'st3', 'icp',]]
     df = pd.merge(df_p, df_v, on='patientunitstayid')
 
     #28 day mortality
-    df['Target'] = (df['hospitaldischargeoffset'] - df['observationoffset'] < 28*24*60) & (df['hospitaldischargestatus'] == 'Expired')
+    df['Target'] = (df['hospitaldischargeoffset'] - df['observationoffset'] < 60) & (df['hospitaldischargestatus'] == 'Expired')
 
-    df['Target'].value_counts().plot.bar(rot=0, title='Mortality within 28 days of observation')
-    plt.show(); plt.close()
+    #df['Target'].value_counts().plot.bar(rot=0, title='Mortality within 24hrs of observation')
+    #plt.show(); plt.close()
 
 
     return df
 
-def eicu_to_tensor(demographic):
+def eicu_to_tensor(demographic, balance=False):
     df = load_eicu_timeseries()
 
     tasks = []
@@ -195,20 +197,25 @@ def eicu_to_tensor(demographic):
         tasks.append(df[df['ethnicity']=='African American'])
         tasks.append(df[df['ethnicity']=='Hispanic'])
         tasks.append(df[df['ethnicity']=='Asian'])
-        tasks.append(df[df['ethnicity']=='Native American'])
+        #tasks.append(df[df['ethnicity']=='Native American']) # No mortality
         tasks.append(df[df['ethnicity']=='Other/Unknown'])
     elif demographic == 'ethnicity_coarse':
         tasks.append(df[df['ethnicity_coarse']=='Caucasian'])
         tasks.append(df[df['ethnicity']=='BAME'])
+    elif demographic == 'region':
+        tasks.append(df[df['region']=='West'])
+        tasks.append(df[df['region']=='Midwest'])
+        tasks.append(df[df['region']=='South'])
+        tasks.append(df[df['region']=='Northeast'])
 
 
     for i in range(len(tasks)):
-        seq_len = 6
+        seq_len = 30
 
-        tasks[i] = tasks[i][['temperature', 'sao2', 'heartrate', 'respiration',
-       'cvp', 'etco2', 'systemicsystolic', 'systemicdiastolic', 'systemicmean',
-       'pasystolic', 'padiastolic', 'pamean', 'st1', 'st2', 'st3', 'icp',
-       'Target']]
+        tasks[i] = tasks[i][['sao2', 'heartrate', 'respiration', 'Target']]
+
+        # Filling missing vals
+        tasks[i] = tasks[i].fillna(method='ffill', axis=1).fillna(method='bfill', axis=1)
 
         partitions = len(tasks[i])//seq_len
         trunc = len(tasks[i]) - len(tasks[i])%partitions
@@ -218,6 +225,19 @@ def eicu_to_tensor(demographic):
         target = torch.LongTensor(target).max(axis=1)[0]
         features = torch.FloatTensor([d.drop('Target', axis=1).values for d in dfs])
 
+        if balance:
+            count_0, count_1 = target.bincount()
+
+            if count_0 > count_1:
+                target, idx = target.topk(count_1*2)
+                features = features[idx]
+            else:
+                target, idx = target.topk(count_0*2, largest=False)
+                features = features[idx]
+        
+        print(f'Task {i} size: {target.shape[0]} (0:{target.bincount()[0]}, 1:{target.bincount()[1]})')
+
+
         tasks[i] = (features, target)
 
     return tasks
@@ -226,7 +246,7 @@ def eicu_to_tensor(demographic):
 
 #plot_demos()
 #df = load_eicu_timeseries()
-#tasks = eicu_to_tensor(df, demographic='ethnicity')
+#tasks = eicu_to_tensor(demographic='ethnicity', balance=True)
 
 # %%
 
