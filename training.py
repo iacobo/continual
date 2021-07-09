@@ -1,6 +1,7 @@
 import time
 import datetime
 from matplotlib import pyplot as plt
+import copy
 
 # ML imports
 import torch
@@ -27,15 +28,15 @@ from data_processing import generate_experiences, generate_eeg_experiences, gene
 
 # HELPER FUNCTIONS
 
-def load_strategy(model, model_name, strategy_name, lr=0.01, train_epochs=10, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, **kwargs):
+def load_strategy(model, model_name, strategy_name, lr=0.01, train_epochs=200, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, **kwargs):
     """
     """
     if model_name == 'MLP':
-        lr = 0.01
+        lr = 0.001
     elif model_name == 'CNN':
         lr = 0.01
     elif model_name == 'LSTM':
-        lr = 0.1
+        lr = 0.01
     else:
         lr = 0.001
 
@@ -47,8 +48,7 @@ def load_strategy(model, model_name, strategy_name, lr=0.01, train_epochs=10, ev
     'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE, #AR1, StreamingLDA
     'CWRStar':CWRStar}
 
-    global ts
-    timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
+    global timestamp
 
     strategy = strategies[strategy_name]
     interactive_logger = InteractiveLogger() #implement tensorboard
@@ -108,6 +108,7 @@ if __name__ == "__main__":
 
     # Timestamp
     ts = time.time()
+    timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
     # Loading data into 'stream' of 'experiences' (tasks)
     GENERATE_DATA = False
@@ -138,21 +139,20 @@ if __name__ == "__main__":
     elif USE_ACTIVITY_DATA:
         experiences = load_activity_data()
         test_experiences = load_activity_data(test=True)
-        n_tasks = 3
 
     elif USE_EICU_DATA:
         print('Loading data...')
-        experiences = eicu_to_tensor(demographic='ethnicity')
+        experiences = eicu_to_tensor(demographic='ethnicity', balance=True)
         print('Loading test data...')
-        test_experiences = eicu_to_tensor(demographic='ethnicity')
-        n_tasks = len(experiences)
+        test_experiences = copy.deepcopy(experiences) #eicu_to_tensor(demographic='ethnicity')
         print('Data loaded.')
 
-        weight = torch.tensor([0.2,1.4])
+        #weight = torch.tensor([1.4, 0.2])
 
     else:
         input('No data specified... (Press Ctrl+C to quit')
 
+    n_tasks = len(experiences)
     n_timesteps = experiences[0][0].shape[-2]
     n_channels = experiences[0][0].shape[-1]
 
@@ -194,6 +194,8 @@ if __name__ == "__main__":
             clean_subplot(i, j, axes)
 
     clean_plot(fig, axes)
+
+    plt.savefig(fr'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr\figs\fig_{timestamp}.png')
 
     if False:
         for _, m in models.items():
