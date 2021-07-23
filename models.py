@@ -8,7 +8,7 @@ LSTM_HIDDEN_DIM = RNN_HIDDEN_DIM//2
 RNN_N_LAYERS = 2
 
 class SimpleMLP(nn.Module):
-    def __init__(self, seq_len, n_channels, output_size=2):
+    def __init__(self, n_channels, seq_len, output_size=2):
         super().__init__()
 
         self.features = nn.Sequential(
@@ -76,7 +76,7 @@ class SimpleLSTM(nn.Module):
         return out
 
 class SimpleCNN(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_channels=CNN_HIDDEN_DIM, n_output=2):
+    def __init__(self, n_channels, seq_len, hidden_channels=CNN_HIDDEN_DIM, output_size=2):
         super().__init__()
 
         self.cnn_layers = nn.Sequential(
@@ -96,7 +96,7 @@ class SimpleCNN(nn.Module):
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
 
-        self.fc = nn.Linear((seq_len//4)*(hidden_channels//4), n_output) #(seq_len//2*num batch norm) * final hid size
+        self.fc = nn.Linear((seq_len//4)*(hidden_channels//4), output_size) #(seq_len//2*num batch norm) * final hid size
 
     # Defining the forward pass    
     def forward(self, x):

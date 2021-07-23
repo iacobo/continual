@@ -4,8 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-def plot_accuracy(method, model, results, ax=None):
-    ax = ax or plt.gca()
+def stack_results(results):
 
     acc = defaultdict(list)
 
@@ -19,6 +18,13 @@ def plot_accuracy(method, model, results, ax=None):
     df.index.rename(f'Epoch', inplace=True)
     stacked = df.stack().reset_index()
     stacked.rename(columns={'level_1': 'Task', 0: 'Accuracy'}, inplace=True)
+
+    return stacked
+
+def plot_accuracy(method, model, results, ax=None):
+    ax = ax or plt.gca()
+
+    stacked = stack_results(results)
 
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int) <= stacked['Epoch \n (15 epochs per task)'].astype(int)]
@@ -42,6 +48,10 @@ def clean_subplot(i, j, axes):
     plt.setp(axes, ylim=(0,1))
 
 def clean_plot(fig, axes):
+    for i in range(len(axes)):
+        for j in range(len(axes[0])):
+            clean_subplot(i,j,axes)
+            
     handles, labels = axes[0,0].get_legend_handles_labels()
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
@@ -51,5 +61,3 @@ def clean_plot(fig, axes):
     fig.supylabel('Accuracy', x=0)
     
     plt.show()
-
-#%%
