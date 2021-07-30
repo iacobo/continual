@@ -7,6 +7,7 @@ from functools import partial
 
 # ML imports
 from torch.nn import CrossEntropyLoss
+from torch.optim import SGD, Adam
 from ray import tune
 from ray.tune import CLIReporter
 
@@ -18,7 +19,7 @@ from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA # Mis
 
 from avalanche.logging import InteractiveLogger, TensorboardLogger, TextLogger
 from avalanche.training.plugins import EvaluationPlugin
-from avalanche.evaluation.metrics import accuracy_metrics
+from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics
 from avalanche.benchmarks.generators import tensors_benchmark
 
 # Local imports
@@ -32,10 +33,10 @@ from data_processing import eicu_to_tensor, random_data
 def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, output_dir=Path(''), timestamp='', **config):
     """
     """
-    try:
-        optimizer = config['optimizer'](model.parameters(), lr=config['lr'], momentum=0.9)
-    except TypeError:
-        optimizer = config['optimizer'](model.parameters(), lr=config['lr'])
+    if config['optimizer'] == 'SGD':
+        optimizer = SGD(model.parameters(), lr=config['lr'], momentum=0.9)
+    elif config['optimizer'] == 'Adam':
+        optimizer = Adam(model.parameters(), lr=config['lr'])
 
     criterion = CrossEntropyLoss(weight=weight)
 
@@ -53,6 +54,7 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
     eval_plugin = EvaluationPlugin(
         accuracy_metrics(stream=True, experience=True), #Stream for avg accuracy over all over all experiences, experience=True for individuals (Former may rely on tasks being roughly same size?)
+        loss_metrics(stream=True),
         loggers=[interactive_logger, tb_logger, text_logger])
 
     model = strategy(
@@ -65,7 +67,7 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
     return model
 
-def train_method(cl_strategy, scenario, eval_on_test=True):
+def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
     """
     """
     print('Starting experiment...')
@@ -83,27 +85,32 @@ def train_method(cl_strategy, scenario, eval_on_test=True):
     results = cl_strategy.evaluator.get_all_metrics()
 
     if validate:
-        return cl_strategy.eval(scenario.test_stream)
+        results = cl_strategy.eval(scenario.test_stream)
+        return results
 
     else:
         return results
 
-# CL hyper-params
-# https://arxiv.org/pdf/2103.07492.pdf
+def training_loop(config, data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, validate=False):
 
-def training_loop(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config, validate=False):
+    # Loading data into 'stream' of 'experiences' (tasks)
+    print('Loading data...')
+    scenario, n_tasks, n_timesteps, n_channels = load_data(data, demo, data_dir, validate)
+    print('Data loaded.')
 
     # This is tune train func
     model = models[model_name](n_channels=n_channels, seq_len=n_timesteps)
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, output_dir=output_dir, timestamp=timestamp, **config)
-    results = train_method(cl_strategy, scenario, eval_on_test=False)
+    results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
 
     if validate:
-        tune.report(loss=results['Loss'], accuracy=results['Accuracy'])
+        tune.report(loss=results['Loss_Stream/eval_phase/train_stream'], 
+                    accuracy=results['Top1_Acc_Stream/eval_phase/train_stream'])
 
-    return results
+    else:
+        return results
 
-def hyperparam_opt(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config):
+def hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
@@ -111,35 +118,29 @@ def hyperparam_opt(models, model_name, strategy_name, scenario, output_dir, time
     Can use returned optimal values to later run full training and testing over all n>=2 tasks.
     """
 
-    reporter = CLIReporter(
-        metric_columns=["loss", "accuracy"])
+    reporter = CLIReporter(metric_columns=["loss", "accuracy"])
+    
     result = tune.run(
-        partial(training_loop, validate=True, models=models, model_name=model_name, strategy_name=strategy_name, scenario=scenario, output_dir=output_dir, timestamp=timestamp, n_channels=n_channels, n_timesteps=n_timesteps),
+        partial(training_loop, data=data, demo=demo, data_dir=data_dir, models=models, model_name=model_name, strategy_name=strategy_name, output_dir=output_dir, timestamp=timestamp, validate=True),
         config=config,
-        progress_reporter=reporter)
+        progress_reporter=reporter,
+        num_samples=10,
+        name=f'{model_name}_{strategy_name}')
 
     best_trial = result.get_best_trial("loss", "min", "last")
     print(f'Best trial config: {best_trial.config}')
     print(f'Best trial final validation loss: {best_trial.last_result["loss"]}')
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
 
-
-
-def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), config_generic=None, config_cl=None):
-
+def load_data(data, demo, data_dir, validate=False):
     """
-    data: ['random','MIMIC','eICU','iORD']
-    demo: ['region','sex','age','ethnicity','ethnicity_coarse','hospital']
+    Data of form:
+    (
+        x:(samples, variables, time_steps), 
+        y:(outcome,)
+    )
     """
 
-    # Timestamp for logging
-    ts = time.time()
-    timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-    data_dir = output_dir / 'data' / data
-
-    # Loading data into 'stream' of 'experiences' (tasks)
-    # of form (x:(samples, variables, time_steps), y:(outcome,))
-    print('Loading data...')
     if data=='eICU':
         experiences = eicu_to_tensor(demographic=demo, balance=True, root=data_dir)
         test_experiences = copy.deepcopy(experiences)
@@ -153,8 +154,6 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
     else:
         print('Unknown data source.')
         pass
-
-    print('Data loaded.')
 
     if validate:
         experiences = experiences[:2]
@@ -172,6 +171,20 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
     )
     # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
 
+    return scenario, n_tasks, n_timesteps, n_channels
+
+def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), config_generic=None, config_cl=None, validate=False):
+
+    """
+    data: ['random','MIMIC','eICU','iORD']
+    demo: ['region','sex','age','ethnicity','ethnicity_coarse','hospital']
+    """
+
+    # Timestamp for logging
+    ts = time.time()
+    timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
+    data_dir = output_dir / 'data' / data
+
     # Define models
     all_models = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
     models = {k: all_models[k] for k in models}
@@ -181,31 +194,34 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
 
     # TRAINING (Need to rerun multiple times, take averages)
     # Container for metrics for plotting CHANGE TO TXT FILE
-    res = {m:{s:None for s in strategies.keys()} for m in models.keys()}
+    res = {m:{s:None for s in strategies} for m in models.keys()}
 
     for model_name in models.keys():
         for strategy_name in strategies:
 
             # Union generic and CL strategy-specific hyperparams
-            config = {**config_generic, **config_cl[strategy_name]}
+            try: config = {**config_generic, **config_cl[strategy_name]}
+            except KeyError: config = config_generic
             # Training loop
-            res[model_name][strategy_name] = training_loop(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config)
-
-            # Tune best config add
+            if validate:
+                hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config)
+            else:
+                res[model_name][strategy_name] = training_loop(config, data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config)
 
             # Secondary experiment: how sensitive regularization strategies are to hyperparams
             # Tune hyperparams over increasing number of tasks?
 
 
     # PLOTTING
-    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
+    if not validate:
+        fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
-    for i, model in enumerate(models.keys()):
-        for j, strategy in enumerate(strategies.keys()):
-            plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
+        for i, model in enumerate(models.keys()):
+            for j, strategy in enumerate(strategies.keys()):
+                plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
 
-    clean_plot(fig, axes)
-    plt.savefig(output_dir / 'figs' / f'fig_{timestamp}.png')
-    #plt.show()
+        clean_plot(fig, axes)
+        plt.savefig(output_dir / 'figs' / f'fig_{timestamp}.png')
+        #plt.show()
 
-    return res
+        return res
