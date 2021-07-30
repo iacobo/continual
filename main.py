@@ -3,6 +3,7 @@ from data_processing import plot_demos
 from torch.optim import SGD, Adam
 
 from pathlib import Path
+from ray import tune
 
 if __name__ == "__main__":
     # Specify dataset
@@ -15,21 +16,16 @@ if __name__ == "__main__":
     output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
 
     # Hyperparams for grid search
-    config = {'lr':[0.1,0.01,0.001,0.0001], 
-              'optimizer':{'SGD':SGD, 'Adam':Adam}, 
-              'mem_size':[2,5,10],
-              'alpha':[0.001,0.01,0.1,1,10,100,1000],
-              'temperature':[0.5,1,1.5,2]}
+    config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 
+                      'optimizer':tune.choice([SGD, Adam])}
 
-    models = ['MLP']
-    config ={'lr':[0.01], 
-              'optimizer':{'SGD':SGD}, 
-              'mem_size':[2],
-              'alpha':[10],
-              'temperature':[1]}
+    config_cl ={'Replay':{'mem_size':tune.choice([2,5,10])},
+                'EWC':{'ewc_lambda':tune.loguniform(1e-3, 1e2)},
+                'SI':{'si_lambda':tune.loguniform(1e-3, 1e2)},
+                'LwF':{'alpha':tune.loguniform(1e-3, 1e2), 'temperature':[0.5,1,1.5,2]}}
 
     # Then train over all tasks
-    main(data=data, output_dir=output_dir, models=models, config=config)
+    main(data=data, output_dir=output_dir, models=models, config_generic=config_generic, config_cl=config_cl)
 
     # Plotting 
     if False:

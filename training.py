@@ -3,10 +3,12 @@ import time
 from pathlib import Path
 from datetime import datetime
 from matplotlib import pyplot as plt
+from functools import partial
 
 # ML imports
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
+from ray import tune
+from ray.tune import CLIReporter
 
 # CL imports
 from avalanche.training.strategies import Naive, JointTraining, Cumulative # Baselines
@@ -27,13 +29,13 @@ from data_processing import eicu_to_tensor, random_data
 
 # HELPER FUNCTIONS
 
-def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, output_dir=Path(''), timestamp='', **kwargs):
+def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, output_dir=Path(''), timestamp='', **config):
     """
     """
     try:
-        optimizer = kwargs['optimizer'](model.parameters(), lr=kwargs['lr'], momentum=0.9)
+        optimizer = config['optimizer'](model.parameters(), lr=config['lr'], momentum=0.9)
     except TypeError:
-        optimizer = kwargs['optimizer'](model.parameters(), lr=kwargs['lr'])
+        optimizer = config['optimizer'](model.parameters(), lr=config['lr'])
 
     criterion = CrossEntropyLoss(weight=weight)
 
@@ -53,23 +55,12 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
         accuracy_metrics(stream=True, experience=True), #Stream for avg accuracy over all over all experiences, experience=True for individuals (Former may rely on tasks being roughly same size?)
         loggers=[interactive_logger, tb_logger, text_logger])
 
-    if strategy_name == 'StreamingLDA':
-        del kwargs['optimizer']
-
-        if model_name == 'CNN':
-            kwargs['input_size'] = (30//4)*(512//4)
-            kwargs['output_layer_name'] = 'cnn_layers'
-
-    else:
-        kwargs['optimizer'] = optimizer
-        del kwargs['lr']
-
     model = strategy(
-        model, #optimizer=optimizer, 
+        model, optimizer=optimizer, 
         criterion=criterion,
         train_mb_size=train_mb_size, eval_mb_size=eval_mb_size,
         train_epochs=train_epochs, eval_every=eval_every, evaluator=eval_plugin,
-        **kwargs
+        **{k:v for k, v in config.items() if k not in ('optimizer','lr')}
     )
 
     return model
@@ -91,13 +82,50 @@ def train_method(cl_strategy, scenario, eval_on_test=True):
 
     results = cl_strategy.evaluator.get_all_metrics()
 
-    return results
+    if validate:
+        return cl_strategy.eval(scenario.test_stream)
+
+    else:
+        return results
 
 # CL hyper-params
 # https://arxiv.org/pdf/2103.07492.pdf
 
+def training_loop(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config, validate=False):
 
-def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), config=None):
+    # This is tune train func
+    model = models[model_name](n_channels=n_channels, seq_len=n_timesteps)
+    cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, output_dir=output_dir, timestamp=timestamp, **config)
+    results = train_method(cl_strategy, scenario, eval_on_test=False)
+
+    if validate:
+        tune.report(loss=results['Loss'], accuracy=results['Accuracy'])
+
+    return results
+
+def hyperparam_opt(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config):
+    """
+    Hyperparameter optimisation for the given model/strategy.
+    Runs over the validation data for the first 2 tasks.
+
+    Can use returned optimal values to later run full training and testing over all n>=2 tasks.
+    """
+
+    reporter = CLIReporter(
+        metric_columns=["loss", "accuracy"])
+    result = tune.run(
+        partial(training_loop, validate=True, models=models, model_name=model_name, strategy_name=strategy_name, scenario=scenario, output_dir=output_dir, timestamp=timestamp, n_channels=n_channels, n_timesteps=n_timesteps),
+        config=config,
+        progress_reporter=reporter)
+
+    best_trial = result.get_best_trial("loss", "min", "last")
+    print(f'Best trial config: {best_trial.config}')
+    print(f'Best trial final validation loss: {best_trial.last_result["loss"]}')
+    print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
+
+
+
+def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), config_generic=None, config_cl=None):
 
     """
     data: ['random','MIMIC','eICU','iORD']
@@ -120,17 +148,17 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
         experiences = random_data()
         test_experiences = copy.deepcopy(experiences)
 
-    elif data=='MIMIC':
-        raise NotImplemented
-    
-    elif data=='iORD':
-        raise NotImplemented
-
+    elif data=='MIMIC': raise NotImplemented
+    elif data=='iORD': raise NotImplemented
     else:
         print('Unknown data source.')
         pass
 
     print('Data loaded.')
+
+    if validate:
+        experiences = experiences[:2]
+        test_experiences = test_experiences[:2]
 
     n_tasks = len(experiences)
     n_timesteps = experiences[0][0].shape[-2]
@@ -149,45 +177,24 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
     models = {k: all_models[k] for k in models}
 
     # Define CL strategy
-    strategies = {}
-    #strategies = {'Naive':{}, 'Cumulative':{}, 'Replay':{'mem_size':50}} #, 'SI_1':{'si_lambda':1}, 'LwF_1':{'alpha':1, 'temperature':0.5}, 'EWC':{'ewc_lambda':100}} #, 'StreamingLDA':{'input_size':int(0.4*512), 'num_classes':2, 'output_layer_name':'features'}}
+    strategies = ['Naive', 'Cumulative', 'Replay', 'SI', 'LwF', 'EWC'] 
 
-    # Hyperparam gridsearch:
-    for lr in config['lr']:
-        for opt_name, optim in config['optimizer'].items():
-            strategies[f'Naive_{lr}_{opt_name}'.replace('.','_')] = {'lr':lr, 'optimizer':optim}
-            strategies[f'Cumulative_{lr}_{opt_name}'.replace('.','_')] = {'lr':lr, 'optimizer':optim}
-
-            for mem_size in config['mem_size']:
-                strategies[f'Replay_{lr}_{opt_name}_{mem_size}'.replace('.','_')] = {'lr':lr, 'optimizer':optim, 'mem_size':mem_size}
-
-            # Loop over CL specific hyperparams
-            for alpha in config['alpha']:
-                strategies[f'SI_{lr}_{opt_name}_{alpha}'.replace('.','_')] = {'si_lambda':alpha, 'lr':lr, 'optimizer':optim}
-                strategies[f'EWC_{lr}_{opt_name}_{alpha}'.replace('.','_')] = {'ewc_lambda':alpha, 'lr':lr, 'optimizer':optim}
-
-                for temp in config['temperature']:
-                    strategies[f'LwF_{lr}_{opt_name}_{alpha}_{temp}'.replace('.','_')] = {'alpha':alpha, 'temperature':temp, 'lr':lr, 'optimizer':optim}
-    
     # TRAINING (Need to rerun multiple times, take averages)
-    # Container for metrics for plotting
+    # Container for metrics for plotting CHANGE TO TXT FILE
     res = {m:{s:None for s in strategies.keys()} for m in models.keys()}
 
     for model_name in models.keys():
-        for strategy_name, kwargs in strategies.items():
+        for strategy_name in strategies:
 
-            # Union model and strategy config's and pass to raytune
-            # one ray per model/strat combo
+            # Union generic and CL strategy-specific hyperparams
+            config = {**config_generic, **config_cl[strategy_name]}
+            # Training loop
+            res[model_name][strategy_name] = training_loop(models, model_name, strategy_name, scenario, output_dir, timestamp, n_channels, n_timesteps, config)
 
-            # Secondary experiment: how sensitive reg strats are to hyperparams
+            # Tune best config add
 
-            # This is tune train func
-            model = models[model_name](n_channels=n_channels, seq_len=n_timesteps)
-            cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, output_dir=output_dir, timestamp=timestamp, **kwargs)
-            results = train_method(cl_strategy, scenario, eval_on_test=False)
-            res[model_name][strategy_name] = results
-
-            # tune.report(loss=(val_loss / val_steps), accuracy=correct / total)
+            # Secondary experiment: how sensitive regularization strategies are to hyperparams
+            # Tune hyperparams over increasing number of tasks?
 
 
     # PLOTTING
