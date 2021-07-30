@@ -1,5 +1,3 @@
-#%%
-
 import torch
 import numpy as np
 import pandas as pd
@@ -11,12 +9,10 @@ from pathlib import Path
 # eICU DATASET
 ########################
 
-ROOT = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr\data\eICU')
-
-def load_eicu(drop_dupes=False):
+def load_eicu(drop_dupes=False, root=Path('.')):
     # Load tables
-    df_p = pd.read_csv(ROOT / 'patient.csv')
-    df_h = pd.read_csv(ROOT / 'hospital.csv')
+    df_p = pd.read_csv(root / 'patient.csv')
+    df_h = pd.read_csv(root / 'hospital.csv')
     
     # Necessary cols
     # 'patienthealthsystemstayid', 
@@ -39,12 +35,12 @@ def load_eicu(drop_dupes=False):
 
     return df_p
 
-def load_eicu_timeseries(target=60):
+def load_eicu_timeseries(target=60, root=Path('.')):
 
     # JA: Check size of df_v is same as merged size
 
-    df_p = load_eicu()
-    df_v = pd.read_csv(ROOT / 'vitalPeriodic.csv')
+    df_p = load_eicu(root=root)
+    df_v = pd.read_csv(root / 'vitalPeriodic.csv')
     variables = ['patientunitstayid', 'observationoffset', 'sao2', 'heartrate', 'respiration']
     df_v = df_v[variables]
     df = pd.merge(df_p, df_v, on='patientunitstayid')
@@ -96,8 +92,8 @@ def grab_tasks(df, demographic):
 
     return tasks
 
-def eicu_to_tensor(demographic, seq_len=30, balance=False):
-    df = load_eicu_timeseries()
+def eicu_to_tensor(demographic, root=Path('.'), seq_len=30, balance=False):
+    df = load_eicu_timeseries(root=root)
     tasks = grab_tasks(df, demographic)
     variables = ['sao2', 'heartrate', 'respiration', 'Target']
 
@@ -134,9 +130,39 @@ def eicu_to_tensor(demographic, seq_len=30, balance=False):
         
         print(f'Task {i} size: {target.shape[0]} (0:{target.bincount()[0]}, 1:{target.bincount()[1]})')
 
-
         tasks[i] = (features, target)
 
+    return tasks
+
+########################
+# MIMIC DATA
+########################
+
+# To implement
+
+########################
+# iORD DATA
+########################
+
+# To implement
+
+########################
+# RANDOM DATA
+########################
+
+def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
+    """
+    Returns random data of form:
+
+    [
+        (
+            Features (standard normal): (n_samples,seq_len,n_vars),
+            Target (binary):            (n_samples,)
+        ),
+        ...
+    ]
+    """
+    tasks = [(torch.randn(n_samples,seq_len,n_vars), torch.randint(0,2,(n_samples,))) for _ in range(n_tasks)]
     return tasks
 
 def plot_demos():
@@ -153,8 +179,5 @@ def plot_demos():
     df['age'].plot.hist(bins=20, label='age', ax=axes[0,1], title='Age')
     df['region'].value_counts().plot.bar(ax=axes[2,0], rot=0, title='Region (North America)')
     df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
-    plt.show(); plt.close()
-
-#plot_demos()
-
-# %%
+    plt.show()
+    plt.close()

@@ -1,9 +1,16 @@
 # local imports
 import data_processing
 import models
+
 # other libs
+import math
 import torch
 import unittest
+from pathlib import Path
+
+def magnitude(value):
+    if (value == 0): return 0
+    return int(math.floor(math.log10(abs(value))))
 
 # Model definition tests
 class TestModelMethods(unittest.TestCase):
@@ -24,6 +31,17 @@ class TestModelMethods(unittest.TestCase):
                             expected_shape = torch.Size([batch_size, n_classes])
                             self.assertEqual(output.shape, expected_shape)
 
+    def test_modelcapacity(self):
+        """
+        Testing different models have same order of magnitude of parameters.
+        """
+        simple_models = [models.SimpleCNN, models.SimpleMLP, models.SimpleRNN, models.SimpleLSTM]
+        n_params = [sum(p.numel() for p in m.parameters() if p.requires_grad) for m in simple_models]
+        param_magnitudes = [magnitude(p) for p in n_params]
+
+        self.assertTrue(len(set(param_magnitudes))==1)
+
+
 
 # Data loading tests
 class TestDataLoadingMethods(unittest.TestCase):
@@ -32,16 +50,18 @@ class TestDataLoadingMethods(unittest.TestCase):
         """
         Checking patient ID's are unique.
         """
-        df = data_processing.load_eicu()
+        data_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr\data\eICU')
+        df = data_processing.load_eicu(root=data_dir)
         self.assertEqual(len(df), len(df.groupby('patientunitstayid')))
         
     def test_tasktargets(self):
         """
         Check all task splits have examples of both classes.
         """
+        data_dir = data_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr\data\eICU')
         demographics = ['age', 'gender', 'ethnicity', 'region', 'hospitaldischargeyear']
         for demo in demographics:
-            tasks = data_processing.eicu_to_tensor(demo)
+            tasks = data_processing.eicu_to_tensor(demo, root=data_dir)
             for i, task in enumerate(tasks):
                 labels = torch.LongTensor([0,1])
                 data_labels = task[1].unique()
@@ -57,6 +77,7 @@ class TestDataLoadingMethods(unittest.TestCase):
         sim_data = drop(sim_data)
         sim_data[sim_data==0] = float('nan')
 
+        # NEE DTO IMPLEMENT
         self.assertTrue(True)
 
 

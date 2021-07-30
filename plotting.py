@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -59,5 +58,3 @@ def clean_plot(fig, axes):
     fig.suptitle('Continual Learning model comparison')
     fig.supxlabel('Epoch')
     fig.supylabel('Accuracy', x=0)
-    
-    plt.show()
