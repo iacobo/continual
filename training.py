@@ -82,13 +82,12 @@ def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
         cl_strategy.train(experience, eval_streams=eval_streams)
         print('Training completed', '\n\n')
 
-    results = cl_strategy.evaluator.get_all_metrics()
-
     if validate:
         results = cl_strategy.eval(scenario.test_stream)
         return results
 
     else:
+        results = cl_strategy.evaluator.get_all_metrics()
         return results
 
 def training_loop(config, data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, validate=False):
@@ -98,7 +97,6 @@ def training_loop(config, data, demo, data_dir, models, model_name, strategy_nam
     scenario, n_tasks, n_timesteps, n_channels = load_data(data, demo, data_dir, validate)
     print('Data loaded.')
 
-    # This is tune train func
     model = models[model_name](n_channels=n_channels, seq_len=n_timesteps)
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, output_dir=output_dir, timestamp=timestamp, **config)
     results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
@@ -106,6 +104,7 @@ def training_loop(config, data, demo, data_dir, models, model_name, strategy_nam
     if validate:
         tune.report(loss=results['Loss_Stream/eval_phase/train_stream'], 
                     accuracy=results['Top1_Acc_Stream/eval_phase/train_stream'])
+        # Return overwrites raytune report
 
     else:
         return results
@@ -132,6 +131,8 @@ def hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, outp
     print(f'Best trial final validation loss: {best_trial.last_result["loss"]}')
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
 
+    # JA: save best_trial.config to dict[model][strat], load as config for normal training
+
 def load_data(data, demo, data_dir, validate=False):
     """
     Data of form:
@@ -156,6 +157,7 @@ def load_data(data, demo, data_dir, validate=False):
         pass
 
     if validate:
+        # Make method to return train/val for 'validate==True' and train/test else
         experiences = experiences[:2]
         test_experiences = test_experiences[:2]
 
@@ -173,7 +175,7 @@ def load_data(data, demo, data_dir, validate=False):
 
     return scenario, n_tasks, n_timesteps, n_channels
 
-def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), config_generic=None, config_cl=None, validate=False):
+def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], output_dir=Path('.'), config_generic=None, config_cl=None, validate=False):
 
     """
     data: ['random','MIMIC','eICU','iORD']
@@ -188,9 +190,6 @@ def main(data='random', demo='region', models=['MLP'], output_dir=Path('.'), con
     # Define models
     all_models = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
     models = {k: all_models[k] for k in models}
-
-    # Define CL strategy
-    strategies = ['Naive', 'Cumulative', 'Replay', 'SI', 'LwF', 'EWC'] 
 
     # TRAINING (Need to rerun multiple times, take averages)
     # Container for metrics for plotting CHANGE TO TXT FILE
