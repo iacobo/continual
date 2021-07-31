@@ -37,7 +37,7 @@ def main(validate=False):
         best_params = None
     
     # Train and test over all tasks
-    training.main(data=data, output_dir=output_dir, models=models, strategies=strategies, config_generic=best_params, config_cl={})
+    training.main(data=data, output_dir=output_dir, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
 
 
     # Plotting
