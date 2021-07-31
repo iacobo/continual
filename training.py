@@ -124,7 +124,8 @@ def hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, outp
         config=config,
         progress_reporter=reporter,
         num_samples=10,
-        name=f'{model_name}_{strategy_name}')
+        name=f'{model_name}_{strategy_name}',
+        resources_per_trial={"cpu": 4})
 
     best_trial = result.get_best_trial("loss", "min", "last")
     print(f'Best trial config: {best_trial.config}')
@@ -132,6 +133,8 @@ def hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, outp
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
 
     # JA: save best_trial.config to dict[model][strat], load as config for normal training
+
+    return best_trial.config
 
 def load_data(data, demo, data_dir, validate=False):
     """
@@ -194,25 +197,29 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], out
     # TRAINING (Need to rerun multiple times, take averages)
     # Container for metrics for plotting CHANGE TO TXT FILE
     res = {m:{s:None for s in strategies} for m in models.keys()}
+    res_params = {m:{s:None for s in strategies} for m in models.keys()}
 
     for model_name in models.keys():
         for strategy_name in strategies:
-
             # Union generic and CL strategy-specific hyperparams
             try: config = {**config_generic, **config_cl[strategy_name]}
             except KeyError: config = config_generic
+            
             # Training loop
             if validate:
-                hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config)
+                best_params = hyperparam_opt(data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config)
+                res_params[model_name][strategy_name] = best_params
             else:
                 res[model_name][strategy_name] = training_loop(config, data, demo, data_dir, models, model_name, strategy_name, output_dir, timestamp, config)
 
             # Secondary experiment: how sensitive regularization strategies are to hyperparams
             # Tune hyperparams over increasing number of tasks?
 
+    if validate:
+        return res_params
 
     # PLOTTING
-    if not validate:
+    else:
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
         for i, model in enumerate(models.keys()):
