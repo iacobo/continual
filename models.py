@@ -1,5 +1,11 @@
 from torch import nn
 
+# CL imports
+from avalanche.training.strategies import Naive, JointTraining, Cumulative # Baselines
+from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Regularisation
+from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
+from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA # Misc
+
 MLP_HIDDEN_DIM = 512
 
 CNN_HIDDEN_DIM = MLP_HIDDEN_DIM
@@ -107,3 +113,10 @@ class SimpleCNN(nn.Module):
         out = out.view(batch_size, -1)
         out = self.fc(out)
         return out
+
+# CONTAINERS
+MODELS_DICT = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
+STRATEGIES_DICT = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
+                   'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence, 'Replay':Replay, 
+                   'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE, 
+                   'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}

@@ -1,9 +1,10 @@
+import copy
 import torch
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-#import seaborn as sns; sns.set()
+from avalanche.benchmarks.generators import tensors_benchmark
 
 ########################
 # eICU DATASET
@@ -164,6 +165,54 @@ def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
     """
     tasks = [(torch.randn(n_samples,seq_len,n_vars), torch.randint(0,2,(n_samples,))) for _ in range(n_tasks)]
     return tasks
+
+#######################
+# ALL
+#######################
+
+# PUT THIS IN DATA_PROCESSING
+# PUT OTHER MODULES IN utils.___
+def load_data(data, demo, data_dir, validate=False):
+    """
+    Data of form:
+    (
+        x:(samples, variables, time_steps), 
+        y:(outcome,)
+    )
+    """
+
+    if data=='eICU':
+        experiences = eicu_to_tensor(demographic=demo, balance=True, root=data_dir)
+        test_experiences = copy.deepcopy(experiences)
+
+    elif data=='random':
+        experiences = random_data()
+        test_experiences = copy.deepcopy(experiences)
+
+    elif data=='MIMIC': raise NotImplemented
+    elif data=='iORD': raise NotImplemented
+    else:
+        print('Unknown data source.')
+        pass
+
+    if validate:
+        # Make method to return train/val for 'validate==True' and train/test else
+        experiences = experiences[:2]
+        test_experiences = test_experiences[:2]
+
+    n_tasks = len(experiences)
+    n_timesteps = experiences[0][0].shape[-2]
+    n_channels = experiences[0][0].shape[-1]
+
+    scenario = tensors_benchmark(
+        train_tensors=experiences,
+        test_tensors=test_experiences,
+        task_labels=[0 for _ in range(n_tasks)],  # Task label of each train exp
+        complete_test_set_only=False
+    )
+    # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
+
+    return scenario, n_tasks, n_timesteps, n_channels
 
 def plot_demos():
     """

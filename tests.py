@@ -77,7 +77,7 @@ class TestDataLoadingMethods(unittest.TestCase):
         sim_data = drop(sim_data)
         sim_data[sim_data==0] = float('nan')
 
-        # NEE DTO IMPLEMENT
+        # NEED TO IMPLEMENT
         self.assertTrue(True)
 
 

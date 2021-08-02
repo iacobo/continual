@@ -1,31 +1,23 @@
-import copy
 import time
 from pathlib import Path
 from datetime import datetime
-from matplotlib import pyplot as plt
 from functools import partial
+from matplotlib import pyplot as plt
 
 # ML imports
-from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
 from ray import tune
 from ray.tune import CLIReporter
+from torch.nn import CrossEntropyLoss
+from torch.optim import SGD, Adam
 
-# CL imports
-from avalanche.training.strategies import Naive, JointTraining, Cumulative # Baselines
-from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Regularisation
-from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
-from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA # Misc
-
-from avalanche.logging import InteractiveLogger, TensorboardLogger, TextLogger
+from avalanche.logging import InteractiveLogger, TensorboardLogger
 from avalanche.training.plugins import EvaluationPlugin
 from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics
-from avalanche.benchmarks.generators import tensors_benchmark
 
 # Local imports
-from models import SimpleMLP, SimpleCNN, SimpleLSTM, SimpleRNN
+from models import MODELS_DICT, STRATEGIES_DICT
 from plotting import plot_accuracy, clean_plot
-from data_processing import eicu_to_tensor, random_data
+from data_processing import load_data
 
 
 # HELPER FUNCTIONS
@@ -40,25 +32,20 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
     criterion = CrossEntropyLoss(weight=weight)
 
-    strategies = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
-    'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence, 'Replay':Replay, 
-    'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE, 
-    'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}
-
-    strategy = strategies[strategy_name.split('_')[0]]
+    strategy = STRATEGIES_DICT[strategy_name]
 
     # Loggers
     interactive_logger = InteractiveLogger()
-    text_logger = TextLogger(open(output_dir / 'log.txt', 'a'))
     tb_logger = TensorboardLogger(tb_log_dir = output_dir / f'tb_data_{timestamp}' / model_name / strategy_name) # JA ROOT
 
     if validate:
         loggers = [tb_logger]
     else:
-        loggers = [interactive_logger, tb_logger, text_logger]
+        loggers = [interactive_logger, tb_logger]
 
     eval_plugin = EvaluationPlugin(
-        accuracy_metrics(stream=True, experience=True), #Stream for avg accuracy over all over all experiences, experience=True for individuals (Former may rely on tasks being roughly same size?)
+        accuracy_metrics(stream=True,      # Avg accuracy over all experiences (may rely on tasks being roughly same size?)
+                         experience=True), # Accuracy for each experience
         loss_metrics(stream=True),
         loggers=loggers)
 
@@ -74,6 +61,10 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
 def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
     """
+    Avalanche Cl training loop. For each 'experience' in scenario's train_stream:
+
+        - Trains method on experience
+        - evaluates model on test_stream
     """
     print('Starting experiment...')
 
@@ -96,22 +87,29 @@ def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
         return results
 
 def training_loop(config, data, demo, data_dir, model_name, strategy_name, output_dir, timestamp, validate=False):
+    """
+    Training wrapper:
+        - loads data
+        - instantiates model
+        - equips model with CL strategy
+        - trains and evaluates method
+        - returns either resutls or hyperparam optimisation if `validate`
+
+    """
 
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
     scenario, n_tasks, n_timesteps, n_channels = load_data(data, demo, data_dir, validate)
     print('Data loaded.')
 
-    all_models = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
-
-    model = all_models[model_name](n_channels=n_channels, seq_len=n_timesteps)
+    model = MODELS_DICT[model_name](n_channels=n_channels, seq_len=n_timesteps)
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, output_dir=output_dir, timestamp=timestamp, validate=validate, **config)
     results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
 
     if validate:
         tune.report(loss=results['Loss_Stream/eval_phase/train_stream'], 
                     accuracy=results['Top1_Acc_Stream/eval_phase/train_stream'])
-        # Return overwrites raytune report
+        # WARNING: `return` overwrites raytune report
 
     else:
         return results
@@ -131,7 +129,8 @@ def hyperparam_opt(config, data, demo, data_dir, model_name, strategy_name, outp
         config=config,
         progress_reporter=reporter,
         num_samples=10,
-        name=f'{data}_{demo}_{model_name}_{strategy_name}', # ADD DATA/EXPERIMENT TAG
+        local_dir=output_dir / 'ray_results' / f'{data}_{demo}',
+        name=f'{model_name}_{strategy_name}',
         resources_per_trial={"cpu": 4})
 
     best_trial = result.get_best_trial("loss", "min", "last")
@@ -139,53 +138,8 @@ def hyperparam_opt(config, data, demo, data_dir, model_name, strategy_name, outp
     print(f'Best trial final validation loss: {best_trial.last_result["loss"]}')
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
 
-    # JA: save best_trial.config to dict[model][strat], load as config for normal training
-
     return best_trial.config
 
-# PUT THIS IN DATA_PROCESSING
-# PUT OTHER MODULES IN utils.___
-def load_data(data, demo, data_dir, validate=False):
-    """
-    Data of form:
-    (
-        x:(samples, variables, time_steps), 
-        y:(outcome,)
-    )
-    """
-
-    if data=='eICU':
-        experiences = eicu_to_tensor(demographic=demo, balance=True, root=data_dir)
-        test_experiences = copy.deepcopy(experiences)
-
-    elif data=='random':
-        experiences = random_data()
-        test_experiences = copy.deepcopy(experiences)
-
-    elif data=='MIMIC': raise NotImplemented
-    elif data=='iORD': raise NotImplemented
-    else:
-        print('Unknown data source.')
-        pass
-
-    if validate:
-        # Make method to return train/val for 'validate==True' and train/test else
-        experiences = experiences[:2]
-        test_experiences = test_experiences[:2]
-
-    n_tasks = len(experiences)
-    n_timesteps = experiences[0][0].shape[-2]
-    n_channels = experiences[0][0].shape[-1]
-
-    scenario = tensors_benchmark(
-        train_tensors=experiences,
-        test_tensors=test_experiences,
-        task_labels=[0 for _ in range(n_tasks)],  # Task label of each train exp
-        complete_test_set_only=False
-    )
-    # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
-
-    return scenario, n_tasks, n_timesteps, n_channels
 
 def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], output_dir=Path('.'), config_generic=None, config_cl=None, validate=False):
 
