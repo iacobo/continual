@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 
 # ML imports
 from ray import tune
-from ray.tune import CLIReporter
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD, Adam
 
@@ -54,7 +53,7 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
         criterion=criterion,
         train_mb_size=train_mb_size, eval_mb_size=eval_mb_size,
         train_epochs=train_epochs, eval_every=eval_every, evaluator=eval_plugin,
-        **{k:v for k, v in config.items() if k not in ('optimizer','lr')}
+        **{k:v for k, v in config.items() if k not in ('optimizer','lr')} # JA: Need to make this more elegant. Take names from generic keys?
     )
 
     return model
@@ -122,7 +121,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, ti
     Can use returned optimal values to later run full training and testing over all n>=2 tasks.
     """
 
-    reporter = CLIReporter(metric_columns=["loss", "accuracy"])
+    reporter = tune.CLIReporter(metric_columns=["loss", "accuracy"])
     
     result = tune.run(
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, output_dir=output_dir, timestamp=timestamp, validate=True),

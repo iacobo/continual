@@ -181,6 +181,7 @@ def load_data(data, demo, root_dir, validate=False):
     )
     """
 
+    # JA: Implement "Save tensor as .np object" on first load, load local copy if exists
     data_dir = root_dir / 'data' / data
 
     if data=='eICU':
