@@ -172,7 +172,7 @@ def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
 
 # PUT THIS IN DATA_PROCESSING
 # PUT OTHER MODULES IN utils.___
-def load_data(data, demo, data_dir, validate=False):
+def load_data(data, demo, root_dir, validate=False):
     """
     Data of form:
     (
@@ -180,6 +180,8 @@ def load_data(data, demo, data_dir, validate=False):
         y:(outcome,)
     )
     """
+
+    data_dir = root_dir / 'data' / data
 
     if data=='eICU':
         experiences = eicu_to_tensor(demographic=demo, balance=True, root=data_dir)

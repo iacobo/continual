@@ -10,7 +10,7 @@ def main(validate=False):
     output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
 
     # Specify models
-    models = ['MLP'] #,'CNN','RNN','LSTM']
+    models = ['MLP','CNN'] #,'RNN','LSTM']
 
     # Specify CL strategies
     strategies = ['Naive', 'EWC'] #'Cumulative', 'Replay', 'SI', 'LwF', 'MAS', 'GEM', 'AGEM'

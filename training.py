@@ -86,7 +86,7 @@ def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
         results = cl_strategy.evaluator.get_all_metrics()
         return results
 
-def training_loop(config, data, demo, data_dir, model_name, strategy_name, output_dir, timestamp, validate=False):
+def training_loop(config, data, demo, model_name, strategy_name, output_dir, timestamp, validate=False):
     """
     Training wrapper:
         - loads data
@@ -99,7 +99,7 @@ def training_loop(config, data, demo, data_dir, model_name, strategy_name, outpu
 
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
-    scenario, n_tasks, n_timesteps, n_channels = load_data(data, demo, data_dir, validate)
+    scenario, n_tasks, n_timesteps, n_channels = load_data(data, demo, output_dir, validate)
     print('Data loaded.')
 
     model = MODELS_DICT[model_name](n_channels=n_channels, seq_len=n_timesteps)
@@ -114,7 +114,7 @@ def training_loop(config, data, demo, data_dir, model_name, strategy_name, outpu
     else:
         return results
 
-def hyperparam_opt(config, data, demo, data_dir, model_name, strategy_name, output_dir, timestamp):
+def hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, timestamp):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
@@ -125,13 +125,13 @@ def hyperparam_opt(config, data, demo, data_dir, model_name, strategy_name, outp
     reporter = CLIReporter(metric_columns=["loss", "accuracy"])
     
     result = tune.run(
-        partial(training_loop, data=data, demo=demo, data_dir=data_dir, model_name=model_name, strategy_name=strategy_name, output_dir=output_dir, timestamp=timestamp, validate=True),
+        partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, output_dir=output_dir, timestamp=timestamp, validate=True),
         config=config,
         progress_reporter=reporter,
         num_samples=10,
         local_dir=output_dir / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
-        resources_per_trial={"cpu": 4})
+        resources_per_trial={"cpu":4})
 
     best_trial = result.get_best_trial("loss", "min", "last")
     print(f'Best trial config: {best_trial.config}')
@@ -151,12 +151,10 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], out
     # Timestamp for logging
     ts = time.time()
     timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-    data_dir = output_dir / 'data' / data
 
     # TRAINING (Need to rerun multiple times, take averages)
     # Container for metrics for plotting CHANGE TO TXT FILE
     res = {m:{s:None for s in strategies} for m in models}
-    res_params = {m:{s:None for s in strategies} for m in models}
 
     # Change to remove ref to keys, use names directly and key, val superset
     for model_name in models:
@@ -167,17 +165,17 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], out
                 try: config = {**config_generic, **config_cl[strategy_name]}
                 except KeyError: config = config_generic
 
-                best_params = hyperparam_opt(config, data, demo, data_dir, model_name, strategy_name, output_dir, timestamp)
-                res_params[model_name][strategy_name] = best_params
+                best_params = hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, timestamp)
+                res[model_name][strategy_name] = best_params
             else:
                 config = config_cl[model_name][strategy_name]
-                res[model_name][strategy_name] = training_loop(config, data, demo, data_dir, model_name, strategy_name, output_dir, timestamp)
+                res[model_name][strategy_name] = training_loop(config, data, demo, model_name, strategy_name, output_dir, timestamp)
 
             # Secondary experiment: how sensitive regularization strategies are to hyperparams
             # Tune hyperparams over increasing number of tasks?
 
     if validate:
-        return res_params
+        return res
 
     # PLOTTING
     else:
