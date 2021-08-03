@@ -17,7 +17,7 @@ def main(validate=False):
     models = ['MLP','CNN', 'RNN','LSTM']
 
     # Specify CL strategies
-    strategies = ['Naive', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'Cumulative', 'SI', 'AGEM' # JA: INVESTIGATE MAS!!!
+    strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
 
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 

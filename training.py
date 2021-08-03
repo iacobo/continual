@@ -133,7 +133,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, ti
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, output_dir=output_dir, timestamp=timestamp, validate=True),
         config=config,
         progress_reporter=reporter,
-        num_samples=10,
+        num_samples=20,
         local_dir=output_dir / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=trial_str_creator,
