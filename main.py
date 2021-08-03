@@ -1,17 +1,19 @@
 import training
 from data_processing import plot_demos
 
-import sys
+from sys import platform
 from ray import tune
 from pathlib import Path
 
 def main(validate=False):
+
+    if platform.system() == 'Linux':
+        output_dir = Path('/home/scat5356/Downloads')
+    elif platform.system() == 'Windows':
+        output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
+
     # Specify dataset
     data = 'random'
-    if sys.platform() == 'Linux':
-        output_dir = Path('/home/scat5356/Downloads')
-    elif sys.platform() == 'Windows':
-        output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
 
     # Specify models
     models = ['MLP','CNN', 'RNN','LSTM']
