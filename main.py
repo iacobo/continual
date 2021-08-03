@@ -1,7 +1,7 @@
 import training
 from data_processing import plot_demos
 
-from sys import platform
+import platform
 from ray import tune
 from pathlib import Path
 
