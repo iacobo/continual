@@ -1,13 +1,17 @@
 import training
 from data_processing import plot_demos
 
-from pathlib import Path
+import sys
 from ray import tune
+from pathlib import Path
 
 def main(validate=False):
     # Specify dataset
     data = 'random'
-    output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
+    if sys.platform() == 'Linux':
+        output_dir = Path('/home/scat5356/Downloads')
+    elif sys.platform() == 'Windows':
+        output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
 
     # Specify models
     models = ['MLP','CNN', 'RNN','LSTM']
@@ -18,7 +22,7 @@ def main(validate=False):
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 
                       'optimizer':tune.choice(['SGD','Adam'])}
-                      # 'train_mb_size':tune.choice([16,32,64,128,256,512,1024])
+                      # 'train_mb_size':tune.choice([32,128,256,512,1024])
                       # 'hl':tune.choice([64,128,256,512,1024])
                       # 'nl':tune.choice(['tan', 'relu'])
                       # 'bilinear':tune.choice([True,False])

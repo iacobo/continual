@@ -113,6 +113,12 @@ def training_loop(config, data, demo, model_name, strategy_name, output_dir, tim
     else:
         return results
 
+def trial_str_creator(trial):
+    """
+    Function to give meaningful name to ray tune trial.
+    """
+    return f'{trial.trainable_name}_{trial.trial_id}'
+
 def hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, timestamp):
     """
     Hyperparameter optimisation for the given model/strategy.
@@ -130,6 +136,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, output_dir, ti
         num_samples=10,
         local_dir=output_dir / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
+        trial_name_creator=trial_str_creator,
         resources_per_trial={"cpu":4})
 
     best_trial = result.get_best_trial("loss", "min", "last")

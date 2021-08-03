@@ -114,6 +114,11 @@ class SimpleCNN(nn.Module):
         out = self.fc(out)
         return out
 
+#class SimpleTransformer():
+#
+#    encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
+#    transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
+
 # CONTAINERS
 MODELS_DICT = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
 STRATEGIES_DICT = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
