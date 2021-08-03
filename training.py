@@ -1,4 +1,5 @@
 import time
+import platform
 from pathlib import Path
 from datetime import datetime
 from functools import partial
@@ -21,7 +22,7 @@ from data_processing import load_data
 
 # HELPER FUNCTIONS
 
-def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, output_dir=Path(''), timestamp='', validate=False, **config):
+def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, output_dir=Path(''), timestamp='', validate=False, experience=False, stream=True, **config):
     """
     """
     if config['optimizer'] == 'SGD':
@@ -43,9 +44,9 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
         loggers = [interactive_logger, tb_logger]
 
     eval_plugin = EvaluationPlugin(
-        accuracy_metrics(stream=True,      # Avg accuracy over all experiences (may rely on tasks being roughly same size?)
-                         experience=True), # Accuracy for each experience
-        loss_metrics(stream=True),
+        accuracy_metrics(stream=stream,      # Avg accuracy over all experiences (may rely on tasks being roughly same size?)
+                         experience=experience), # Accuracy for each experience
+        loss_metrics(stream=stream, experience=experience),
         loggers=loggers)
 
     model = strategy(
@@ -106,8 +107,16 @@ def training_loop(config, data, demo, model_name, strategy_name, output_dir, tim
     results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
 
     if validate:
-        tune.report(loss=results['Loss_Stream/eval_phase/train_stream'], 
-                    accuracy=results['Top1_Acc_Stream/eval_phase/train_stream'])
+        print(results.keys())
+        input('...')
+        if platform.system() == 'Windows':
+            loss = results['Loss_Stream/eval_phase/train_stream']
+            accuracy = results['Top1_Acc_Stream/eval_phase/train_stream']
+        else:
+            loss = results['Loss_Stream/eval_phase/train_stream/Task000']
+            accuracy = results['Top1_Acc_Stream/eval_phase/train_stream/Task000']
+
+        tune.report(loss=loss, accuracy=accuracy)
         # WARNING: `return` overwrites raytune report
 
     else:

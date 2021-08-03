@@ -16,7 +16,7 @@ def main(validate=False):
     data = 'random'
 
     # Specify models
-    models = ['MLP','CNN', 'RNN','LSTM']
+    models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
     strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
