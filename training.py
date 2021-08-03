@@ -107,12 +107,11 @@ def training_loop(config, data, demo, model_name, strategy_name, output_dir, tim
     results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
 
     if validate:
-        print(results.keys())
-        input('...')
-        if platform.system() == 'Windows':
+        # JA: Avalanche differing behaviour in latest version?
+        try:
             loss = results['Loss_Stream/eval_phase/train_stream']
             accuracy = results['Top1_Acc_Stream/eval_phase/train_stream']
-        else:
+        except:
             loss = results['Loss_Stream/eval_phase/train_stream/Task000']
             accuracy = results['Top1_Acc_Stream/eval_phase/train_stream/Task000']
 
