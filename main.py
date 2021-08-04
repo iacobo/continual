@@ -1,5 +1,4 @@
-import training
-from data_processing import plot_demos
+from utils import training, plotting
 
 import platform
 from ray import tune
@@ -49,10 +48,6 @@ def main(validate=False):
     # JA: MUST ENSURE DATA SPLIT IS SAME FOR HYPERPARAM TUNE AND FURTHER TRAINING!!!!
     training.main(data=data, output_dir=output_dir, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
 
-    # Plotting
-    if False:
-        plot_demos()
-
 if __name__ == "__main__":
     main(validate=True)
 
@@ -61,3 +56,7 @@ if __name__ == "__main__":
     # Sensitivity to sequence length
     # Sensitivity to replay size Naive -> Cumulative
     # Sensitivity to hyperparams of reg methods
+
+    # Plotting
+    if False:
+        plotting.plot_demos()

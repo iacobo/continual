@@ -1,20 +1,27 @@
-# Continual Learning for Time-Series (and EHR)
-Continual Learning repo for DPhil work
+# Continual Learning of Longitudinal Health Records / ICU EHR
 
-Project layout:
+Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv). If you use any of the code here, please cite the above in your work.
 
-1.
-    1. Adapt van de Ven [pytorch implementations](https://github.com/GMvandeVen/continual-learning) of main CL methods for ingesting time-series data as opposed to image  
-         - (i.e. convert CNN to RNN - code is not simple, easier said than done)
-    2. Adapt proposed benchmarking datasets from [Harutyunyan et al](https://www.nature.com/articles/s41597-019-0103-9) (for *multi-task* learning on time-series EHR) into CL appropriate datasets .HiRID-ICU-Benchmark — A Comprehensive
-Machine Learning Benchmark on High-resolution
-ICU Data   
-         - (i.e. task incremental, where appropriate class/domain incremental by splitting on label/demographic)  
-         - (for DIL need to be careful of potential colinear variables acting as 'labels' for the domain e.g. splitting on "hospital" but "country of birth" is present as variable)
-    5. Adapt ii. into format ingestible by i. 
-    6. Evaluate i. on ii.
-2. Evaluate 1 on curated Oxford / Haven etc dataset. 
-    - e.g. class-incremental learning predicting different health events
-    - e.g. domain-incremental predicting generic health event from different specific events (respiratory failure, cardiac arrest etc).
-4. Further development of superior techniques on more advanced dataset (domain-incremental learning with different datasets from oxford vs America vs SA etc).
-5. *(Ambitious) pursue rigorous theoretically driven novel technique (as opposed to vague biological motivations / empirical architectures proposed).*
+### Instructions
+
+1. Clone this repo to your local machine.
+2. Ensure you have permission to access both the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU](https://www.physionet.org/content/eicu-crd/2.0/) datasets.
+3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the repo's `/data` subfolder:
+
+    ```
+    wget -r -N -c -np --user <username> --ask-password https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/
+    ```
+
+4. To run all experiments with the hyperparameters quoted in the paper:
+   ```
+   python main.py
+   ```
+5. To run all experiments with hyperparameter tuning:
+   ```
+   python main.py validate=True
+   ```
+6. Individual experiments can be specified by the `experiment` argument. Likewise, a subset of model architectures and continual learning mechanisms can be specified with the `models` and `strategies` args respectively e.g:
+   ```
+   python main.py experiment=region models=['MLP','CNN'] strategies=['EWC','Replay']
+   ```
+   INCLUDE HELP FOR FUNCTION SHOWING POSSIBLE ARGUMENTS
