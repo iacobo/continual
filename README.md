@@ -51,6 +51,6 @@ For ease of reproducibility, code readability, and standardisation of results, w
 
 | Tool                        | Source               |
 |-----------------------------|----------------------|
-|ICU Data                     | MIMIC-III<br> eICU<br> HiRID |
-| Data preprocessing / task definition | FIDDLE<br> HiRID-eICU-Pipeline |
-|Continual Learning strategies| Avalanche
+|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/)<br> [HiRID](https://physionet.org/content/hirid/1.1.1/) |
+| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
+|Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
