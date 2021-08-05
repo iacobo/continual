@@ -25,3 +25,14 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
    python main.py experiment=region models=['MLP','CNN'] strategies=['EWC','Replay']
    ```
    INCLUDE HELP FOR FUNCTION SHOWING POSSIBLE ARGUMENTS
+
+## Reproducibility
+
+For ease of reproducibility and standardisation of results, we use the following tools in this project:
+
+| Tool                        | Source              |
+|-----------------------------|---------------------|
+|Dataset                      | MIMIC-3, eICU, HiRID|
+|Preprocessing of ICU data / task definition   | FIDDLE, HiRID-eICU
+|Code and model definitions   | PyTorch
+|Continual Learning strategies| Avalanche

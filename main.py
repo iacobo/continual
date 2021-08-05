@@ -6,13 +6,8 @@ from pathlib import Path
 
 def main(validate=False):
 
-    if platform.system() == 'Linux':
-        output_dir = Path('/home/scat5356/Downloads')
-    elif platform.system() == 'Windows':
-        output_dir = Path(r'C:\Users\jacob\OneDrive\Documents\code\cl code\ehr')
-
     # Specify dataset
-    data = 'random'
+    data = 'eICU'
 
     # Specify models
     models = ['MLP', 'CNN', 'RNN', 'LSTM']
@@ -39,14 +34,14 @@ def main(validate=False):
 
     # Hyperparam opt over validation data for first 2 tasks
     if validate:
-        best_params = training.main(data=data, output_dir=output_dir, models=models, strategies=strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
+        best_params = training.main(data=data, models=models, strategies=strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
         # Save to local file
     else:
         best_params = None
     
     # Train and test over all tasks
     # JA: MUST ENSURE DATA SPLIT IS SAME FOR HYPERPARAM TUNE AND FURTHER TRAINING!!!!
-    training.main(data=data, output_dir=output_dir, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
+    training.main(data=data, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
 
 if __name__ == "__main__":
     main(validate=True)

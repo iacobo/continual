@@ -7,6 +7,8 @@ import pandas as pd
 from pathlib import Path
 from avalanche.benchmarks.generators import tensors_benchmark
 
+DATA_DIR = Path(__file__).parents[1] / 'data' / 'eICU'
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Compute total dataset first, save, load, then do task splits based on column and then drop those cols
 
@@ -14,7 +16,7 @@ from avalanche.benchmarks.generators import tensors_benchmark
 # eICU DATASET
 ########################
 
-def load_eicu(drop_dupes=False, root=Path('.')):
+def load_eicu(drop_dupes=False, root=DATA_DIR):
     # Load tables
     df_p = pd.read_csv(root / 'patient.csv')
     df_h = pd.read_csv(root / 'hospital.csv')
@@ -40,12 +42,12 @@ def load_eicu(drop_dupes=False, root=Path('.')):
 
     return df_p
 
-def load_eicu_timeseries(target=60, root=Path('.')):
+def load_eicu_timeseries(target=60):
 
     # JA: Check size of df_v is same as merged size
 
-    df_p = load_eicu(root=root)
-    df_v = pd.read_csv(root / 'vitalPeriodic.csv')
+    df_p = load_eicu()
+    df_v = pd.read_csv(DATA_DIR / 'vitalPeriodic.csv')
     variables = ['patientunitstayid', 'observationoffset', 'sao2', 'heartrate', 'respiration']
     df_v = df_v[variables]
     df = pd.merge(df_p, df_v, on='patientunitstayid')
@@ -97,8 +99,8 @@ def grab_tasks(df, demographic):
 
     return tasks
 
-def eicu_to_tensor(demographic, root=Path('.'), seq_len=30, balance=False):
-    df = load_eicu_timeseries(root=root)
+def eicu_to_tensor(demographic, seq_len=30, balance=False):
+    df = load_eicu_timeseries()
     tasks = grab_tasks(df, demographic)
     variables = ['sao2', 'heartrate', 'respiration', 'Target']
 
@@ -176,7 +178,7 @@ def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
 
 # PUT THIS IN DATA_PROCESSING
 # PUT OTHER MODULES IN utils.___
-def load_data(data, demo, root_dir, validate=False):
+def load_data(data, demo, validate=False):
     """
     Data of form:
     (
@@ -186,10 +188,10 @@ def load_data(data, demo, root_dir, validate=False):
     """
 
     # JA: Implement "Save tensor as .np object" on first load, load local copy if exists
-    data_dir = root_dir / 'data' / data
+    data_dir = DATA_DIR / data
 
     if data=='eICU':
-        experiences = eicu_to_tensor(demographic=demo, balance=True, root=data_dir)
+        experiences = eicu_to_tensor(demographic=demo, balance=True)
         test_experiences = copy.deepcopy(experiences)
 
     elif data=='random':
@@ -235,7 +237,7 @@ def load_fiddle(data, task):
 
     features of form N_patients x Seq_len x Features
     '''
-    data_dir = Path('.') / 'data' / f'FIDDLE_{data}'
+    data_dir = DATA_DIR / f'FIDDLE_{data}'
     features_x = sparse.load_npz(data_dir / 'features' / task / 'X.npz')
     features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz')
     outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')
