@@ -1,4 +1,7 @@
+#%%
+
 import copy
+import json
 import torch
 import sparse
 import numpy as np
@@ -7,7 +10,7 @@ import pandas as pd
 from pathlib import Path
 from avalanche.benchmarks.generators import tensors_benchmark
 
-DATA_DIR = Path(__file__).parents[1] / 'data' / 'eICU'
+DATA_DIR = Path(__file__).parents[1] / 'data'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Compute total dataset first, save, load, then do task splits based on column and then drop those cols
@@ -16,10 +19,10 @@ DATA_DIR = Path(__file__).parents[1] / 'data' / 'eICU'
 # eICU DATASET
 ########################
 
-def load_eicu(drop_dupes=False, root=DATA_DIR):
+def load_eicu(drop_dupes=False):
     # Load tables
-    df_p = pd.read_csv(root / 'patient.csv')
-    df_h = pd.read_csv(root / 'hospital.csv')
+    df_p = pd.read_csv(DATA_DIR / 'eICU' / 'patient.csv')
+    df_h = pd.read_csv(DATA_DIR / 'eICU' / 'hospital.csv')
     
     # Necessary cols
     # 'patienthealthsystemstayid', 
@@ -238,15 +241,22 @@ def load_fiddle(data, task):
     features of form N_patients x Seq_len x Features
     '''
     data_dir = DATA_DIR / f'FIDDLE_{data}'
-    features_x = sparse.load_npz(data_dir / 'features' / task / 'X.npz').todense()
+    features_x = None #sparse.load_npz(data_dir / 'features' / task / 'X.npz').todense()
     features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz').todense()
+
+    with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
+        X_feature_names = json.load(X_file)
+    with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
+        s_feature_names = json.load(s_file)
+    
     df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')
 
-    return features_x, features_s, df_outcome
+    return features_x, features_s, X_feature_names, s_feature_names, df_outcome
     #raise NotImplementedError
 
+# Save as .json
 demo_cols = {
-    ['mimic3']:{
+    'mimic3':{
         "time_year":[
             "228396_value_Year"
         ],
@@ -290,7 +300,7 @@ demo_cols = {
             ]
         },
     
-    ['eicu']:{
+    'eicu':{
         "sex":[
             "gender_value:Female", 
             "gender_value:Male"
@@ -357,3 +367,5 @@ def train_val_test_split(tasks):
     # take random id's in proportion 80:10:10 from first 2 tasks,    ensure outcome label balance.
     # take random id's in proportion 80:10:10 from subsequent tasks, ensure outcome label balance.
     raise NotImplementedError
+
+#%%
