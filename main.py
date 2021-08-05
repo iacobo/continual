@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         const=True, 
                         default=False, 
                         help='Tune hyperparameters.')
-    args, _ = parser.parse_known_args()
+    args = parser.parse_args()
 
     main(args)
 

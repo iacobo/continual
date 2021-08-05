@@ -2,52 +2,46 @@
 
 Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv). If you use any of the code here, please cite the above in your work.
 
-### Instructions
+## Reproducing paper results
 
 1. Clone this repo to your local machine.
    
-2. Ensure you have permission to access both the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU](https://www.physionet.org/content/eicu-crd/2.0/) datasets (as well as [HiRID]() if you wish to run advanced experiments).
+2. Ensure you have permission to access both [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU](https://www.physionet.org/content/eicu-crd/2.0/)  
+(as well as [HiRID]() if you wish to run advanced experiments).
    
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the repo's `/data` subfolder:
 
-    ```
+    ```powershell
     wget -r -N -c -np --user <username> --ask-password https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/
     ```
 
-4. To run all experiments with the hyperparameters quoted in the paper:
-   ```
+4. To reproduce all experiments from the paper run:
+   ```powershell
    python main.py
    ```
-5. To run all experiments with hyperparameter tuning (note this requires `ray tune`):
-   ```
-   python main.py --validate
-   ```
-6. Individual experiments can be specified by the `--experiment` argument. Likewise, a model architectures and continual learning strategies can be specified with the `--models` and `--strategies` args respectively e.g:
-   ```
-   python main.py --experiment region --models MLP CNN --strategies EWC Replay
+
+5. For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run the following:
+   ```powershell
+   tensorboard --logdir=/results/tb_results/<tb_log_exp_name>
    ```
 
-   For a list of permissable values, run the `--help` flag:
+## Individual experiments
 
-   ```
-   >>> python main.py -h
+Individual experiments can be specified by the `--experiment` argument. Likewise, model architectures and continual learning strategies can be specified with the `--models` and `--strategies` args respectively e.g:
 
-   usage: main.py [-h] [--validate] [--experiment {time_month,time_season,time_year,region,hospital,age,sex,ethnicity}] [--strategies {Naive,Cumulative,EWC,SI,LwF,Replay,GEM}] [--models {MLP,CNN,RNN,LSTM}]
-   
-   optional arguments:
-      -h, --help            show this help message and exit
-      --validate            Run hyperparameter optimisation routine during training.
-      --experiment {time_month,time_season,time_year,region,hospital,age,sex,ethnicity}
-                            Name of experiment to run.
-      --strategies {Naive,Cumulative,EWC,SI,LwF,Replay,GEM}
-                            Continual learning strategy(s) to evaluate.
-      --models {MLP,CNN,RNN,LSTM}
-                            Model(s) to evaluate.
-   ```
+```powershell
+python main.py --experiment region --models MLP CNN --strategies EWC Replay
+```
+
+For a list of permissable values, use the `--help` flag:
+
+```powershell
+python main.py --help
+```
 
 ## Reproducibility
 
-For ease of reproducibility, code readability, and standardisation of results, we use the following tools in this project:
+For ease of reproducibility, readability, and standardisation of results, we use the following tools in this project:
 
 | Tool                        | Source               |
 |-----------------------------|----------------------|
