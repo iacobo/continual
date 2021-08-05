@@ -81,6 +81,7 @@ if __name__ == "__main__":
     # Sensitivity to sequence length (4hr vs 12hr)
     # Sensitivity to replay size Naive -> replay -> Cumulative
     # Sensitivity to hyperparams of reg methods
+    # Sensitivity to number of variables
 
     # Plotting
     if False:
