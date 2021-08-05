@@ -1,19 +1,21 @@
 from utils import training, plotting
 
-import platform
+import argparse
 from ray import tune
-from pathlib import Path
 
-def main(validate=False):
+def main(args):
 
     # Specify dataset
-    data = 'eICU'
+    if args.data=='all':
+        data = 'eICU'
 
     # Specify models
-    models = ['MLP', 'CNN', 'RNN', 'LSTM']
+    if args.models=='all':
+        models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
-    strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
+    if args.strategies=='all':
+        strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
 
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 
@@ -33,7 +35,7 @@ def main(validate=False):
                 }
 
     # Hyperparam opt over validation data for first 2 tasks
-    if validate:
+    if args.validate:
         best_params = training.main(data=data, models=models, strategies=strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
         # Save to local file
     else:
@@ -44,12 +46,40 @@ def main(validate=False):
     training.main(data=data, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
 
 if __name__ == "__main__":
-    main(validate=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--outcome', 
+                        type=str, 
+                        default='all', 
+                        choices=['arf','shock','mortality'], 
+                        help='Outcome to predict.')
+    parser.add_argument('--experiment', 
+                        type=str, 
+                        default='all', 
+                        choices=['time_month','time_season','time_year','region','hospital','age','sex','ethnicity'], 
+                        help='Experiment to run.') # Domain incremental
+    parser.add_argument('--strategies', 
+                        type=str, 
+                        default='all', 
+                        choices=['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'], 
+                        help='Continual learning strategy(s) to evaluate.')
+    parser.add_argument('--models', 
+                        type=str, 
+                        default='all', 
+                        choices=['MLP','CNN','RNN','LSTM'], 
+                        help='Model(s) to evaluate.')
+    parser.add_argument('--validate', 
+                        action='store_const', 
+                        const=True, 
+                        default=False, 
+                        help='Tune hyperparameters.')
+    args, _ = parser.parse_known_args()
+
+    main(args)
 
     # Secondary experiments:
     ########################
-    # Sensitivity to sequence length
-    # Sensitivity to replay size Naive -> Cumulative
+    # Sensitivity to sequence length (4hr vs 12hr)
+    # Sensitivity to replay size Naive -> replay -> Cumulative
     # Sensitivity to hyperparams of reg methods
 
     # Plotting
