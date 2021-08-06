@@ -1,9 +1,10 @@
+from utils import data_processing
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 
-from collections import defaultdict
-from utils import data_processing
 
 def stack_results(results):
 

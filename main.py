@@ -1,7 +1,6 @@
-from utils import training, plotting
-
 import argparse
 from ray import tune
+from utils import training, plotting
 
 def main(args):
 

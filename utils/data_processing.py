@@ -233,27 +233,6 @@ def load_data(data, demo, validate=False):
 # FIDDLE
 ##########
 
-def load_fiddle(data, task):
-    '''
-    - `data` ['eicu', 'mimic3']
-    - `task` ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
-
-    features of form N_patients x Seq_len x Features
-    '''
-    data_dir = DATA_DIR / f'FIDDLE_{data}'
-    features_x = None #sparse.load_npz(data_dir / 'features' / task / 'X.npz').todense()
-    features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz').todense()
-
-    with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
-        X_feature_names = json.load(X_file)
-    with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
-        s_feature_names = json.load(s_file)
-    
-    df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')
-
-    return features_x, features_s, X_feature_names, s_feature_names, df_outcome
-    #raise NotImplementedError
-
 # Save as .json
 demo_cols = {
     'mimic3':{
@@ -353,16 +332,63 @@ demo_cols = {
         }
     }
 
-def split_fiddle(data, task, demo):
-    features_x, features_s, df_outcome = load_fiddle(data, task)
-    dmeo_cols = demo_cols[data]
-    tasks_idx = [features_s[i]==1 for i in dmeo_cols[demo]]
-    tasks = [(features_x[idx], df_outcome[idx]) for idx in tasks_idx]
+def load_fiddle(data='mimic3', task='mortality_48h'):
+    '''
+    - `data` ['eicu', 'mimic3']
+    - `task` ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
 
-    #return tasks
-    raise NotImplementedError
+    features of form N_patients x Seq_len x Features
+    '''
+    data_dir = DATA_DIR / f'FIDDLE_{data}'
+    features_X = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:10].todense()
+    features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz')[:10].todense()
 
-def train_val_test_split(tasks):
+    with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
+        X_feature_names = json.load(X_file)
+    with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
+        s_feature_names = json.load(s_file)
+    
+    df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')[:10]
+
+    return features_X, features_s, X_feature_names, s_feature_names, df_outcome
+    #raise NotImplementedError
+
+def get_modes(x,feat,seq_dim=1):
+    """
+    For a tensor of shape NxLxF
+    Returns modal value for given feature across sequence dim.
+    """
+    return x[:,:,feat].mode(dim=seq_dim)[0]
+
+def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
+    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, task)
+
+    timevar_categorical_demos = ['time_year','time_month']
+    static_categorical_demos = []
+    static_onehot_demos = ['sex','age','ethnicity','hospital']
+    timevar_onehot_demos = []
+    
+    # if feat is categorical
+    if demo in timevar_categorical_demos:
+        assert len(demo_cols[data][demo]) == 1, "More than one categorical col specified!"
+        demo_cat = X_feature_names.index(demo_cols[data][demo][0])
+        tasks = get_modes(features_X,demo_cat)
+        tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
+    elif demo in static_categorical_demos:
+        demo_cat = s_feature_names.index(demo_cols[data][demo][0])
+        tasks = features_s[:,demo_cat]
+        tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
+    elif demo in timevar_onehot_demos:
+        demo_onehots = [X_feature_names.index(col) for col in demo_cols[data][demo]]
+        tasks_idx = [get_modes(features_X,i)==1 for i in demo_onehots]
+    elif demo in static_onehot_demos:
+        demo_onehots = [s_feature_names.index(col) for col in demo_cols[data][demo]]
+        tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
+    tasks = [(features_X[idx], df_outcome[idx]) for idx in tasks_idx]
+
+    return tasks
+
+def split_trainvaltest_fiddle(tasks):
     #assert len(tasks) > 2
     # take random id's in proportion 80:10:10 from first 2 tasks,    ensure outcome label balance.
     # take random id's in proportion 80:10:10 from subsequent tasks, ensure outcome label balance.

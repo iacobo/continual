@@ -81,6 +81,18 @@ class TestDataLoadingMethods(unittest.TestCase):
         # NEED TO IMPLEMENT
         self.assertTrue(True)
 
+    def test_modalfeatvalfromseq(self):
+        """
+        Test that mode of correct dim is returned.
+        """
+        for n in [1,50,100]:
+            for seq_len in [1,5,10,50,100]:
+                for n_feats in [1,2,5,10,50,100]:
+                    for i in range(n_feats):
+                        x = torch.randint(0,1,(n,seq_len,n_feats))
+                        modes = data_processing.get_modes(x,feat=i)
+                        self.assertEqual(modes.shape, torch.Size([n]))
+
 # CL task split tests
 class TestCLConstructionMethods(unittest.TestCase):
 
