@@ -1,6 +1,13 @@
 # Continual Learning of Longitudinal Health Records / ICU EHR
 
-Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv). If you use any of the code here, please cite the above in your work.
+Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv). If you use any of the code here, please cite the above in your work:
+
+```latex
+@article{armstrong2021continual,
+  title={Continual Learning of Longitudinal Health Records},
+  author={Armstrong, Jacob}
+}
+```
 
 ## Reproducing paper results
 
@@ -8,13 +15,9 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
    
 2. Ensure you have permission to access both [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU](https://www.physionet.org/content/eicu-crd/2.0/).\*
    
-3. Download the [preprocessed FIDDLE datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the repo's `/data` subfolder:
+3. Download the [preprocessed FIDDLE datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the repo's `/data` subfolder.
 
-    ```powershell
-    wget -r -N -c -np -P /<repo dir>/data/ --user <username> --ask-password https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/
-    ```
-
-4. To rerun all experiments from the paper run:
+4. To rerun all experiments from the paper:
    ```powershell
    python main.py
    ```

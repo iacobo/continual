@@ -240,7 +240,7 @@ demo_cols = {
             "228396_value_Year"
         ],
         "time_month":[
-            "228396_value_Year & month", 
+            "228396_value_Year & month"
             #"228396_value_Year, month, & day"
         ],
         "sex":[
@@ -300,7 +300,7 @@ demo_cols = {
             "ethnicity_value:Other/Unknown"
             ],
         "hospital":[
-            "hospitalid_value:73__"
+            "hospitalid_value:73__",
             "hospitalid_value:110__", 
             "hospitalid_value:122__", 
             "hospitalid_value:142__", 
@@ -328,11 +328,27 @@ demo_cols = {
             "hospitalid_value:443__", 
             "hospitalid_value:449__", 
             "hospitalid_value:458__"
+            ],
+        "unit":[
+            "unittype_value:CCU-CTICU", 
+            "unittype_value:CSICU", 
+            "unittype_value:CTICU", 
+            "unittype_value:Cardiac ICU", 
+            "unittype_value:MICU", 
+            "unittype_value:Med-Surg ICU", 
+            "unittype_value:Neuro ICU", 
+            "unittype_value:SICU"
+        ],
+        "ward":[ 
+            "wardid_value:236__", 
+            "wardid_value:607__", 
+            "wardid_value:646__", 
+            "wardid_value:653__"
             ]
         }
     }
 
-def load_fiddle(data='mimic3', task='mortality_48h'):
+def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
     '''
     - `data` ['eicu', 'mimic3']
     - `task` ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
@@ -340,15 +356,35 @@ def load_fiddle(data='mimic3', task='mortality_48h'):
     features of form N_patients x Seq_len x Features
     '''
     data_dir = DATA_DIR / f'FIDDLE_{data}'
-    features_X = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:10].todense()
-    features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz')[:10].todense()
-
+    
     with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
         X_feature_names = json.load(X_file)
     with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
         s_feature_names = json.load(s_file)
+
+    ## TESTING
+    TEST_DATE_COLS = False
+    if TEST_DATE_COLS:
+        feat_subset = [X_feature_names.index(c) for c in X_feature_names if c.startswith('228396')]
+        X_feature_names = [c for c in X_feature_names if c.startswith('228396')]
+        #df = pd.DataFrame(sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:,:,feat_subset].todense(), columns=X_feature_names)
+        vals = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:,:,feat_subset].todense()
+        return vals
+
+    # Subset vars with list to reduce mem overhead
+    var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
+    var_X_subset = sorted(list(set(range(10)).union(set(var_X_demos))))
+    X_feature_names = [X_feature_names[i] for i in var_X_subset]
+
+    var_s_demos = [s_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if not key.startswith('time')]
+    var_s_subset = sorted(list(set(range(10)).union(set(var_s_demos))))
+    s_feature_names = [s_feature_names[i] for i in var_s_subset]
+
+    # Loading tensors
+    features_X = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:n,:,var_X_subset].todense()
+    features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz')[:n,var_s_subset].todense()
     
-    df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')[:10]
+    df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')[:n]
 
     return features_X, features_s, X_feature_names, s_feature_names, df_outcome
     #raise NotImplementedError
@@ -358,7 +394,8 @@ def get_modes(x,feat,seq_dim=1):
     For a tensor of shape NxLxF
     Returns modal value for given feature across sequence dim.
     """
-    return x[:,:,feat].mode(dim=seq_dim)[0]
+    # JA: Check conversion to tnsor, dtype etc
+    return torch.mode(torch.tensor(x[:,:,feat]), dim=seq_dim)[0].cpu().detach().numpy()
 
 def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, task)
@@ -373,6 +410,7 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
         assert len(demo_cols[data][demo]) == 1, "More than one categorical col specified!"
         demo_cat = X_feature_names.index(demo_cols[data][demo][0])
         tasks = get_modes(features_X,demo_cat)
+        print(pd.DataFrame(tasks).value_counts())
         tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
     elif demo in static_categorical_demos:
         demo_cat = s_feature_names.index(demo_cols[data][demo][0])
@@ -384,14 +422,34 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     elif demo in static_onehot_demos:
         demo_onehots = [s_feature_names.index(col) for col in demo_cols[data][demo]]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
+    else:
+        raise NotImplementedError
+
+    #df_outcome['y_true']
     tasks = [(features_X[idx], df_outcome[idx]) for idx in tasks_idx]
 
     return tasks
 
-def split_trainvaltest_fiddle(tasks):
-    #assert len(tasks) > 2
-    # take random id's in proportion 80:10:10 from first 2 tasks,    ensure outcome label balance.
-    # take random id's in proportion 80:10:10 from subsequent tasks, ensure outcome label balance.
-    raise NotImplementedError
+def split_trainvaltest_fiddle(tasks, validate=False):
+    tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']) for t in tasks]
+    if validate:
+        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']) for t in tasks[:2]]
+    tasks_test = [
+        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']) if i<2 else 
+        (t[0][t[1]['partition'].isin(['val','test'])], t[1][t[1]['partition'].isin(['val','test'])]) for i, t in enumerate(tasks)]
+    # take random id's in proportion 80:10:10 from first 2 tasks, ensure outcome label balance.
+    # take random id's in proportion 80:20 from subsequent tasks, ensure outcome label balance.
+    if validate:
+        return tasks_train, tasks_val, tasks_test
+    else:
+        return tasks_train, tasks_test
 
 #%%
+tasks = split_tasks_fiddle(demo='age')
+[t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks]
+
+train_exp, val_exp, test_exp = split_trainvaltest_fiddle(tasks, validate=True)
+# %%
+
+# Hospital id's
+# list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))
