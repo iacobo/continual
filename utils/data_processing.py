@@ -201,7 +201,17 @@ def load_data(data, demo, validate=False):
         experiences = random_data()
         test_experiences = copy.deepcopy(experiences)
 
-    elif data=='MIMIC': raise NotImplemented
+    elif data=='fiddle_mimic':
+        tasks = split_tasks_fiddle(demo=demo)
+        for t in tasks:
+            print(demo)
+            description = t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'))
+            print(description)
+
+        experiences, test_experiences = split_trainvaltest_fiddle(tasks, validate=False)
+        experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
+        test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
+
     elif data=='iORD': raise NotImplemented
     else:
         print('Unknown data source.')
@@ -431,12 +441,12 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     return tasks
 
 def split_trainvaltest_fiddle(tasks, validate=False):
-    tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']) for t in tasks]
+    tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
     if validate:
-        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']) for t in tasks[:2]]
+        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks[:2]]
     tasks_test = [
-        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']) if i<2 else 
-        (t[0][t[1]['partition'].isin(['val','test'])], t[1][t[1]['partition'].isin(['val','test'])]) for i, t in enumerate(tasks)]
+        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) if i<2 else 
+        (t[0][t[1]['partition'].isin(['val','test'])], t[1][t[1]['partition'].isin(['val','test'])]['y_true'].values) for i, t in enumerate(tasks)]
     # take random id's in proportion 80:10:10 from first 2 tasks, ensure outcome label balance.
     # take random id's in proportion 80:20 from subsequent tasks, ensure outcome label balance.
     if validate:
@@ -445,10 +455,10 @@ def split_trainvaltest_fiddle(tasks, validate=False):
         return tasks_train, tasks_test
 
 #%%
-tasks = split_tasks_fiddle(demo='age')
-[t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks]
+#tasks = split_tasks_fiddle(demo='age')
+#[t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks]
 
-train_exp, val_exp, test_exp = split_trainvaltest_fiddle(tasks, validate=True)
+#train_exp, val_exp, test_exp = split_trainvaltest_fiddle(tasks, validate=True)
 # %%
 
 # Hospital id's

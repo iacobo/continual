@@ -6,15 +6,18 @@ def main(args):
 
     # Specify dataset
     if args.data=='all':
-        data = 'eICU'
+        args.data = 'fiddle_mimic' #'eICU'
+
+    if args.experiment:
+        args.experiment = 'age'
 
     # Specify models
     if args.models=='all':
-        models = ['MLP', 'CNN', 'RNN', 'LSTM']
+        args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
     if args.strategies=='all':
-        strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
+        args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
 
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 
@@ -35,17 +38,22 @@ def main(args):
 
     # Hyperparam opt over validation data for first 2 tasks
     if args.validate:
-        best_params = training.main(data=data, models=models, strategies=strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
+        best_params = training.main(data=args.data, demo=args.experiment, models=args.models, strategies=args.strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
         # Save to local file
     else:
         best_params = None
     
     # Train and test over all tasks
     # JA: MUST ENSURE DATA SPLIT IS SAME FOR HYPERPARAM TUNE AND FURTHER TRAINING!!!!
-    training.main(data=data, models=models, strategies=strategies, config_generic={}, config_cl=best_params)
+    training.main(data=args.data, demo=args.experiment, models=args.models, strategies=args.strategies, config_generic={}, config_cl=best_params)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--data', 
+                        type=str, 
+                        default='all', 
+                        choices=['fiddle_mimic','fiddle_eicu','MIMIC','eICU','iord'], 
+                        help='Dataset to use.')
     parser.add_argument('--outcome', 
                         type=str, 
                         default='all', 
