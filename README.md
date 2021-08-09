@@ -52,6 +52,8 @@ For ease of reproducibility, readability, and standardisation of results, we use
 
 ---
 
+<sup>
+
 ### Note
 
 \* (as well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments)
@@ -61,3 +63,5 @@ For ease of reproducibility, readability, and standardisation of results, we use
 avalanche @ git+https://github.com/ContinualAI/avalanche.git@a2e2fb09f77eaecad8dbbe74b4b78ab737b7e464
 ```
 Since `pip` versioning may have been irregular during this period, if you encounter compatability issues related to Avalanche try installing this specific version.
+
+</sup>
