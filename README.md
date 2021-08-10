@@ -56,9 +56,9 @@ For ease of reproducibility, readability, and standardisation of results, we use
 
 ### Note
 
-\* (as well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments)
+\* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.
 
-\** Avalanche is currently in its beta release. Development on this project was mostly completed using an earlier alpha build:
+\*\* Avalanche is currently in its beta release. Development on this project was mostly completed using an earlier alpha build:
 ```
 avalanche @ git+https://github.com/ContinualAI/avalanche.git@a2e2fb09f77eaecad8dbbe74b4b78ab737b7e464
 ```

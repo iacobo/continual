@@ -243,6 +243,25 @@ def load_data(data, demo, validate=False):
 # FIDDLE
 ##########
 
+def get_coarse_ethnicity(df):
+    eth_map = {}
+    eth_map['ETHNICITY_value:WHITE'] = [c for c in df.columns if c.startswith('ETHNICITY_value:WHITE')]
+    eth_map['ETHNICITY_value:ASIAN'] = [c for c in df.columns if c.startswith('ETHNICITY_value:ASIAN')]
+    eth_map['ETHNICITY_value:BLACK'] = [c for c in df.columns if c.startswith('ETHNICITY_value:BLACK')]
+    eth_map['ETHNICITY_value:HISPANIC'] = [c for c in df.columns if c.startswith('ETHNICITY_value:HISPANIC')]
+    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:') and c not in eth_map['ETHNICITY_value:WHITE'] + eth_map['ETHNICITY_value:BLACK'] + eth_map['ETHNICITY_value:ASIAN'] + eth_map['ETHNICITY_value:HISPANIC']]
+
+    for k,v in eth_map:
+        df[k] = df[v].ne(0).any(axis=1) # Mutually exclusive, sum should work
+
+    return df
+
+def get_eicu_region(df):
+    
+    raise NotImplementedError
+
+    
+
 # Save as .json
 demo_cols = {
     'mimic3':{
@@ -358,13 +377,31 @@ demo_cols = {
         }
     }
 
+def recover_admission_time():
+    """
+    Function to recover datetime info for admission from FIDDLE.
+    """
+    *_, df_outcome = load_fiddle()
+    ids = df_outcome['ID']
+
+    raise NotImplementedError
+
+    ## load original MIMIC-III csv
+    #df_mimic = 
+
+    ## grab quarter (season) from data and id
+    #df_mimic['quarter'] = df_mimic['admittime'].dt.quarter
+    #df_mimic = df_mimic[['ID','quarter']]
+
+    # One hot encode, then Merge df's
+
 def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
-    '''
+    """
     - `data` ['eicu', 'mimic3']
     - `task` ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
 
     features of form N_patients x Seq_len x Features
-    '''
+    """
     data_dir = DATA_DIR / f'FIDDLE_{data}'
     
     with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
@@ -408,9 +445,14 @@ def get_modes(x,feat,seq_dim=1):
     return torch.mode(torch.tensor(x[:,:,feat]), dim=seq_dim)[0].cpu().detach().numpy()
 
 def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
+    """
+    Takes FIDDLE format data and given an outcome and demographic,
+    splits the input data across that demographic into multiple
+    tasks/experiences.
+    """
     features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, task)
 
-    timevar_categorical_demos = ['time_year','time_month']
+    timevar_categorical_demos = ['time_year','time_month'] # WRONG check prefix of col name for MIMIC var id
     static_categorical_demos = []
     static_onehot_demos = ['sex','age','ethnicity','hospital']
     timevar_onehot_demos = []
@@ -420,7 +462,6 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
         assert len(demo_cols[data][demo]) == 1, "More than one categorical col specified!"
         demo_cat = X_feature_names.index(demo_cols[data][demo][0])
         tasks = get_modes(features_X,demo_cat)
-        print(pd.DataFrame(tasks).value_counts())
         tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
     elif demo in static_categorical_demos:
         demo_cat = s_feature_names.index(demo_cols[data][demo][0])
@@ -435,31 +476,33 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     else:
         raise NotImplementedError
 
-    #df_outcome['y_true']
     tasks = [(features_X[idx], df_outcome[idx]) for idx in tasks_idx]
+
+    # Displays number of outcomes per train/test/val partition per task
+    print([t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks])
 
     return tasks
 
-def split_trainvaltest_fiddle(tasks, validate=False):
+def split_trainvaltest_fiddle(tasks, validate=False, n_val_tasks=2):
+    """
+    Takes a dataset of multiple tasks/experiences and splits it into 
+    train[/val]/test sets.
+
+    Assumes FIDDLE style outcome/partition cols in df of outcome values.
+    """
     tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
     if validate:
-        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks[:2]]
+        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks[:n_val_tasks]]
     tasks_test = [
-        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) if i<2 else 
+        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) if i<n_val_tasks else 
         (t[0][t[1]['partition'].isin(['val','test'])], t[1][t[1]['partition'].isin(['val','test'])]['y_true'].values) for i, t in enumerate(tasks)]
     # take random id's in proportion 80:10:10 from first 2 tasks, ensure outcome label balance.
-    # take random id's in proportion 80:20 from subsequent tasks, ensure outcome label balance.
+    # take random id's in proportion 80:20 from subsequent tasks, ensure outcome label balance (or 90:10?)
     if validate:
         return tasks_train, tasks_val, tasks_test
     else:
         return tasks_train, tasks_test
 
-#%%
-#tasks = split_tasks_fiddle(demo='age')
-#[t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks]
-
-#train_exp, val_exp, test_exp = split_trainvaltest_fiddle(tasks, validate=True)
-# %%
 
 # Hospital id's
 # list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))

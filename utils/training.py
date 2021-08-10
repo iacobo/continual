@@ -5,6 +5,7 @@ from functools import partial
 from matplotlib import pyplot as plt
 
 # ML imports
+import torch
 from ray import tune
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD, Adam
@@ -140,6 +141,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
     """
 
     reporter = tune.CLIReporter(metric_columns=["loss", "accuracy"])
+    resources = {"gpu": 1} if torch.cuda.is_available() else {}
     
     result = tune.run(
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, timestamp=timestamp, validate=True),
@@ -149,7 +151,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
         local_dir=RESULTS_DIR / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=trial_str_creator,
-        resources_per_trial={"cpu":4})
+        resources_per_trial=resources)
 
     best_trial = result.get_best_trial("loss", "min", "last")
     print(f'Best trial config: {best_trial.config}')
