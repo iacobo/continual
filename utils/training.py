@@ -106,16 +106,24 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     print('Data loaded.')
     print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
 
+    # JA:
     # Load main data first as .np file
     # Then call CL split on given domain increment
 
+    # JA: Need to decide how to balance. Overall proportion? Proportion in first 2 tasks?
+    BALANCE = True
+    if BALANCE:
+        weight = (1.0, 0.93/(1-0.93))
+    else:
+        weight = None
+
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps)
-    cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, timestamp=timestamp, validate=validate, **config)
+    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, **config)
     results = train_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 
     if validate:
         # JA: Avalanche differing behaviour in latest version?
-        # JA: Need to check ability to record eval on train and test streams
+        # JA: Need to check ability to record eval on train *and* test streams
         try:
             loss = results['Loss_Stream/eval_phase/test_stream']
             accuracy = results['Top1_Acc_Stream/eval_phase/test_stream']
