@@ -113,7 +113,7 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     # JA: Need to decide how to balance. Overall proportion? Proportion in first 2 tasks?
     BALANCE = True
     if BALANCE:
-        weight = (1.0, 0.93/(1-0.93))
+        weight = torch.tensor([1.0, 0.93/(1.0-0.93)])
     else:
         weight = None
 
