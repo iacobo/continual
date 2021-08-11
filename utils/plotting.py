@@ -12,7 +12,7 @@ def stack_results(results):
 
     # Get accuracies for each test set per training "experience"
     for k,v in results.items():
-        if 'Top1_Acc_Exp' in k and '/Exp' in k:
+        if 'Top1_Acc_Exp' in k: #and '/Exp' in k:
             new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
             acc[new_k] = v[1]
 

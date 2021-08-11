@@ -1,4 +1,5 @@
 import time
+import json
 from pathlib import Path
 from datetime import datetime
 from functools import partial
@@ -38,12 +39,13 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
     # Loggers
     interactive_logger = InteractiveLogger()
-    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'tb_results' / f'tb_data_{timestamp}' / model_name / strategy_name) # JA ROOT
+    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'tb_results' / f'tb_data_{timestamp}' / model_name / strategy_name)
 
     if validate:
         loggers = [tb_logger]
     else:
         loggers = [interactive_logger, tb_logger]
+        experience=True
 
     eval_plugin = EvaluationPlugin(
         accuracy_metrics(stream=stream, experience=experience),
@@ -81,11 +83,11 @@ def train_method(cl_strategy, scenario, eval_on_test=True, validate=False):
 
     if validate:
         results = cl_strategy.eval(scenario.test_stream)
-        return results
 
     else:
         results = cl_strategy.evaluator.get_all_metrics()
-        return results
+    
+    return results
 
 def training_loop(config, data, demo, model_name, strategy_name, timestamp, validate=False):
     """
@@ -102,35 +104,30 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     print('Loading data...')
     scenario, n_tasks, n_timesteps, n_channels = data_processing.load_data(data, demo, validate)
     print('Data loaded.')
-    print(f'N tasks:{n_tasks} \nN timesteps:{n_timesteps} \nN features{n_channels}')
+    print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
 
     # Load main data first as .np file
     # Then call CL split on given domain increment
 
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps)
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=None, timestamp=timestamp, validate=validate, **config)
-    results = train_method(cl_strategy, scenario, eval_on_test=False, validate=validate)
+    results = train_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 
     if validate:
         # JA: Avalanche differing behaviour in latest version?
+        # JA: Need to check ability to record eval on train and test streams
         try:
-            loss = results['Loss_Stream/eval_phase/train_stream']
-            accuracy = results['Top1_Acc_Stream/eval_phase/train_stream']
+            loss = results['Loss_Stream/eval_phase/test_stream']
+            accuracy = results['Top1_Acc_Stream/eval_phase/test_stream']
         except:
-            loss = results['Loss_Stream/eval_phase/train_stream/Task000']
-            accuracy = results['Top1_Acc_Stream/eval_phase/train_stream/Task000']
+            loss = results['Loss_Stream/eval_phase/test_stream/Task000']
+            accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
 
         tune.report(loss=loss, accuracy=accuracy)
         # WARNING: `return` overwrites raytune report
 
     else:
         return results
-
-def trial_str_creator(trial):
-    """
-    Function to give meaningful name to ray tune trial.
-    """
-    return f'{trial.trainable_name}_{trial.trial_id}'
 
 def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
     """
@@ -147,10 +144,10 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, timestamp=timestamp, validate=True),
         config=config,
         progress_reporter=reporter,
-        num_samples=20,
+        num_samples=5,
         local_dir=RESULTS_DIR / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
-        trial_name_creator=trial_str_creator,
+        trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
         resources_per_trial=resources)
 
     best_trial = result.get_best_trial("loss", "min", "last")
@@ -196,9 +193,13 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
 
     if validate:
         return res
-
+        
     # PLOTTING
     else:
+        # Locally saving results
+        with open(RESULTS_DIR / f'latest_results_{data}_{demo}.json', 'w') as handle:
+            json.dump(res, handle)
+
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
         for i, model in enumerate(models):

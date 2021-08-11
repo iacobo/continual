@@ -13,6 +13,7 @@ def main(args):
 
     # Specify models
     if args.models=='all':
+        # JA: Fix single argument passed, need to list-ify
         args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument('--data', 
                         type=str, 
                         default='all', 
-                        choices=['fiddle_mimic','fiddle_eicu','MIMIC','eICU','iord'], 
+                        choices=['fiddle_mimic','fiddle_eicu','MIMIC','eICU','iord','random'], 
                         help='Dataset to use.')
     parser.add_argument('--outcome', 
                         type=str, 
@@ -68,11 +69,13 @@ if __name__ == "__main__":
                         type=str, 
                         default='all', 
                         choices=['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'], 
+                        nargs='+',
                         help='Continual learning strategy(s) to evaluate.')
     parser.add_argument('--models', 
                         type=str, 
                         default='all', 
                         choices=['MLP','CNN','RNN','LSTM'], 
+                        nargs='+',
                         help='Model(s) to evaluate.')
     parser.add_argument('--validate', 
                         action='store_const', 

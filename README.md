@@ -5,7 +5,8 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
 ```latex
 @article{armstrong2021continual,
   title={Continual Learning of Longitudinal Health Records},
-  author={Armstrong, Jacob}
+  author={Armstrong, Jacob},
+  year={2021}
 }
 ```
 
@@ -21,7 +22,7 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
    ```powershell
    python main.py
    ```
-   Figures will be saved to the `/results/figs`. For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
+   Figures will be saved to `/results/figs`. For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
    ```powershell
    tensorboard --logdir=/results/tb_results/<tb_log_exp_name>
    ```
@@ -42,7 +43,7 @@ python main.py --help
 
 ## Reproducibility
 
-For ease of reproducibility, readability, and standardisation of results, we use the following tools in this project:
+For standardisation of task definitions, feature pre-processing, and model implementations, we use the following tools:
 
 | Tool                        | Source               |
 |-----------------------------|----------------------|
@@ -62,6 +63,8 @@ For ease of reproducibility, readability, and standardisation of results, we use
 ```
 avalanche @ git+https://github.com/ContinualAI/avalanche.git@a2e2fb09f77eaecad8dbbe74b4b78ab737b7e464
 ```
-Since `pip` versioning may have been irregular during this period, if you encounter compatability issues related to Avalanche try installing this specific version.
+Since `pip` versioning may have been low resolution during this period, try using the above version if you encounter compatability issues related to Avalanche.
+
+\* Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
 
 </sup>
