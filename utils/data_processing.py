@@ -208,7 +208,7 @@ def load_data(data, demo, validate=False):
             description = t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'))
             print(description)
 
-        experiences, test_experiences = split_trainvaltest_fiddle(tasks, validate=False)
+        experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
         test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
 
@@ -409,15 +409,6 @@ def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
     with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
         s_feature_names = json.load(s_file)
 
-    ## TESTING
-    TEST_DATE_COLS = False
-    if TEST_DATE_COLS:
-        feat_subset = [X_feature_names.index(c) for c in X_feature_names if c.startswith('228396')]
-        X_feature_names = [c for c in X_feature_names if c.startswith('228396')]
-        #df = pd.DataFrame(sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:,:,feat_subset].todense(), columns=X_feature_names)
-        vals = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:,:,feat_subset].todense()
-        return vals
-
     # Subset vars with list to reduce mem overhead
     var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
     var_X_subset = sorted(list(set(range(10)).union(set(var_X_demos))))
@@ -483,25 +474,21 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
 
     return tasks
 
-def split_trainvaltest_fiddle(tasks, validate=False, n_val_tasks=2):
+def split_trainvaltest_fiddle(tasks, val_as_test=True):
     """
     Takes a dataset of multiple tasks/experiences and splits it into 
     train[/val]/test sets.
 
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
     """
-    tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
-    if validate:
-        tasks_val = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks[:n_val_tasks]]
-    tasks_test = [
-        (t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) if i<n_val_tasks else 
-        (t[0][t[1]['partition'].isin(['val','test'])], t[1][t[1]['partition'].isin(['val','test'])]['y_true'].values) for i, t in enumerate(tasks)]
-    # take random id's in proportion 80:10:10 from first 2 tasks, ensure outcome label balance.
-    # take random id's in proportion 80:20 from subsequent tasks, ensure outcome label balance (or 90:10?)
-    if validate:
-        return tasks_train, tasks_val, tasks_test
+    if val_as_test:
+        tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
+        tasks_test = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks]
     else:
-        return tasks_train, tasks_test
+        tasks_train = [(t[0][t[1]['partition'].isin(['train','val'])], t[1][t[1]['partition'].isin(['train','val'])]['y_true'].values) for t in tasks]
+        tasks_test = [(t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) for t in tasks]
+
+    return tasks_train, tasks_test
 
 
 # Hospital id's

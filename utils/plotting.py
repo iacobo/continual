@@ -59,8 +59,12 @@ def clean_plot(fig, axes):
     fig.legend(handles, labels, loc='center right', title='Task')
 
     fig.suptitle('Continual Learning model comparison')
-    fig.supxlabel('Epoch')
-    fig.supylabel('Accuracy', x=0)
+    try:
+        fig.supxlabel('Epoch')
+        fig.supylabel('Accuracy', x=0)
+    except AttributeError:
+        fig.text(0.5, 0.04, 'Epoch', ha='center')
+        fig.text(0.04, 0.5, 'Accuracy', va='center', rotation='vertical')
 
 def plot_demos():
     """
