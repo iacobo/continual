@@ -24,7 +24,8 @@ def main(args):
     config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
                       'optimizer':tune.choice(['SGD','Adam']),
                       'train_epochs':tune.choice([20,60,100]),
-                      'train_mb_size':tune.choice([32,64,128,256,512,1024])}
+                      'train_mb_size':tune.choice([32,64,128,256,512,1024])
+                      }
                       # 'hl':tune.choice([64,128,256,512,1024])
                       # 'nl':tune.choice(['tan', 'relu'])
                       # 'bilinear':tune.choice([True,False])

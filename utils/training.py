@@ -23,7 +23,7 @@ RESULTS_DIR = Path(__file__).parents[1] / 'results'
 
 # HELPER FUNCTIONS
 
-def load_strategy(model, model_name, strategy_name, train_epochs=50, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, timestamp='', validate=False, experience=False, stream=True, **config):
+def load_strategy(model, model_name, strategy_name, eval_every=1, eval_mb_size=1024, weight=None, timestamp='', validate=False, experience=False, stream=True, config={}):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -39,6 +39,7 @@ def load_strategy(model, model_name, strategy_name, train_epochs=50, eval_every=
 
     # Loggers
     interactive_logger = InteractiveLogger()
+    # JA: subfolders for datset / experiments VVV
     tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'tb_results' / f'tb_data_{timestamp}' / model_name / strategy_name)
 
     if validate:
@@ -56,15 +57,16 @@ def load_strategy(model, model_name, strategy_name, train_epochs=50, eval_every=
         eval_plugin = EvaluationPlugin(
             accuracy_metrics(stream=stream, experience=experience),
             loss_metrics(stream=stream, experience=experience),
-            StreamConfusionMatrix(save_image=False), #num_classes=2, 
+            StreamConfusionMatrix(save_image=False), 
             loggers=loggers)
 
     model = strategy(
-        model, optimizer=optimizer, 
+        model, 
+        optimizer=optimizer, 
         criterion=criterion, 
         eval_mb_size=eval_mb_size, 
         eval_every=eval_every,
-         evaluator=eval_plugin,
+        evaluator=eval_plugin,
         **{k:v for k, v in config.items() if k not in ('optimizer','lr')} # JA: Need to make this more elegant. Take names from generic keys?
     )
 
@@ -119,7 +121,7 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     # Then call CL split on given domain increment
 
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps)
-    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, **config)
+    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, config=config)
     results = train_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 
     if validate:
