@@ -23,7 +23,7 @@ RESULTS_DIR = Path(__file__).parents[1] / 'results'
 
 # HELPER FUNCTIONS
 
-def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, timestamp='', validate=False, experience=False, stream=True, **config):
+def load_strategy(model, model_name, strategy_name, train_epochs=50, eval_every=1, train_mb_size=128, eval_mb_size=1024, weight=None, timestamp='', validate=False, experience=False, stream=True, **config):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -56,7 +56,7 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
         eval_plugin = EvaluationPlugin(
             accuracy_metrics(stream=stream, experience=experience),
             loss_metrics(stream=stream, experience=experience),
-            StreamConfusionMatrix(num_classes=2, save_image=False),
+            StreamConfusionMatrix(save_image=False), #num_classes=2, 
             loggers=loggers)
 
     model = strategy(
@@ -207,7 +207,7 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
         # Locally saving results
         with open(RESULTS_DIR / f'latest_results_{data}_{demo}.json', 'w') as handle:
             # JA: cannot save tensor as json
-            res_noconf = {k:v for k,v in res.items() if 'ConfusionMatrix' not in k}
+            res_noconf = {k:v for k,v in res.items() if 'Top1_Acc_Exp' in k}
             json.dump(res_noconf, handle)
 
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)

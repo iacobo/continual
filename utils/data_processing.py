@@ -256,6 +256,24 @@ def get_coarse_ethnicity(df):
 
     return df
 
+def recover_admission_time():
+    """
+    Function to recover datetime info for admission from FIDDLE.
+    """
+    *_, df_outcome = load_fiddle()
+    ids = df_outcome['ID']
+
+    raise NotImplementedError
+
+    ## load original MIMIC-III csv
+    #df_mimic = 
+
+    ## grab quarter (season) from data and id
+    #df_mimic['quarter'] = df_mimic['admittime'].dt.quarter
+    #df_mimic = df_mimic[['ID','quarter']]
+
+    # One hot encode, then Merge df's
+
 def get_eicu_region(df):
     
     raise NotImplementedError
@@ -265,13 +283,6 @@ def get_eicu_region(df):
 # Save as .json
 demo_cols = {
     'mimic3':{
-        "time_year":[
-            "228396_value_Year"
-        ],
-        "time_month":[
-            "228396_value_Year & month"
-            #"228396_value_Year, month, & day"
-        ],
         "sex":[
             "GENDER_value:F"
             ],
@@ -377,24 +388,6 @@ demo_cols = {
         }
     }
 
-def recover_admission_time():
-    """
-    Function to recover datetime info for admission from FIDDLE.
-    """
-    *_, df_outcome = load_fiddle()
-    ids = df_outcome['ID']
-
-    raise NotImplementedError
-
-    ## load original MIMIC-III csv
-    #df_mimic = 
-
-    ## grab quarter (season) from data and id
-    #df_mimic['quarter'] = df_mimic['admittime'].dt.quarter
-    #df_mimic = df_mimic[['ID','quarter']]
-
-    # One hot encode, then Merge df's
-
 def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
     """
     - `data` ['eicu', 'mimic3']
@@ -443,7 +436,7 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     """
     features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, task)
 
-    timevar_categorical_demos = ['time_year','time_month'] # WRONG check prefix of col name for MIMIC var id
+    timevar_categorical_demos = []
     static_categorical_demos = []
     static_onehot_demos = ['sex','age','ethnicity','hospital']
     timevar_onehot_demos = []
