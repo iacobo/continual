@@ -67,7 +67,7 @@ def load_strategy(model, model_name, strategy_name, eval_every=1, eval_mb_size=1
         eval_mb_size=eval_mb_size, 
         eval_every=eval_every,
         evaluator=eval_plugin,
-        **{k:v for k, v in config.items() if k not in ('optimizer','lr')} # JA: Need to make this more elegant. Take names from generic keys?
+        **{k:v for k, v in config.items() if k not in ('optimizer','lr','hidden_dim')} # JA: Need to make this more elegant. Take names from generic keys?
     )
 
     return model
@@ -116,11 +116,14 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     print('Data loaded.')
     print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
 
+    # JA: CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    weight = None
+
     # JA:
     # Load main data first as .np file
     # Then call CL split on given domain increment
 
-    model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps)
+    model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'])
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, config=config)
     results = train_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 

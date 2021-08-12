@@ -14,27 +14,27 @@ LSTM_HIDDEN_DIM = RNN_HIDDEN_DIM//2
 RNN_N_LAYERS = 2
 
 class SimpleMLP(nn.Module):
-    def __init__(self, n_channels, seq_len, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=MLP_HIDDEN_DIM, output_size=2):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Linear(in_features=seq_len*n_channels, out_features=MLP_HIDDEN_DIM, bias=True),
+            nn.Linear(in_features=seq_len*n_channels, out_features=hidden_dim, bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=MLP_HIDDEN_DIM, out_features=int(0.8*MLP_HIDDEN_DIM), bias=True),
+            nn.Linear(in_features=hidden_dim, out_features=int(0.8*hidden_dim), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=int(0.8*MLP_HIDDEN_DIM), out_features=int(0.6*MLP_HIDDEN_DIM), bias=True),
+            nn.Linear(in_features=int(0.8*hidden_dim), out_features=int(0.6*hidden_dim), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
 
-            nn.Linear(in_features=int(0.6*MLP_HIDDEN_DIM), out_features=int(0.4*MLP_HIDDEN_DIM), bias=True),
+            nn.Linear(in_features=int(0.6*hidden_dim), out_features=int(0.4*hidden_dim), bias=True),
             nn.ReLU(inplace=True),
             #nn.Dropout(p=0.5, inplace=False),
             )
-        self.fc = nn.Linear(in_features=int(0.4*MLP_HIDDEN_DIM), out_features=output_size, bias=True)
+        self.fc = nn.Linear(in_features=int(0.4*hidden_dim), out_features=output_size, bias=True)
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -82,27 +82,27 @@ class SimpleLSTM(nn.Module):
         return out
 
 class SimpleCNN(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_channels=CNN_HIDDEN_DIM, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=CNN_HIDDEN_DIM, output_size=2):
         super().__init__()
 
         self.cnn_layers = nn.Sequential(
-            nn.Conv1d(n_channels, hidden_channels, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(hidden_channels),
+            nn.Conv1d(n_channels, hidden_dim, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(inplace=True),
             #nn.MaxPool1d(kernel_size=2, stride=2),
 
-            nn.Conv1d(hidden_channels, hidden_channels//2, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(hidden_channels//2),
+            nn.Conv1d(hidden_dim, hidden_dim//2, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(hidden_dim//2),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=2, stride=2),
 
-            nn.Conv1d(hidden_channels//2, hidden_channels//4, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(hidden_channels//4),
+            nn.Conv1d(hidden_dim//2, hidden_dim//4, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(hidden_dim//4),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
 
-        self.fc = nn.Linear((seq_len//4)*(hidden_channels//4), output_size) #(seq_len//2*num batch norm) * final hid size
+        self.fc = nn.Linear((seq_len//4)*(hidden_dim//4), output_size) #(seq_len//2*num batch norm) * final hid size
 
     # Defining the forward pass    
     def forward(self, x):
