@@ -61,9 +61,10 @@ def load_strategy(model, model_name, strategy_name, train_epochs=50, eval_every=
 
     model = strategy(
         model, optimizer=optimizer, 
-        criterion=criterion,
-        train_mb_size=train_mb_size, eval_mb_size=eval_mb_size,
-        train_epochs=train_epochs, eval_every=eval_every, evaluator=eval_plugin,
+        criterion=criterion, 
+        eval_mb_size=eval_mb_size, 
+        eval_every=eval_every,
+         evaluator=eval_plugin,
         **{k:v for k, v in config.items() if k not in ('optimizer','lr')} # JA: Need to make this more elegant. Take names from generic keys?
     )
 
@@ -152,7 +153,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, timestamp=timestamp, validate=True),
         config=config,
         progress_reporter=reporter,
-        num_samples=5,
+        num_samples=20,
         local_dir=RESULTS_DIR / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',

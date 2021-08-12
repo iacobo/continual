@@ -200,6 +200,7 @@ def load_data(data, demo, validate=False):
     elif data=='random':
         experiences = random_data()
         test_experiences = copy.deepcopy(experiences)
+        weights = None
 
     elif data=='fiddle_mimic':
         tasks = split_tasks_fiddle(demo=demo)
