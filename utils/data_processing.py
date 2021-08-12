@@ -210,7 +210,7 @@ def load_data(data, demo, validate=False):
 
         # Class weights for balancing
         class_sizes = experiences[0][1].unique(return_counts=True)[1] + experiences[1][1].unique(return_counts=True)[1]
-        weights = class_sizes / class_sizes[1]
+        weights = class_sizes[1] / class_sizes
 
     elif data=='iORD': raise NotImplemented
     else:

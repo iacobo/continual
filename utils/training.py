@@ -206,7 +206,9 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
     else:
         # Locally saving results
         with open(RESULTS_DIR / f'latest_results_{data}_{demo}.json', 'w') as handle:
-            json.dump(res, handle)
+            # JA: cannot save tensor as json
+            res_noconf = {k:v for k,v in res.items() if 'ConfusionMatrix' not in k}
+            json.dump(res_noconf, handle)
 
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
