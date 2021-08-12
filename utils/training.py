@@ -13,7 +13,7 @@ from torch.optim import SGD, Adam
 
 from avalanche.logging import InteractiveLogger, TensorboardLogger
 from avalanche.training.plugins import EvaluationPlugin
-from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics
+from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamConfusionMatrix
 
 # Local imports
 from utils import models, plotting, data_processing
@@ -43,14 +43,21 @@ def load_strategy(model, model_name, strategy_name, train_epochs=20, eval_every=
 
     if validate:
         loggers = [tb_logger]
+
+        eval_plugin = EvaluationPlugin(
+            accuracy_metrics(stream=stream, experience=experience),
+            loss_metrics(stream=stream, experience=experience),
+            loggers=loggers)
+
     else:
         loggers = [interactive_logger, tb_logger]
         experience=True
 
-    eval_plugin = EvaluationPlugin(
-        accuracy_metrics(stream=stream, experience=experience),
-        loss_metrics(stream=stream, experience=experience),
-        loggers=loggers)
+        eval_plugin = EvaluationPlugin(
+            accuracy_metrics(stream=stream, experience=experience),
+            loss_metrics(stream=stream, experience=experience),
+            StreamConfusionMatrix(num_classes=2, save_image=False),
+            loggers=loggers)
 
     model = strategy(
         model, optimizer=optimizer, 
@@ -102,20 +109,13 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
 
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
-    scenario, n_tasks, n_timesteps, n_channels = data_processing.load_data(data, demo, validate)
+    scenario, n_tasks, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
     print('Data loaded.')
     print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
 
     # JA:
     # Load main data first as .np file
     # Then call CL split on given domain increment
-
-    # JA: Need to decide how to balance. Overall proportion? Proportion in first 2 tasks?
-    BALANCE = True
-    if BALANCE:
-        weight = torch.tensor([1.0, 0.93/(1.0-0.93)])
-    else:
-        weight = None
 
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps)
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, **config)

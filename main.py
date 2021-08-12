@@ -21,7 +21,7 @@ def main(args):
         args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
 
     # Generic hyperparameter search-space
-    config_generic = {'lr':tune.loguniform(1e-4, 1e-1), 
+    config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
                       'optimizer':tune.choice(['SGD','Adam'])}
                       # 'train_mb_size':tune.choice([32,128,256,512,1024])
                       # 'hl':tune.choice([64,128,256,512,1024])
@@ -31,9 +31,9 @@ def main(args):
     # CL hyper-params
     # https://arxiv.org/pdf/2103.07492.pdf
     config_cl ={'Replay':{'mem_size':tune.choice([2,5,10])},
-                'EWC':{'ewc_lambda':tune.loguniform(1e-3, 1e2)},
-                'SI':{'si_lambda':tune.loguniform(1e-3, 1e2)},
-                'LwF':{'alpha':tune.loguniform(1e-3, 1e2), 'temperature':tune.uniform(0.0,3.0)},
+                'EWC':{'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
+                'SI':{'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
+                'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.uniform(0.0,3.0)},
                 'GEM':{'patterns_per_exp':tune.choice([2,5,10]), 'memory_strength':tune.uniform(0.0,1.0)} #32,64,128,256
                 }
 

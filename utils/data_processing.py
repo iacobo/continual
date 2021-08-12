@@ -203,14 +203,14 @@ def load_data(data, demo, validate=False):
 
     elif data=='fiddle_mimic':
         tasks = split_tasks_fiddle(demo=demo)
-        for t in tasks:
-            print(demo)
-            description = t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'))
-            print(description)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
         test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
+
+        # Class weights for balancing
+        class_sizes = experiences[0][1].unique(return_counts=True)[1] + experiences[1][1].unique(return_counts=True)[1]
+        weights = class_sizes / class_sizes[1]
 
     elif data=='iORD': raise NotImplemented
     else:
@@ -234,7 +234,7 @@ def load_data(data, demo, validate=False):
     )
     # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
 
-    return scenario, n_tasks, n_timesteps, n_channels
+    return scenario, n_tasks, n_timesteps, n_channels, weights
 
 
 
