@@ -5,7 +5,6 @@ from avalanche.training.strategies import Naive, JointTraining, Cumulative # Bas
 from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Regularisation
 from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
 from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
-from torch.nn.modules import dropout # Misc
 
 
 class SimpleMLP(nn.Module):

@@ -6,14 +6,13 @@ def main(args):
 
     # Specify dataset
     if args.data=='all':
-        args.data = 'fiddle_mimic' #'eICU'
+        args.data = 'fiddle_mimic'
 
     if args.experiment:
         args.experiment = 'age'
 
     # Specify models
     if args.models=='all':
-        # JA: Fix single argument passed, need to list-ify
         args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
@@ -24,23 +23,23 @@ def main(args):
     config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
                       'optimizer':tune.choice(['SGD','Adam']),
                       'hidden_dim':tune.choice([64,128,256,512,1024]),
-                      'train_epochs':tune.choice([100]), 
+                      'train_epochs':tune.choice([200]), 
                       'train_mb_size':tune.choice([32,64,128,256,512,1024])
                       }
 
     config_model = {'MLP':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
                     'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
-                    'RNN':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bilinear':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
-                    'LSTM':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bilinear':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4])}
+                    'RNN':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    'LSTM':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4])}
                     }
 
     # CL hyper-params
     # https://arxiv.org/pdf/2103.07492.pdf
-    config_cl ={'Replay':{'mem_size':tune.choice([2,5,10])},
+    config_cl ={'Replay':{'mem_size':tune.choice([4,16,32])},
                 'EWC':{'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
                 'SI':{'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
-                'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.uniform(0.0,3.0)},
-                'GEM':{'patterns_per_exp':tune.choice([2,5,10]), 'memory_strength':tune.uniform(0.0,1.0)} #32,64,128,256
+                'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.choice(0.0,0.5,1.0,1.5,2.0,2.5,3.0)},
+                'GEM':{'patterns_per_exp':tune.choice([4,16,32]), 'memory_strength':tune.uniform(0.0,1.0)}
                 }
 
     # Hyperparam opt over validation data for first 2 tasks
@@ -58,13 +57,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', 
                         type=str, 
-                        default='all', 
+                        default='fiddle_mimic', 
                         choices=['fiddle_mimic','fiddle_eicu','MIMIC','eICU','iord','random'], 
                         help='Dataset to use.')
     parser.add_argument('--outcome', 
                         type=str, 
-                        default='all', 
-                        choices=['arf','shock','mortality'], 
+                        default='mortality_48h', 
+                        choices=['ARF_4h','ARF_12h','shock_4h','shock_12h','mortality'], 
                         help='Outcome to predict.')
     parser.add_argument('--experiment', 
                         type=str, 

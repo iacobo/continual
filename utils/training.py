@@ -212,8 +212,8 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
         # Locally saving results
         with open(RESULTS_DIR / f'latest_results_{data}_{demo}.json', 'w') as handle:
             # JA: cannot save tensor as json
-            res_noconf = {k:v for k,v in res.items() if 'Top1_Acc_Exp' in k}
-            json.dump(res_noconf, handle)
+            res_acc = {k:v for k,v in res.items() if 'Top1_Acc_Exp' in k}
+            json.dump(res_acc, handle)
 
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
@@ -222,7 +222,6 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
                 plotting.plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
 
         plotting.clean_plot(fig, axes)
-        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{timestamp}.png')
-        #plt.show()
+        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{demo}_{timestamp}.png')
 
         return res

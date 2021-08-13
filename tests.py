@@ -6,6 +6,11 @@ import unittest
 import itertools
 from pathlib import Path
 
+BATCH_SIZES = (1,10,100)
+SEQ_LENS = (4,10,30,50,100)
+N_VARS = (2,10,30,100)
+N_CLASSES = (2,3,4,10)
+
 def magnitude(value):
     if (value == 0): return 0
     return int(math.floor(math.log10(abs(value))))
@@ -17,10 +22,10 @@ class TestModelMethods(unittest.TestCase):
         """
         Testing model produces correct shape of output for variety of input sizes.
         """
-        for batch_size in (1,10,100):
-            for seq_len in (5,10,15,30):
-                for n_vars in (2,10,30):
-                    for n_classes in (2,4):
+        for batch_size in BATCH_SIZES:
+            for seq_len in SEQ_LENS:
+                for n_vars in N_VARS:
+                    for n_classes in N_CLASSES:
                         input = torch.randn(batch_size, seq_len, n_vars)
                         simple_models = models.MODELS.values()
                         for model in simple_models:
@@ -33,9 +38,9 @@ class TestModelMethods(unittest.TestCase):
         """
         Testing different models have same order of magnitude of parameters.
         """
-        for seq_len in (5,10,15,30):
-            for n_vars in (2,10,30):
-                for n_classes in (2,4):
+        for seq_len in SEQ_LENS:
+            for n_vars in N_VARS:
+                for n_classes in N_CLASSES:
                     simple_models = models.MODELS.values()
                     n_params = [sum(p.numel() for p in m(seq_len=seq_len, n_channels=n_vars, output_size=n_classes).parameters() if p.requires_grad) for m in simple_models]
                     param_magnitudes = [magnitude(p) for p in n_params]
@@ -68,28 +73,15 @@ class TestDataLoadingMethods(unittest.TestCase):
                 data_labels = task[1].unique()
                 self.assertTrue(data_labels.equal(labels), f"Demographic {demo}, task {i} has unexpected labels: {data_labels}")
 
-    def test_interpolation(self):
-        """
-        Test that interpolation of missing values works.
-        """
-
-        sim_data = torch.randn(100,10,30)
-        drop = torch.nn.Dropout(p=0.1)
-        sim_data = drop(sim_data)
-        sim_data[sim_data==0] = float('nan')
-
-        # NEED TO IMPLEMENT
-        self.assertTrue(True)
-
     def test_modalfeatvalfromseq(self):
         """
         Test that mode of correct dim is returned.
         """
-        for n in [1,50,100]:
-            for seq_len in [1,5,10,50,100]:
-                for n_feats in [1,2,5,10,50,100]:
+        for n in BATCH_SIZES:
+            for seq_len in SEQ_LENS:
+                for n_feats in N_VARS:
                     for i in range(n_feats):
-                        x = torch.randint(0,1,(n,seq_len,n_feats))
+                        x = torch.randint(0,1,(n,seq_len,n_feats)).clone().detach().numpy()
                         modes = data_processing.get_modes(x,feat=i)
                         self.assertEqual(modes.shape, torch.Size([n]))
 

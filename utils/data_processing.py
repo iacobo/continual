@@ -202,8 +202,8 @@ def load_data(data, demo, validate=False):
         test_experiences = copy.deepcopy(experiences)
         weights = None
 
-    elif data=='fiddle_mimic':
-        tasks = split_tasks_fiddle(demo=demo)
+    elif data in ('fiddle_mimic', 'fiddle_eicu'):
+        tasks = split_tasks_fiddle(data=data.split('_')[-1], demo=demo)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
@@ -434,7 +434,7 @@ def get_modes(x,feat,seq_dim=1):
     Returns modal value for given feature across sequence dim.
     """
     # JA: Check conversion to tnsor, dtype etc
-    return torch.mode(torch.tensor(x[:,:,feat]), dim=seq_dim)[0].cpu().detach().numpy()
+    return torch.LongTensor(x[:,:,feat]).mode(dim=seq_dim)[0].clone().detach().numpy()
 
 def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
     """
