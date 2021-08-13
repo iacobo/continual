@@ -202,7 +202,7 @@ def load_data(data, demo, validate=False):
         test_experiences = copy.deepcopy(experiences)
         weights = None
 
-    elif data in ('fiddle_mimic', 'fiddle_eicu'):
+    elif data in ('fiddle_mimic3', 'fiddle_eicu'):
         tasks = split_tasks_fiddle(data=data.split('_')[-1], demo=demo)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
@@ -215,10 +215,9 @@ def load_data(data, demo, validate=False):
 
         weights = class1_count / torch.LongTensor([class0_count, class1_count])
 
-    elif data=='iORD': raise NotImplemented
     else:
         print('Unknown data source.')
-        pass
+        raise NotImplemented
 
     if validate:
         # Make method to return train/val for 'validate==True' and train/test else
@@ -426,7 +425,6 @@ def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
     df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')[:n]
 
     return features_X, features_s, X_feature_names, s_feature_names, df_outcome
-    #raise NotImplementedError
 
 def get_modes(x,feat,seq_dim=1):
     """

@@ -4,20 +4,13 @@ from utils import training, plotting
 
 def main(args):
 
-    # Specify dataset
-    if args.data=='all':
-        args.data = 'fiddle_mimic'
-
-    if args.experiment:
-        args.experiment = 'age'
-
     # Specify models
     if args.models=='all':
         args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     # Specify CL strategies
     if args.strategies=='all':
-        args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
+        args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM'] #'AGEM' # JA: INVESTIGATE MAS!!!
 
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
@@ -36,9 +29,10 @@ def main(args):
     # CL hyper-params
     # https://arxiv.org/pdf/2103.07492.pdf
     config_cl ={'Replay':{'mem_size':tune.choice([4,16,32])},
+                'GDumb':{'mem_size':tune.choice([4,16,32])},
                 'EWC':{'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
                 'SI':{'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
-                'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.choice(0.0,0.5,1.0,1.5,2.0,2.5,3.0)},
+                'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.choice([0.0,0.5,1.0,1.5,2.0,2.5,3.0])},
                 'GEM':{'patterns_per_exp':tune.choice([4,16,32]), 'memory_strength':tune.uniform(0.0,1.0)}
                 }
 
@@ -57,17 +51,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', 
                         type=str, 
-                        default='fiddle_mimic', 
-                        choices=['fiddle_mimic','fiddle_eicu','MIMIC','eICU','iord','random'], 
+                        default='fiddle_mimic3', 
+                        choices=['fiddle_mimic3','fiddle_eicu','MIMIC','eICU','iord','random'], 
                         help='Dataset to use.')
     parser.add_argument('--outcome', 
                         type=str, 
                         default='mortality_48h', 
-                        choices=['ARF_4h','ARF_12h','shock_4h','shock_12h','mortality'], 
+                        choices=['ARF_4h','ARF_12h','shock_4h','shock_12h','mortality_48h'], 
                         help='Outcome to predict.')
     parser.add_argument('--experiment', 
                         type=str, 
-                        default='all', 
+                        default='age', 
                         choices=['time_month','time_season','time_year','region','hospital','age','sex','ethnicity'], 
                         help='Experiment to run.') # Domain incremental
     parser.add_argument('--strategies', 

@@ -174,7 +174,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
 def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic=None, config_model=None, config_cl=None, validate=False):
 
     """
-    data: ['random','MIMIC','eICU','iORD']
+    data: ['random','mimic3','eicu','iord']
     demo: ['region','sex','age','ethnicity','ethnicity_coarse','hospital']
     """
 
