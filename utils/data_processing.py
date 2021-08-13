@@ -210,8 +210,10 @@ def load_data(data, demo, validate=False):
         test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
 
         # Class weights for balancing
-        class_sizes = experiences[0][1].unique(return_counts=True)[1] + experiences[1][1].unique(return_counts=True)[1]
-        weights = class_sizes[1] / class_sizes
+        class1_count = sum(experiences[0][1]) + sum(experiences[1][1])
+        class0_count = len(experiences[0][1]) + len(experiences[1][1]) - class1_count
+
+        weights = class1_count / torch.LongTensor([class0_count, class1_count])
 
     elif data=='iORD': raise NotImplemented
     else:
@@ -487,3 +489,4 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
 
 # Hospital id's
 # list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))
+# %%

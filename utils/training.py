@@ -116,9 +116,6 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     print('Data loaded.')
     print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
 
-    # JA: CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    weight = None
-
     # JA:
     # Load main data first as .np file
     # Then call CL split on given domain increment
