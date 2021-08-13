@@ -4,37 +4,37 @@ from torch import nn
 from avalanche.training.strategies import Naive, JointTraining, Cumulative # Baselines
 from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Regularisation
 from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
-from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA # Misc
+from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
+from torch.nn.modules import dropout # Misc
 
-MLP_HIDDEN_DIM = 512
-
-CNN_HIDDEN_DIM = MLP_HIDDEN_DIM
-RNN_HIDDEN_DIM = MLP_HIDDEN_DIM
-LSTM_HIDDEN_DIM = RNN_HIDDEN_DIM//2
-RNN_N_LAYERS = 2
 
 class SimpleMLP(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_dim=MLP_HIDDEN_DIM, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, output_size=2, dropout=0, nonlinearity='relu'):
         super().__init__()
+
+        if nonlinearity == 'relu':
+            nonlinearity = nn.ReLU
+        elif nonlinearity == 'tanh':
+            nonlinearity = nn.Tanh
 
         self.features = nn.Sequential(
             nn.Linear(in_features=seq_len*n_channels, out_features=hidden_dim, bias=True),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(p=0.5, inplace=False),
+            nonlinearity(),
+            nn.Dropout(p=dropout),
 
-            nn.Linear(in_features=hidden_dim, out_features=int(0.8*hidden_dim), bias=True),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=hidden_dim, out_features=hidden_dim, bias=True),
+            nonlinearity(),
+            nn.Dropout(p=dropout),
 
-            nn.Linear(in_features=int(0.8*hidden_dim), out_features=int(0.6*hidden_dim), bias=True),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=hidden_dim, out_features=hidden_dim, bias=True),
+            nonlinearity(),
+            nn.Dropout(p=dropout),
 
-            nn.Linear(in_features=int(0.6*hidden_dim), out_features=int(0.4*hidden_dim), bias=True),
-            nn.ReLU(inplace=True),
-            #nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=hidden_dim, out_features=hidden_dim, bias=True),
+            nonlinearity(),
+            nn.Dropout(p=dropout),
             )
-        self.fc = nn.Linear(in_features=int(0.4*hidden_dim), out_features=output_size, bias=True)
+        self.fc = nn.Linear(in_features=hidden_dim, out_features=output_size, bias=True)
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -46,12 +46,12 @@ class SimpleMLP(nn.Module):
 
 
 class SimpleRNN(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_dim=RNN_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2, bidirectional=True):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, nonlinearity='tanh', dropout=0):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
-        self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional)
+        self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout, nonlinearity=nonlinearity)
         self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
@@ -65,12 +65,12 @@ class SimpleRNN(nn.Module):
 
 class SimpleLSTM(nn.Module):
 
-    def __init__(self, n_channels, seq_len, hidden_dim=LSTM_HIDDEN_DIM, n_layers=RNN_N_LAYERS, output_size=2, bidirectional=True):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
-        self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional)
+        self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
         self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
@@ -82,23 +82,28 @@ class SimpleLSTM(nn.Module):
         return out
 
 class SimpleCNN(nn.Module):
-    def __init__(self, n_channels, seq_len, hidden_dim=CNN_HIDDEN_DIM, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, output_size=2, nonlinearity='relu'):
         super().__init__()
+
+        if nonlinearity == 'relu':
+            nonlinearity = nn.ReLU
+        elif nonlinearity == 'tanh':
+            nonlinearity = nn.Tanh
 
         self.cnn_layers = nn.Sequential(
             nn.Conv1d(n_channels, hidden_dim, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU(inplace=True),
+            nonlinearity(),
             #nn.MaxPool1d(kernel_size=2, stride=2),
 
             nn.Conv1d(hidden_dim, hidden_dim//2, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(hidden_dim//2),
-            nn.ReLU(inplace=True),
+            nonlinearity(),
             nn.MaxPool1d(kernel_size=2, stride=2),
 
             nn.Conv1d(hidden_dim//2, hidden_dim//4, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(hidden_dim//4),
-            nn.ReLU(inplace=True),
+            nonlinearity(),
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
 

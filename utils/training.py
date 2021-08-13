@@ -67,7 +67,9 @@ def load_strategy(model, model_name, strategy_name, eval_every=1, eval_mb_size=1
         eval_mb_size=eval_mb_size, 
         eval_every=eval_every,
         evaluator=eval_plugin,
-        **{k:v for k, v in config.items() if k not in ('optimizer','lr','hidden_dim')} # JA: Need to make this more elegant. Take names from generic keys?
+        train_epochs=config['train_epochs'],
+        train_mb_size=config['train_mb_size'],
+        **config['strategy']
     )
 
     return model
@@ -114,13 +116,13 @@ def training_loop(config, data, demo, model_name, strategy_name, timestamp, vali
     print('Loading data...')
     scenario, n_tasks, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
     print('Data loaded.')
-    print(f'N tasks: {n_tasks} \nN timesteps: {n_timesteps} \nN features: {n_channels}')
+    print(f'    N tasks: {n_tasks} \nN timesteps: {n_timesteps} \n N features: {n_channels}')
 
     # JA:
     # Load main data first as .np file
     # Then call CL split on given domain increment
 
-    model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'])
+    model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'], **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, timestamp=timestamp, validate=validate, config=config)
     results = train_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 
@@ -169,7 +171,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp):
     return best_trial.config
 
 
-def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic=None, config_cl=None, validate=False):
+def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic=None, config_model=None, config_cl=None, validate=False):
 
     """
     data: ['random','MIMIC','eICU','iORD']
@@ -190,8 +192,8 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
             # Training loop
             if validate:
                 # Union generic and CL strategy-specific hyperparams
-                try: config = {**config_generic, **config_cl[strategy_name]}
-                except KeyError: config = config_generic
+                try: config = {**config_generic, 'model':config_model[model_name], 'strategy':config_cl[strategy_name]}
+                except KeyError: config = {**config_generic, 'model':config_model[model_name], 'strategy':{}}
 
                 best_params = hyperparam_opt(config, data, demo, model_name, strategy_name, timestamp)
                 res[model_name][strategy_name] = best_params

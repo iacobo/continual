@@ -23,12 +23,16 @@ def main(args):
     # Generic hyperparameter search-space
     config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
                       'optimizer':tune.choice(['SGD','Adam']),
-                      'train_epochs':tune.choice([100]),
-                      'train_mb_size':tune.choice([32,64,128,256,512,1024]),
-                      'hidden_dim':tune.choice([64,128,256,512,1024])
+                      'hidden_dim':tune.choice([64,128,256,512,1024]),
+                      'train_epochs':tune.choice([100]), 
+                      'train_mb_size':tune.choice([32,64,128,256,512,1024])
                       }
-                      # 'nl':tune.choice(['tan', 'relu'])
-                      # 'bilinear':tune.choice([True,False])
+
+    config_model = {'MLP':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    'RNN':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bilinear':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    'LSTM':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bilinear':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4])}
+                    }
 
     # CL hyper-params
     # https://arxiv.org/pdf/2103.07492.pdf
@@ -41,7 +45,7 @@ def main(args):
 
     # Hyperparam opt over validation data for first 2 tasks
     if args.validate:
-        best_params = training.main(data=args.data, demo=args.experiment, models=args.models, strategies=args.strategies, config_generic=config_generic, config_cl=config_cl, validate=True)
+        best_params = training.main(data=args.data, demo=args.experiment, models=args.models, strategies=args.strategies, config_generic=config_generic, config_model=config_model, config_cl=config_cl, validate=True)
         # Save to local file
     else:
         best_params = None
