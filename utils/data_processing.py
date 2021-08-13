@@ -225,6 +225,11 @@ def load_data(data, demo, validate=False):
         experiences = experiences[:2]
         test_experiences = test_experiences[:2]
 
+    # JA: REMOVE!!!!!!!!!!!! JUST FOR TESTING
+    ######################################################################
+    experiences = experiences[:1]
+    test_experiences = test_experiences[:1]
+
     n_tasks = len(experiences)
     n_timesteps = experiences[0][0].shape[-2]
     n_channels = experiences[0][0].shape[-1]
