@@ -1,10 +1,10 @@
-from utils import models, data_processing
-
 import math
 import torch
 import unittest
 import itertools
 from pathlib import Path
+
+from utils import models, data_processing
 
 BATCH_SIZES = (1,10,100)
 SEQ_LENS = (4,10,30,50,100)
