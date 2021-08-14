@@ -22,6 +22,7 @@ def main(args):
 
     config_model = {'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
                     'MLP':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    # Need to make RNN/LSTM drpout>0 conditional on layers>1
                     'RNN':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
                     'LSTM':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4])}
                     }
