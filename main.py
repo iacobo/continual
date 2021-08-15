@@ -1,6 +1,17 @@
 import argparse
 from ray import tune
 from utils import training, plotting
+import numpy as np
+
+def get_dropout_from_n_layers(spec):
+    """
+    Has dropout of 0 if n_layers==1, else random dropout.
+    """
+    if spec.config.model.n_layers == 1:
+        return 0.0
+    else:
+        p = np.random.randint(0,6)
+        return p * 0.1
 
 def main(args):
 
@@ -16,16 +27,15 @@ def main(args):
     config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
                       'optimizer':tune.choice(['SGD','Adam']),
                       'hidden_dim':tune.choice([64,128,256,512,1024]),
-                      'train_epochs':tune.choice([200]), 
+                      'train_epochs':50, 
                       'train_mb_size':tune.choice([32,64,128,256,512,1024])
                       }
 
     config_model = {# JA: use ModuleList(?) to parameterise n_layers for MLP and CNN
                     'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
                     'MLP':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
-                    # JA: Need to make RNN/LSTM drpout>0 conditional on layers>1
-                    'RNN':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
-                    'LSTM':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 'bidirectional':tune.choice([True,False]), 'n_layers':tune.choice([1,2,3,4])}
+                    'RNN':{'n_layers':tune.choice([1,2,3,4]), 'dropout':tune.sample_from(get_dropout_from_n_layers), 'bidirectional':tune.choice([True,False]), 'nonlinearity':tune.choice(['tanh', 'relu'])},
+                    'LSTM':{'n_layers':tune.choice([1,2,3,4]), 'dropout':tune.sample_from(get_dropout_from_n_layers), 'bidirectional':tune.choice([True,False])}
                     }
 
     config_cl ={'Replay':{'mem_size':tune.choice([4,16,32])},
