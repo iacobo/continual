@@ -40,7 +40,7 @@ def main(args):
 
     config_cl ={'Replay':{'mem_size':tune.choice([4,16,32])},
                 'GDumb':{'mem_size':tune.choice([4,16,32])},
-                'EWC':{'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'mode':tune.choice(['separate','onlinesum'])},
+                'EWC':{'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'mode':tune.choice(['separate','online'])},
                 'SI':{'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])},
                 'LwF':{'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]), 'temperature':tune.quniform(0,3,0.5)},
                 'GEM':{'patterns_per_exp':tune.choice([4,16,32]), 'memory_strength':tune.quniform(0,1,0.1)},
