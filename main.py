@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument('--data', 
                         type=str, 
                         default='fiddle_mimic3', 
-                        choices=['fiddle_mimic3','fiddle_eicu','MIMIC','eICU','iord','random'], 
+                        choices=['fiddle_mimic3','fiddle_eicu','random'], 
                         help='Dataset to use.')
     parser.add_argument('--outcome', 
                         type=str, 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser.add_argument('--strategies', 
                         type=str, 
                         default='all', 
-                        choices=['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GEM', 'AGEM'], 
+                        choices=['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM', 'AGEM'], 
                         nargs='+',
                         help='Continual learning strategy(s) to evaluate.')
     parser.add_argument('--models', 
@@ -103,6 +103,8 @@ if __name__ == "__main__":
     # Sensitivity to replay size Naive -> replay -> Cumulative
     # Sensitivity to hyperparams of reg methods
     # Sensitivity to number of variables
+    #  JA: Secondary experiment: how sensitive regularization strategies are to hyperparams
+    #  Tune hyperparams over increasing number of tasks?
 
     # Plotting
     if False:

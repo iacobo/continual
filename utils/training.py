@@ -167,11 +167,12 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
     return best_trial.config
 
 
+# JA: Move this to main.py?
 def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic=None, config_model=None, config_cl=None, validate=False):
 
     """
-    data: ['random','mimic3','eicu','iord']
-    demo: ['region','sex','age','ethnicity','ethnicity_coarse','hospital']
+    Main training loop. Takes dataset, demographic splits, 
+    and evaluates model/strategies over given hyperparams over this problem.
     """
 
     # TRAINING 
@@ -190,9 +191,6 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
             else:
                 config = config_cl[model][strategy]
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
-
-            # JA: Secondary experiment: how sensitive regularization strategies are to hyperparams
-            # Tune hyperparams over increasing number of tasks?
 
     if validate:
         return res
