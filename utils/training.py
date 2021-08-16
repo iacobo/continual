@@ -146,20 +146,20 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
     Can use returned optimal values to later run full training and testing over all n>=2 tasks.
     """
 
-    reporter = tune.CLIReporter(metric_columns=["loss", "accuracy"])
-    resources = {"gpu": 0.25} if torch.cuda.is_available() else {}
+    reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy'])
+    resources = {'gpu': 0.25} if torch.cuda.is_available() else {}
     
     result = tune.run(
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, validate=True),
         config=config,
         progress_reporter=reporter,
-        num_samples=100,
+        num_samples=50,
         local_dir=RESULTS_DIR / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
         resources_per_trial=resources)
 
-    best_trial = result.get_best_trial("loss", "min", "last")
+    best_trial = result.get_best_trial('loss', 'min', 'last')
     print(f'Best trial config:                    {best_trial.config}')
     print(f'Best trial final validation loss:     {best_trial.last_result["loss"]}')
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
@@ -176,7 +176,6 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
     """
 
     # TRAINING 
-    # JA: (Need to rerun multiple times, take averages)
     # Container for metrics for plotting
     res = {m:{s:None for s in strategies} for m in models}
 
@@ -187,7 +186,9 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, demo, model, strategy)
                 res[model][strategy] = best_params
-            # Training loop
+            # Training loop 
+            # JA: (Need to rerun multiple times for mean + CI's)
+            # for i in range(5): res[model][strategy].append(...)
             else:
                 config = config_cl[model][strategy]
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
