@@ -6,11 +6,9 @@ from utils import training, config
 RESULTS_DIR = Path(__file__).parents[0] / 'results'
 
 def main(args):
-    # Specify models
     if args.models=='all':
         args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
-    # Specify CL strategies
     if args.strategies=='all':
         args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM', 'AGEM'] # JA: INVESTIGATE MAS!!!
 
