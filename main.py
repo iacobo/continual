@@ -10,7 +10,7 @@ def main(args):
     if args.strategies=='all':
         args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM', 'AGEM'] # JA: INVESTIGATE MAS!!!
 
-    # Hyperparam opt over validation data for first 2 tasks
+    # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
         best_params = training.main(data=args.data, 
                                     demo=args.experiment, 
@@ -24,7 +24,7 @@ def main(args):
     else:
         best_params = None
     
-    # Train and test over all tasks
+    # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data, 
                   demo=args.experiment, 
                   models=args.models, 
@@ -69,10 +69,7 @@ if __name__ == "__main__":
 
     main(args)
 
-    # Plotting
-    if False:
-        pass
-        #plotting.plot_demos()
+#plotting.plot_demos()
 
 # Secondary experiments:
 ########################

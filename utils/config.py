@@ -7,7 +7,7 @@ def get_dropout_from_n_layers(spec):
     Has dropout of 0 if n_layers==1, else random dropout.
     """
     if spec.config.model.n_layers==1:
-        return 0.0
+        return 0
     else:
         return 0.1 * np.random.randint(0,6)
 
