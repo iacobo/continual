@@ -194,6 +194,7 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
 
     if validate:
+        # JA: need to save each exp/model/strat combo to a new file
         with open(RESULTS_DIR / 'hyperparams' / f'best_config_{data}_{demo}.json', 'w') as handle:
             json.dump(res, handle)
         return res
