@@ -51,6 +51,34 @@ For standardisation of task definitions, feature pre-processing, and model imple
 | Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
 |Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)\*\*
 
+
+## Project structure
+
+- `main.py`   
+  Main training program.
+- `test.py`  
+Test suite.
+  - `utils`
+    - `config.py`   
+    Hyperparameter search space configuration.
+    - `data_processing.py`   
+    Code to load and pre-process datasets, split datasets along task boundaries.
+    - `models.py`   
+    Model definitions, continual learning strategies.
+    - `training.py`   
+    Functions for performing hyper-parameter optimisation, training, and evaluation of models.
+    - `plotting.py`  
+    Functions to plot results.
+  - `data`
+    - `FIDDLE_eicu`   
+    Pre-processed eICU-CRD dataset.
+    - `FIDDLE_mimic3`   
+    Pre-processed MIMIC-III dataset.
+  - `results`
+    - `figs`
+    - `tb_results`
+
+
 ---
 
 <sup>

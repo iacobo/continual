@@ -63,7 +63,6 @@ class SimpleRNN(nn.Module):
 
 
 class SimpleLSTM(nn.Module):
-
     def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
         super().__init__()
 

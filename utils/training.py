@@ -168,7 +168,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
 
 
 # JA: Move this to main.py?
-def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic=None, config_model=None, config_cl=None, validate=False):
+def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
 
     """
     Main training loop. Takes dataset, demographic splits, 
