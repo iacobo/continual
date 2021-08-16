@@ -116,16 +116,23 @@ def recover_admission_time():
     Function to recover datetime info for admission from FIDDLE.
     """
     *_, df_outcome = load_fiddle()
-    ids = df_outcome['ID']
-
-    raise NotImplementedError
+    df_outcome['SUBJECT_ID'] = df_outcome['stay'].str.split('_', expand=True)[0].astype(int)
+    df_outcome['stay_number'] = df_outcome['stay'].str.split('_', expand=True)[1].str.replace('episode','').astype(int)
 
     ## load original MIMIC-III csv
-    #df_mimic = 
+    df_mimic = pd.read_csv(DATA_DIR / 'mimic3' / 'ADMISSIONS.csv', parse_dates=['ADMITTIME'])
 
     ## grab quarter (season) from data and id
-    #df_mimic['quarter'] = df_mimic['admittime'].dt.quarter
-    #df_mimic = df_mimic[['ID','quarter']]
+    df_mimic['quarter'] = df_mimic['ADMITTIME'].dt.quarter
+
+    gr = df_mimic.sort_values('ADMITTIME').groupby('SUBJECT_ID')
+    df_mimic['stay_number'] = gr.cumcount()+1
+    df_mimic = df_mimic[['SUBJECT_ID','stay_number','quarter']]
+
+    return df_outcome.merge(df_mimic, on=['SUBJECT_ID','stay_number'])
+
+
+    # Groupby.rank -> group by subject_id, rank by admit time, get n for matching
 
     # One hot encode, then Merge df's
 
@@ -342,3 +349,5 @@ def get_hospital_ids():
     Gets hospial id's from df cols.
     """
     return list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))
+
+# %%
