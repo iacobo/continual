@@ -10,7 +10,7 @@ def main(args):
         args.models = ['MLP', 'CNN', 'RNN', 'LSTM']
 
     if args.strategies=='all':
-        args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM', 'AGEM'] # JA: INVESTIGATE MAS!!!
+        args.strategies = ['Naive', 'Cumulative', 'EWC', 'SI', 'LwF', 'Replay', 'GDumb', 'GEM'] # JA: INVESTIGATE MAS, 'AGEM' (num samples > mem?)!!!
 
     # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
