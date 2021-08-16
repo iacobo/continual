@@ -1,5 +1,9 @@
+import json
 import argparse
+from pathlib import Path
 from utils import training, config
+
+RESULTS_DIR = Path(__file__).parents[0] / 'results'
 
 def main(args):
     # Specify models
@@ -20,9 +24,11 @@ def main(args):
                                     config_model=config.config_model, 
                                     config_cl=config.config_cl, 
                                     validate=True)
-        # Save to local file
+
+    # Load previously tuned hyper-param config
     else:
-        best_params = None
+        with open(RESULTS_DIR / 'hyperparams' / f'best_config_{args.data}_{args.experiment}.json') as json_file:
+            best_params = json.load(json_file)
     
     # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data, 

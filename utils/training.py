@@ -47,7 +47,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     # Loggers
     # JA: subfolders for datset / experiments VVV
     interactive_logger = InteractiveLogger()
-    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'tb_results' / f'tb_data_{get_timestamp()}' / model_name / strategy_name)
+    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'loggers' / 'tb_results' / f'tb_data_{get_timestamp()}' / model_name / strategy_name)
 
     if validate:
         loggers = [tb_logger]
@@ -154,7 +154,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
         config=config,
         progress_reporter=reporter,
         num_samples=50,
-        local_dir=RESULTS_DIR / 'ray_results' / f'{data}_{demo}',
+        local_dir=RESULTS_DIR / 'loggers' / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
         resources_per_trial=resources)
@@ -194,12 +194,14 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
 
     if validate:
+        with open(RESULTS_DIR / 'hyperparams' / f'best_config_{data}_{demo}.json', 'w') as handle:
+            json.dump(res, handle)
         return res
         
     # PLOTTING
     else:
         # Locally saving results
-        with open(RESULTS_DIR / f'latest_results_{data}_{demo}.json', 'w') as handle:
+        with open(RESULTS_DIR / 'metrics' / f'results_{data}_{demo}.json', 'w') as handle:
             res_acc = {k:v for k,v in res.items() if 'Top1_Acc_Exp' in k}
             json.dump(res_acc, handle)
 
