@@ -319,7 +319,7 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
         demo_onehots = [s_feature_names.index(col) for col in demo_cols[data][demo]]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
     elif demo=='time_season':
-        seasons = recover_admission_time['quarter']
+        seasons = recover_admission_time()['quarter']
         tasks_idx = [seasons==i for i in range(4)]
     else:
         raise NotImplementedError
