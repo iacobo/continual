@@ -30,7 +30,7 @@ def get_timestamp():
     ts = time.time()
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
-def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config={}):
+def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config={}, benchmark=None):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -58,7 +58,8 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
         StreamConfusionMatrix(save_image=False),
         accuracy_metrics(stream=True, experience=not validate),
         loss_metrics(stream=True, experience=not validate),
-        loggers=loggers)
+        loggers=loggers,
+        benchmark=benchmark)
 
     # JA: IMPLEMENT specificity, precision etc
     # https://github.com/ContinualAI/avalanche/blob/master/notebooks/from-zero-to-hero-tutorial/05_evaluation.ipynb
@@ -125,7 +126,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False)
     # Then call CL split on given domain increment
 
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'], **config['model'])
-    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config)
+    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
 
     if validate:
@@ -203,7 +204,8 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
     else:
         # Locally saving results
         with open(RESULTS_DIR / 'metrics' / f'results_{data}_{demo}.json', 'w') as handle:
-            json.dump(res, handle)
+            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} for s, metrics in strats.items()} for m, strats in res.items()}
+            json.dump(res_no_tensors, handle)
 
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
