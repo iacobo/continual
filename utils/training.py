@@ -164,7 +164,34 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
     print(f'Best trial final validation loss:     {best_trial.last_result["loss"]}')
     print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
 
-    return best_trial.config
+    return best_trial
+
+def update_local_results(current_params, current_score, data, demo, model, strategy):
+    """
+    Updates local json files with current best parameter / validation loss
+    values for given data/demographic, for current model/strategy.
+    """
+    best_config_file = RESULTS_DIR / 'hyperparams' / f'best_config_{data}_{demo}.json'
+    best_val_file = RESULTS_DIR / 'hyperparams' / f'best_val_loss_{data}_{demo}.json'
+
+    if best_config_file.is_file():
+        with open(best_config_file) as handle:
+            best_config = json.load(handle)
+        with open(best_val_file) as handle:
+            best_val_loss = json.load(handle)
+    else:
+        best_config = {}
+        best_val_loss = {}
+
+    # Only update if has not previously been computed, or score is better
+    if best_val_loss.get(model,{}).get(strategy,None) is None or current_score < best_val_loss[model][strategy]:
+        best_config[model][strategy] = current_params
+        best_val_loss[model][strategy] = current_score
+
+        with open(best_config_file, 'w') as handle:
+            json.dump(best_config, handle)
+        with open(best_val_file, 'w') as handle:
+            json.dump(best_val_loss, handle)
 
 
 # JA: Move this to main.py?
@@ -184,8 +211,10 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
             # Hyperparam opt
             if validate:
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
-                best_params = hyperparam_opt(config, data, demo, model, strategy)
-                res[model][strategy] = best_params
+                best_trial = hyperparam_opt(config, data, demo, model, strategy)
+                update_local_results(best_trial.config, best_trial.last_result["loss"], data, demo, model, strategy)
+
+                
             # Training loop 
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
