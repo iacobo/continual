@@ -1,10 +1,18 @@
 from utils import data_processing
 from collections import defaultdict
+from datetime import datetime
 
+import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+def get_timestamp():
+    """
+    Returns current timestamp as string.
+    """
+    ts = time.time()
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def stack_results(results):
 
@@ -31,7 +39,7 @@ def plot_accuracy(method, model, results, ax=None):
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int) <= stacked['Epoch \n (15 epochs per task)'].astype(int)]
 
-    sns.lineplot(data=stacked, x=f'Epoch', y='Accuracy', hue='Task', ax=ax)
+    sns.lineplot(data=stacked, x='Epoch', y='Accuracy', hue='Task', ax=ax)
     ax.set_title(method, size=10)
     ax.set_ylabel(model)
     ax.set_xlabel('')
@@ -58,13 +66,30 @@ def clean_plot(fig, axes):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-    fig.suptitle('Continual Learning model comparison')
+def annotate_plot(fig, demo):
     try:
         fig.supxlabel('Epoch')
         fig.supylabel('Accuracy', x=0)
     except AttributeError:
         fig.text(0.5, 0.04, 'Epoch', ha='center')
         fig.text(0.04, 0.5, 'Accuracy', va='center', rotation='vertical')
+
+    fig.suptitle(f'Continual Learning model comparison \n'
+                 f'Problem: {"48h mortality"} \n'
+                 f'Domain Increment: {demo}')
+
+def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True):
+        fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
+
+        for i, model in enumerate(models):
+            for j, strategy in enumerate(strategies):
+                plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
+
+        clean_plot(fig, axes)
+        annotate_plot(fig, demo)
+
+        if savefig:
+            plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{get_timestamp()}.png')
 
 def plot_demos():
     """

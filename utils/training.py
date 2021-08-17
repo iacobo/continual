@@ -18,17 +18,12 @@ from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamC
 # Local imports
 from utils import models, plotting, data_processing
 
+# Suppressing erroneous MaxPool1d named tensors warning
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
-
-
-# HELPER FUNCTIONS
-
-def get_timestamp():
-    """
-    Returns current timestamp as string.
-    """
-    ts = time.time()
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config={}, benchmark=None):
     """
@@ -47,7 +42,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     # Loggers
     # JA: subfolders for datset / experiments VVV
     interactive_logger = InteractiveLogger()
-    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'loggers' / 'tb_results' / f'tb_data_{get_timestamp()}' / model_name / strategy_name)
+    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'loggers' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
 
     if validate:
         loggers = [tb_logger]
@@ -87,6 +82,8 @@ def train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=False):
     """
     print('Starting experiment...')
 
+    # JA: Can streamline this. Don't have eval_streams for validate, just call eval at end
+
     if eval_on_test:
         eval_streams=[scenario.test_stream]
     else:
@@ -98,8 +95,7 @@ def train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=False):
         print('Training completed', '\n\n')
 
     if validate:
-        results = cl_strategy.eval(scenario.test_stream)
-
+        results = cl_strategy.eval(scenario.test_stream) #.evaluator.get_last_metrics()
     else:
         results = cl_strategy.evaluator.get_all_metrics()
     
@@ -207,13 +203,6 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} for s, metrics in strats.items()} for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 
-        fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
-
-        for i, model in enumerate(models):
-            for j, strategy in enumerate(strategies):
-                plotting.plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
-
-        plotting.clean_plot(fig, axes)
-        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{demo}_{get_timestamp()}.png')
+        plotting.plot_all_model_strats(models, strategies, data, demo, res, results_dir=RESULTS_DIR, savefig=True)
 
         return res
