@@ -22,21 +22,21 @@ def get_decay_from_ewc_mode(spec):
 
 # Hyperparameter search-space
 config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2,1e-1]), 
-                  'optimizer':tune.choice(['SGD','Adam']),
+                  'optimizer':tune.choice(['Adam']), #'SGD',
                   'hidden_dim':tune.choice([64,128,256,512,1024]),
                   'train_epochs':50, 
-                  'train_mb_size':tune.choice([32,64,128,256,512,1024])
+                  'train_mb_size':tune.choice([64,128,256,512,1024])
                   }
 
 # JA: use ModuleList(?) to parameterise n_layers for MLP and CNN
 config_model = {'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
                 'MLP':{'dropout':tune.choice([0,0.1,0.2,0.3,0.4,0.5]), 
                        'nonlinearity':tune.choice(['tanh', 'relu'])},
-                'RNN':{'n_layers':tune.choice([1,2,3,4]), 
+                'RNN':{'n_layers':tune.choice([1,2]), 
                        'dropout':tune.sample_from(get_dropout_from_n_layers), 
                        'bidirectional':tune.choice([True,False]), 
                        'nonlinearity':tune.choice(['tanh', 'relu'])},
-                'LSTM':{'n_layers':tune.choice([1,2,3,4]), 
+                'LSTM':{'n_layers':tune.choice([1,2]), 
                         'dropout':tune.sample_from(get_dropout_from_n_layers), 
                         'bidirectional':tune.choice([True,False])}
                 }

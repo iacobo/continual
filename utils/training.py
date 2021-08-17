@@ -139,7 +139,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False)
     else:
         return results
 
-def hyperparam_opt(config, data, demo, model_name, strategy_name):
+def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
@@ -154,7 +154,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name):
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, validate=True),
         config=config,
         progress_reporter=reporter,
-        num_samples=2,
+        num_samples=num_samples,
         local_dir=RESULTS_DIR / 'loggers' / 'ray_results' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
