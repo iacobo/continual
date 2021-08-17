@@ -1,5 +1,4 @@
 .vscode/settings.json
 data/
-results/figs
-results/loggers
+results/
 *.pyc
