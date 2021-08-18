@@ -22,6 +22,7 @@ from utils import models, plotting, data_processing
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
+# JA: sort out device passed to model etc in Avalanche for GPU speedup on server.
 
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 
@@ -64,7 +65,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
         optimizer=optimizer, 
         criterion=criterion, 
         eval_mb_size=1024, 
-        eval_every=1,
+        eval_every=-1 if validate else 1,
         evaluator=eval_plugin,
         train_epochs=config['train_epochs'],
         train_mb_size=config['train_mb_size'],
@@ -88,7 +89,7 @@ def train_cl_method(cl_strategy, scenario, validate=False):
         print('Training completed', '\n\n')
 
     if validate:
-        results = cl_strategy.evaluator.get_last_metrics()
+        results = cl_strategy.eval(scenario.test_stream)
     else:
         results = cl_strategy.evaluator.get_all_metrics()
     
