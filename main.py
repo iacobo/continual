@@ -1,9 +1,10 @@
 import json
 import argparse
 from pathlib import Path
-from utils import training, config
+from utils import training
+from config import config
 
-RESULTS_DIR = Path(__file__).parents[0] / 'results'
+CONFIG_DIR = Path(__file__).parents[0] / 'config'
 
 def main(args):
     if args.models=='all':
@@ -25,7 +26,7 @@ def main(args):
 
     # Load previously tuned hyper-param config
     else:
-        with open(RESULTS_DIR / 'hyperparams' / f'best_config_{args.data}_{args.experiment}.json') as json_file:
+        with open(CONFIG_DIR / f'best_config_{args.data}_{args.experiment}.json') as json_file:
             best_params = json.load(json_file)
     
     # Train and test over all tasks (using optimised hyperparams)

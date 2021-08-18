@@ -41,6 +41,12 @@ For a list of permissable values, use the `--help` flag:
 python main.py --help
 ```
 
+## Hyperparameters
+
+Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`   
+
+If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` instead.
+
 ## Reproducibility
 
 For standardisation of task definitions, feature pre-processing, and model implementations, we use the following tools:
@@ -56,20 +62,20 @@ For standardisation of task definitions, feature pre-processing, and model imple
 
 - `main.py` (Main training program)
 - `test.py` (Test suite)
-  - `data`
-    - `FIDDLE_eicu` (Pre-processed eICU-CRD dataset)
-    - `FIDDLE_mimic3` (Pre-processed MIMIC-III dataset)
-  - `results`
-    - `figs`
-    - `hyperparams`
-    - `tb_results`
-    - `ray_results`
-  - `utils`
-    - `config.py` (Hyperparameter search space configuration)
-    - `data_processing.py` (Code to load and pre-process datasets, split datasets along task boundaries)
-    - `models.py` (Model definitions, continual learning strategies)
-    - `training.py` (Functions for performing hyper-parameter optimisation, training, and evaluation of models)
-    - `plotting.py` (Functions to plot results)
+- config
+  - `config.py` (Hyperparameter search space configuration)
+- data
+  - FIDDLE_eicu (Pre-processed eICU-CRD dataset)
+  - FIDDLE_mimic3 (Pre-processed MIMIC-III dataset)
+- results
+  - figs (Plotted results)
+  - log
+  - metrics (Results of experiments)
+- utils
+  - `data_processing.py` (Code to load and pre-process datasets, split datasets along task boundaries)
+  - `models.py` (Model definitions, continual learning strategies)
+  - `training.py` (Functions for performing hyper-parameter optimisation, training, and evaluation of models)
+  - `plotting.py` (Functions to plot results)
 
 
 ---
