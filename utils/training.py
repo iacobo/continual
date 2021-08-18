@@ -121,9 +121,10 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
         accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
+        balancedaccuracy = results['BalAcc_Stream/eval_phase/test_stream/Task000']
 
         # WARNING: `return` overwrites raytune report
-        tune.report(loss=loss, accuracy=accuracy)
+        tune.report(loss=loss, accuracy=accuracy, balancedaccuracy=balancedaccuracy)
 
     else:
         return results
@@ -138,7 +139,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10
     Can use returned optimal values to later run full training and testing over all n>=2 tasks.
     """
 
-    reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy'])
+    reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
     resources = {'gpu': 0.25} if CUDA else {}
     
     result = tune.run(
@@ -151,10 +152,11 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
         resources_per_trial=resources)
 
-    best_trial = result.get_best_trial('loss', 'min', 'last')
-    print(f'Best trial config:                    {best_trial.config}')
-    print(f'Best trial final validation loss:     {best_trial.last_result["loss"]}')
-    print(f'Best trial final validation accuracy: {best_trial.last_result["accuracy"]}')
+    best_trial = result.get_best_trial('balancedaccuracy', 'max', 'last')
+    print(f'Best trial config:                             {best_trial.config}')
+    print(f'Best trial final validation loss:              {best_trial.last_result["loss"]}')
+    print(f'Best trial final validation accuracy:          {best_trial.last_result["accuracy"]}')
+    print(f'Best trial final validation balanced accuracy: {best_trial.last_result["balancedaccuracy"]}')
 
     return best_trial.config
 

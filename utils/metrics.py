@@ -7,6 +7,9 @@ from avalanche.evaluation.metrics.mean import Mean
 from avalanche.evaluation.metric_utils import phase_and_task
 from collections import defaultdict
 
+# Custom binary prediction metrics using Avalanche
+# For confusion_vector logic see:
+# https://gist.github.com/the-bass/cae9f3976866776dea17a5049013258d
 
 class BalancedAccuracy(Metric[float]):
     """
