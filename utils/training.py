@@ -104,9 +104,8 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     print('Loading data...')
     scenario, n_tasks, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
     print('Data loaded.')
-    print(f'    N tasks: {n_tasks}\n'
-          f'N timesteps: {n_timesteps}\n'
-          f' N features: {n_channels}')
+    print(f'N timesteps: {n_timesteps}\n'
+          f'N features:  {n_channels}')
 
     # JA:
     # Load main data first as .np file
