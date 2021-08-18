@@ -1,15 +1,9 @@
-import time
 import json
-from pathlib import Path
-from datetime import datetime
-from functools import partial
-from matplotlib import pyplot as plt
-
-# ML imports
 import torch
 from ray import tune
-from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
+from torch import nn, optim 
+from pathlib import Path
+from functools import partial
 
 from avalanche.logging import InteractiveLogger, TensorboardLogger
 from avalanche.training.plugins import EvaluationPlugin
@@ -22,8 +16,7 @@ from utils import models, plotting, data_processing
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# JA: sort out device passed to model etc in Avalanche for GPU speedup on server.
-
+# GLOBALS
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 CUDA = torch.cuda.is_available()
 DEVICE = 'gpu' if CUDA else 'cpu'
@@ -35,12 +28,12 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     """
 
     strategy = models.STRATEGIES[strategy_name]
-    criterion = CrossEntropyLoss(weight=weight)
+    criterion = nn.CrossEntropyLoss(weight=weight)
 
     if config['optimizer'] == 'SGD':
-        optimizer = SGD(model.parameters(), lr=config['lr'], momentum=0.9)
+        optimizer = optim.SGD(model.parameters(), lr=config['lr'], momentum=0.9)
     elif config['optimizer'] == 'Adam':
-        optimizer = Adam(model.parameters(), lr=config['lr'])
+        optimizer = optim.Adam(model.parameters(), lr=config['lr'])
 
     # Loggers
     # JA: subfolders for datset / experiments VVV
@@ -92,11 +85,9 @@ def train_cl_method(cl_strategy, scenario, validate=False):
         print('Training completed', '\n\n')
 
     if validate:
-        results = cl_strategy.eval(scenario.test_stream)
+        return cl_strategy.eval(scenario.test_stream)
     else:
-        results = cl_strategy.evaluator.get_all_metrics()
-    
-    return results
+        return cl_strategy.evaluator.get_all_metrics()
 
 def training_loop(config, data, demo, model_name, strategy_name, validate=False, checkpoint_dir=None):
     """
@@ -193,14 +184,18 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
 
     if validate:
         # JA: need to save each exp/model/strat combo to a new file
-        with open(RESULTS_DIR / 'hyperparams' / f'best_config_{data}_{demo}.json', 'w') as handle:
+        config_file = RESULTS_DIR / 'hyperparams' / f'best_config_{data}_{demo}.json'
+        config_file.parent.mkdir(exist_ok=True, parents=True)
+        with open(config_file, 'w') as handle:
             json.dump(res, handle)
         return res
         
     # PLOTTING
     else:
         # Locally saving results
-        with open(RESULTS_DIR / 'metrics' / f'results_{data}_{demo}.json', 'w') as handle:
+        results_file = RESULTS_DIR / 'metrics' / f'results_{data}_{demo}.json'
+        results_file.parent.mkdir(exist_ok=True, parents=True)
+        with open(results_file, 'w') as handle:
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} for s, metrics in strats.items()} for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 

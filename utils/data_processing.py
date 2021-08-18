@@ -11,6 +11,7 @@ from pathlib import Path
 from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Compute total dataset first, save, load, then do task splits based on column and then drop those cols
@@ -59,8 +60,8 @@ def load_data(data, demo, validate=False):
         tasks = split_tasks_fiddle(data=data.split('_')[-1], demo=demo)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
-        experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
-        test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
+        experiences = [(torch.FloatTensor(feat).to(DEVICE), torch.LongTensor(target).to(DEVICE)) for feat, target in experiences]
+        test_experiences = [(torch.FloatTensor(feat).to(DEVICE), torch.LongTensor(target).to(DEVICE)) for feat, target in test_experiences]
 
         # Class weights for balancing
         class1_count = sum(experiences[0][1]) + sum(experiences[1][1])
