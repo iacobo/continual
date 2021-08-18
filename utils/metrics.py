@@ -8,6 +8,8 @@ from avalanche.evaluation.metric_utils import phase_and_task
 from collections import defaultdict
 
 # Custom binary prediction metrics using Avalanche
+# https://github.com/ContinualAI/avalanche/blob/master/notebooks/from-zero-to-hero-tutorial/05_evaluation.ipynb
+
 # For confusion_vector logic see:
 # https://gist.github.com/the-bass/cae9f3976866776dea17a5049013258d
 

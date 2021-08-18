@@ -24,7 +24,7 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
    ```
    Figures will be saved to `/results/figs`. For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
    ```powershell
-   tensorboard --logdir=/results/tb_results/<tb_log_exp_name>
+   tensorboard --logdir=/results/log/tb_results/<tb_log_exp_name>
    ```
 
 ## Individual experiments

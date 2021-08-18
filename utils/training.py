@@ -39,12 +39,13 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
 
     # Loggers
     # JA: subfolders for datset / experiments VVV
-    interactive_logger = InteractiveLogger()
-    tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'log' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
-
+    
     if validate:
+        tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'log' / 'val' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
         loggers = [tb_logger]
     else:
+        interactive_logger = InteractiveLogger()
+        tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'log' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
         loggers = [interactive_logger, tb_logger]
 
     eval_plugin = EvaluationPlugin(
@@ -54,9 +55,6 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
         loss_metrics(stream=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
-
-    # JA: IMPLEMENT specificity, precision etc
-    # https://github.com/ContinualAI/avalanche/blob/master/notebooks/from-zero-to-hero-tutorial/05_evaluation.ipynb
 
     cl_strategy = strategy(
         model, 
@@ -129,8 +127,6 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     else:
         return results
 
-# JA: Change hyperparam directory to utils/config/hyperparams - keep search space and optimal vals in same location
-
 def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10):
     """
     Hyperparameter optimisation for the given model/strategy.
@@ -160,8 +156,6 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10
 
     return best_trial.config
 
-
-# JA: Move this to main.py?
 def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
 
     """
