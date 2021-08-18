@@ -4,7 +4,6 @@ import copy
 import json
 import torch
 import sparse
-import numpy as np
 import pandas as pd
 
 from pathlib import Path
@@ -353,5 +352,12 @@ def get_hospital_ids():
     Gets hospial id's from df cols.
     """
     return list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))
+
+def cache_processed_dataset():
+    # Given dataset/demo/outcome
+    # Create train and val, and train and test datasets
+    # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
+    # Load numpy arrays
+    return NotImplementedError
 
 # %%

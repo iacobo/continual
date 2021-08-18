@@ -11,6 +11,7 @@ from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamC
 
 # Local imports
 from utils import models, plotting, data_processing
+from utils.metrics import balancedaccuracy_metrics
 
 # Suppressing erroneous MaxPool1d named tensors warning
 import warnings
@@ -49,6 +50,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     eval_plugin = EvaluationPlugin(
         StreamConfusionMatrix(save_image=False),
         accuracy_metrics(stream=True, experience=not validate),
+        balancedaccuracy_metrics(stream=True, experience=not validate),
         loss_metrics(stream=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
