@@ -25,6 +25,8 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # JA: sort out device passed to model etc in Avalanche for GPU speedup on server.
 
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
+CUDA = torch.cuda.is_available()
+DEVICE = 'gpu' if CUDA else 'cpu'
 
 def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config={}, benchmark=None):
     """
@@ -63,6 +65,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     cl_strategy = strategy(
         model, 
         optimizer=optimizer, 
+        device=DEVICE,
         criterion=criterion, 
         eval_mb_size=1024, 
         eval_every=-1 if validate else 1,
@@ -142,7 +145,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy'])
-    resources = {'gpu': 0.25} if torch.cuda.is_available() else {}
+    resources = {'gpu': 0.25} if CUDA else {}
     
     result = tune.run(
         partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, validate=True),
