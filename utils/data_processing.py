@@ -31,7 +31,7 @@ def random_data(seq_len=30, n_vars=3, n_tasks=4, n_samples=100, p_ones=0.1):
         ...
     ]
     """
-    tasks = [(torch.randn(n_samples,seq_len,n_vars), (torch.rand(n_samples) < p_ones).int()) for _ in range(n_tasks)]
+    tasks = [(torch.randn(n_samples,seq_len,n_vars), (torch.rand(n_samples) < p_ones).long()) for _ in range(n_tasks)]
     return tasks
 
 #######################
