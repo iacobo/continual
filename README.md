@@ -54,29 +54,22 @@ For standardisation of task definitions, feature pre-processing, and model imple
 
 ## Project structure
 
-- `main.py`   
-  Main training program.
-- `test.py`  
-Test suite.
-  - `utils`
-    - `config.py`   
-    Hyperparameter search space configuration.
-    - `data_processing.py`   
-    Code to load and pre-process datasets, split datasets along task boundaries.
-    - `models.py`   
-    Model definitions, continual learning strategies.
-    - `training.py`   
-    Functions for performing hyper-parameter optimisation, training, and evaluation of models.
-    - `plotting.py`  
-    Functions to plot results.
+- `main.py` (Main training program)
+- `test.py` (Test suite)
   - `data`
-    - `FIDDLE_eicu`   
-    Pre-processed eICU-CRD dataset.
-    - `FIDDLE_mimic3`   
-    Pre-processed MIMIC-III dataset.
+    - `FIDDLE_eicu` (Pre-processed eICU-CRD dataset)
+    - `FIDDLE_mimic3` (Pre-processed MIMIC-III dataset)
   - `results`
     - `figs`
+    - `hyperparams`
     - `tb_results`
+    - `ray_results`
+  - `utils`
+    - `config.py` (Hyperparameter search space configuration)
+    - `data_processing.py` (Code to load and pre-process datasets, split datasets along task boundaries)
+    - `models.py` (Model definitions, continual learning strategies)
+    - `training.py` (Functions for performing hyper-parameter optimisation, training, and evaluation of models)
+    - `plotting.py` (Functions to plot results)
 
 
 ---
@@ -87,11 +80,7 @@ Test suite.
 
 \* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.
 
-\*\* Avalanche is currently in its beta release. Development on this project was mostly completed using an earlier alpha build:
-```
-avalanche @ git+https://github.com/ContinualAI/avalanche.git@a2e2fb09f77eaecad8dbbe74b4b78ab737b7e464
-```
-Since `pip` versioning may have been low resolution during this period, try using the above version if you encounter compatability issues related to Avalanche.
+\*\* Avalanche is currently in its beta release. Development on this project was mostly completed using an earlier alpha build (0.3.0). Some method implementations and results may be inconsistent across versions.
 
 \* Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
 

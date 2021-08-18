@@ -73,7 +73,7 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
 
     return cl_strategy
 
-def train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=False):
+def train_cl_method(cl_strategy, scenario, validate=False):
     """
     Avalanche Cl training loop. For each 'experience' in scenario's train_stream:
 
@@ -82,26 +82,19 @@ def train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=False):
     """
     print('Starting experiment...')
 
-    # JA: Can streamline this. Don't have eval_streams for validate, just call eval at end
-
-    if eval_on_test:
-        eval_streams=[scenario.test_stream]
-    else:
-        eval_streams=[scenario.train_stream]
-
     for experience in scenario.train_stream:
         print(f'Start of experience: {experience.current_experience}')
-        cl_strategy.train(experience, eval_streams=eval_streams)
+        cl_strategy.train(experience, eval_streams=[scenario.test_stream])
         print('Training completed', '\n\n')
 
     if validate:
-        results = cl_strategy.eval(scenario.test_stream) #.evaluator.get_last_metrics()
+        results = cl_strategy.evaluator.get_last_metrics()
     else:
         results = cl_strategy.evaluator.get_all_metrics()
     
     return results
 
-def training_loop(config, data, demo, model_name, strategy_name, validate=False):
+def training_loop(config, data, demo, model_name, strategy_name, validate=False, checkpoint_dir=None):
     """
     Training wrapper:
         - loads data
@@ -125,7 +118,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False)
 
     model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'], **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config, benchmark=scenario)
-    results = train_cl_method(cl_strategy, scenario, eval_on_test=True, validate=validate)
+    results = train_cl_method(cl_strategy, scenario, validate=validate)
 
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
@@ -136,6 +129,8 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False)
 
     else:
         return results
+
+# JA: Change hyperparam directory to utils/config/hyperparams - keep search space and optimal vals in same location
 
 def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10):
     """
