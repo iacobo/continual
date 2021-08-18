@@ -120,6 +120,10 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
         accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
         balancedaccuracy = results['BalAcc_Stream/eval_phase/test_stream/Task000']
 
+        # Garbage collection
+        del cl_strategy
+        torch.cuda.empty_cache()
+
         # WARNING: `return` overwrites raytune report
         tune.report(loss=loss, accuracy=accuracy, balancedaccuracy=balancedaccuracy)
 
