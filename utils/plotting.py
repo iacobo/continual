@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+METRIC_FULL_NAME = {'BalAcc': 'Balanced Accuracy',
+                    'Top1_Acc': 'Accuracy',
+                    'Loss': 'Loss'}
+
 def get_timestamp():
     """
     Returns current timestamp as string.
@@ -14,24 +18,24 @@ def get_timestamp():
     ts = time.time()
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
-def stack_results(results):
+def stack_results(results, metric='BalAcc'):
 
     acc = defaultdict(list)
 
-    # Get accuracies for each test set per training "experience"
+    # Get metrics for each training "experience"'s test set
     for k,v in results.items():
-        if 'BalAcc_Exp' in k: #and '/Exp' in k:
+        if f'{metric}_Exp' in k:
             new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
             acc[new_k] = v[1]
 
     df = pd.DataFrame.from_dict(acc)
     df.index.rename(f'Epoch', inplace=True)
     stacked = df.stack().reset_index()
-    stacked.rename(columns={'level_1': 'Task', 0: 'Balanced Accuracy'}, inplace=True)
+    stacked.rename(columns={'level_1': 'Task', 0: METRIC_FULL_NAME[metric]}, inplace=True)
 
     return stacked
 
-def plot_accuracy(method, model, results, ax=None):
+def plot_accuracy(method, model, results, ax=None, metric='BalAcc'):
     ax = ax or plt.gca()
 
     stacked = stack_results(results)
@@ -39,7 +43,7 @@ def plot_accuracy(method, model, results, ax=None):
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int) <= stacked['Epoch \n (15 epochs per task)'].astype(int)]
 
-    sns.lineplot(data=stacked, x='Epoch', y='Balanced Accuracy', hue='Task', ax=ax)
+    sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
     ax.set_ylabel(model)
     ax.set_xlabel('')
@@ -66,13 +70,13 @@ def clean_plot(fig, axes):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-def annotate_plot(fig, demo):
+def annotate_plot(fig, demo, metric='BalAcc'):
     try:
         fig.supxlabel('Epoch')
-        fig.supylabel('Balanced Accuracy', x=0)
+        fig.supylabel(METRIC_FULL_NAME[metric], x=0)
     except AttributeError:
         fig.text(0.5, 0.04, 'Epoch', ha='center')
-        fig.text(0.04, 0.5, 'Balanced Accuracy', va='center', rotation='vertical')
+        fig.text(0.04, 0.5, METRIC_FULL_NAME[metric], va='center', rotation='vertical')
 
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {"48h mortality"} | Domain Increment: {demo}')
