@@ -20,14 +20,14 @@ def stack_results(results):
 
     # Get accuracies for each test set per training "experience"
     for k,v in results.items():
-        if 'Top1_Acc_Exp' in k: #and '/Exp' in k:
+        if 'BalAcc_Exp' in k: #and '/Exp' in k:
             new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
             acc[new_k] = v[1]
 
     df = pd.DataFrame.from_dict(acc)
     df.index.rename(f'Epoch', inplace=True)
     stacked = df.stack().reset_index()
-    stacked.rename(columns={'level_1': 'Task', 0: 'Accuracy'}, inplace=True)
+    stacked.rename(columns={'level_1': 'Task', 0: 'Balanced Accuracy'}, inplace=True)
 
     return stacked
 
@@ -39,7 +39,7 @@ def plot_accuracy(method, model, results, ax=None):
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int) <= stacked['Epoch \n (15 epochs per task)'].astype(int)]
 
-    sns.lineplot(data=stacked, x='Epoch', y='Accuracy', hue='Task', ax=ax)
+    sns.lineplot(data=stacked, x='Epoch', y='Balanced Accuracy', hue='Task', ax=ax)
     ax.set_title(method, size=10)
     ax.set_ylabel(model)
     ax.set_xlabel('')
@@ -69,14 +69,13 @@ def clean_plot(fig, axes):
 def annotate_plot(fig, demo):
     try:
         fig.supxlabel('Epoch')
-        fig.supylabel('Accuracy', x=0)
+        fig.supylabel('Balanced Accuracy', x=0)
     except AttributeError:
         fig.text(0.5, 0.04, 'Epoch', ha='center')
-        fig.text(0.04, 0.5, 'Accuracy', va='center', rotation='vertical')
+        fig.text(0.04, 0.5, 'Balanced Accuracy', va='center', rotation='vertical')
 
     fig.suptitle(f'Continual Learning model comparison \n'
-                 f'Problem: {"48h mortality"} \n'
-                 f'Domain Increment: {demo}')
+                 f'Outcome: {"48h mortality"} | Domain Increment: {demo}')
 
 def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True):
         fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
