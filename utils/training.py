@@ -115,15 +115,15 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
 
+    # Garbage collection
+    del cl_strategy
+    del model
+    torch.cuda.empty_cache()
+
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
         accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
         balancedaccuracy = results['BalAcc_Stream/eval_phase/test_stream/Task000']
-
-        # Garbage collection
-        del cl_strategy
-        del model
-        torch.cuda.empty_cache()
 
         # WARNING: `return` overwrites raytune report
         tune.report(loss=loss, accuracy=accuracy, balancedaccuracy=balancedaccuracy)
@@ -131,7 +131,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     else:
         return results
 
-def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=10):
+def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
