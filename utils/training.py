@@ -185,18 +185,14 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
 
     if validate:
         # JA: need to save each exp/model/strat combo to a new file
-        config_file = CONFIG_DIR / f'best_config_{data}_{demo}.json'
-        config_file.parent.mkdir(exist_ok=True, parents=True)
-        with open(config_file, 'w') as handle:
+        with open(CONFIG_DIR / f'best_config_{data}_{demo}.json', 'w') as handle:
             json.dump(res, handle)
         return res
         
     # PLOTTING
     else:
         # Locally saving results
-        results_file = RESULTS_DIR / 'metrics' / f'results_{data}_{demo}.json'
-        results_file.parent.mkdir(exist_ok=True, parents=True)
-        with open(results_file, 'w') as handle:
+        with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w') as handle:
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} for s, metrics in strats.items()} for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 
