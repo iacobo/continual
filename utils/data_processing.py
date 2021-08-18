@@ -19,7 +19,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 # RANDOM DATA
 ########################
 
-def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
+def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=100, p_ones=0.1):
     """
     Returns random data of form:
 
@@ -31,7 +31,7 @@ def random_data(seq_len=30, n_vars=3, n_tasks=3, n_samples=30):
         ...
     ]
     """
-    tasks = [(torch.randn(n_samples,seq_len,n_vars), torch.randint(0,2,(n_samples,))) for _ in range(n_tasks)]
+    tasks = [(torch.randn(n_samples,seq_len,n_vars), (torch.rand(n_samples) < p_ones).int()) for _ in range(n_tasks)]
     return tasks
 
 #######################
