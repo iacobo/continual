@@ -122,6 +122,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
 
         # Garbage collection
         del cl_strategy
+        del model
         torch.cuda.empty_cache()
 
         # WARNING: `return` overwrites raytune report
