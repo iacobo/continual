@@ -160,7 +160,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50
 
     return best_trial.config
 
-def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
+def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
 
     """
     Main training loop. Takes dataset, demographic splits, 
@@ -187,7 +187,7 @@ def main(data='random', demo='region', models=['MLP'], strategies=['Naive'], con
 
     if validate:
         # JA: need to save each exp/model/strat combo to a new file
-        with open(CONFIG_DIR / f'best_config_{data}_{demo}.json', 'w') as handle:
+        with open(CONFIG_DIR / f'config_{data}_{demo}.json', 'w') as handle:
             json.dump(res, handle)
         return res
         
