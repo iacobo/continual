@@ -11,7 +11,7 @@ N_VARS = (2,10,30,100)
 N_CLASSES = (2,3,4,10)
 
 def magnitude(value):
-    if value == 0: 
+    if value == 0:
         return 0
     else:
         return int(math.floor(math.log10(abs(value))))
@@ -45,9 +45,9 @@ class TestModelMethods(unittest.TestCase):
             for n_vars in N_VARS:
                 for n_classes in N_CLASSES:
                     simple_models = models.MODELS.values()
-                    n_params = [sum(p.numel() 
-                                for p in m(seq_len=seq_len, n_channels=n_vars, output_size=n_classes).parameters() 
-                                if p.requires_grad) 
+                    n_params = [sum(p.numel()
+                                for p in m(seq_len=seq_len, n_channels=n_vars, output_size=n_classes).parameters()
+                                if p.requires_grad)
                                 for m in simple_models]
                     param_magnitudes = [magnitude(p) for p in n_params]
                     # RNN/LSTM order bigger
@@ -77,7 +77,7 @@ class TestCLConstructionMethods(unittest.TestCase):
     def ttest_taskidsnonoverlap(self):
         for dataset in ['MIMIC','eICU']:
             for experiment in ['ARF','shock','mortality']:
-                for demographic in ['age', 'gender', 'ethnicity', 'region', 'time_year', 'time_season', 'time_month']:
+                for demographic in ['age','gender','ethnicity','region','time_year','time_season','time_month']:
                     tasks = data_processing(dataset, demographic, experiment)
                     for pair in itertools.combinations(tasks, repeat=2):
                         self.assertTrue(pair[0][:,0].intersection(pair[0][:,0]) == {})
@@ -85,7 +85,7 @@ class TestCLConstructionMethods(unittest.TestCase):
     def ttest_tasktargets(self):
         for dataset in ['MIMIC','eICU']:
             for experiment in ['ARF','shock','mortality']:
-                for demographic in ['age', 'gender', 'ethnicity', 'region', 'time_year', 'time_season', 'time_month']:
+                for demographic in ['age','gender','ethnicity','region','time_year','time_season','time_month']:
                     tasks = data_processing(dataset, demographic, experiment)
                     for task in tasks:
                         self.assertTrue(len(task[:,-1].unique())==2)
