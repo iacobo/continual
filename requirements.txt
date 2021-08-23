@@ -5,5 +5,6 @@ ray==1.4.1
 matplotlib==3.4.2
 torch==1.9.0
 numpy==1.20.3
-torchvision==0.10.0
 git+https://github.com/ContinualAI/avalanche.git@fa9201f1a38dc57621f3a5b02f833aa7cdc8b6ca
+torchvision==0.10.0
+grown=3.3.1
