@@ -10,6 +10,9 @@ SEQ_LENS = (4,10,30,50,100)
 N_VARS = (2,10,30,100)
 N_CLASSES = (2,3,4,10)
 
+DEMOGRAPHICS = ['age','gender','ethnicity','region','time_year','time_season','time_month']
+OUTCOMES = ['ARF','shock','mortality']
+
 def magnitude(value):
     if value == 0:
         return 0
@@ -76,16 +79,16 @@ class TestCLConstructionMethods(unittest.TestCase):
 
     def ttest_taskidsnonoverlap(self):
         for dataset in ['MIMIC','eICU']:
-            for experiment in ['ARF','shock','mortality']:
-                for demographic in ['age','gender','ethnicity','region','time_year','time_season','time_month']:
+            for experiment in OUTCOMES:
+                for demographic in DEMOGRAPHICS:
                     tasks = data_processing(dataset, demographic, experiment)
                     for pair in itertools.combinations(tasks, repeat=2):
                         self.assertTrue(pair[0][:,0].intersection(pair[0][:,0]) == {})
 
     def ttest_tasktargets(self):
         for dataset in ['MIMIC','eICU']:
-            for experiment in ['ARF','shock','mortality']:
-                for demographic in ['age','gender','ethnicity','region','time_year','time_season','time_month']:
+            for experiment in OUTCOMES:
+                for demographic in DEMOGRAPHICS:
                     tasks = data_processing(dataset, demographic, experiment)
                     for task in tasks:
                         self.assertTrue(len(task[:,-1].unique())==2)
