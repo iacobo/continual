@@ -1,3 +1,7 @@
+[![python version](https://img.shields.io/badge/python-v3.9-blue)](https://www.python.org/) [![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX)
+ [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+
 # Continual Learning of Longitudinal Health Records / ICU EHR
 
 Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv). If you use any of the code here, please cite the above in your work:
