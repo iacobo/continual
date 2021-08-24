@@ -36,9 +36,7 @@ For a list of permissable values, use the `--help` flag:
 python main.py --help
 ```
 
-Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`   
-
-If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` instead.
+Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`. If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` instead.
 
 For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
 ```powershell
