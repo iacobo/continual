@@ -7,6 +7,9 @@ from config import config
 CONFIG_DIR = Path(__file__).parents[0] / 'config'
 
 def main(args):
+    """
+    Loads and runs appropriate experiment from passed args.
+    """
     if args.models=='all':
         args.models = ['MLP','CNN','RNN','LSTM']
 

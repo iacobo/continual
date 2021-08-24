@@ -18,10 +18,10 @@ def magnitude(value):
     """
     Return the magnitude of a positive number.
     """
-    if value == 0:
-        return 0
-    elif value < 0:
+    if value < 0:
         raise ValueError
+    elif value == 0:
+        return 0
     else:
         return int(math.floor(math.log10(value)))
 
@@ -55,7 +55,9 @@ class TestModelMethods(unittest.TestCase):
                 for n_classes in N_CLASSES:
                     simple_models = models.MODELS.values()
                     n_params = [sum(p.numel()
-                                for p in m(seq_len=seq_len, n_channels=n_vars, output_size=n_classes).parameters()
+                                for p in m(seq_len=seq_len, 
+                                           n_channels=n_vars,
+                                           output_size=n_classes).parameters()
                                 if p.requires_grad)
                                 for m in simple_models]
                     param_magnitudes = [magnitude(p) for p in n_params]
@@ -72,13 +74,13 @@ class TestDataLoadingMethods(unittest.TestCase):
         """
         Test that mode of correct dim is returned.
         """
-        for n in BATCH_SIZES:
+        for n_samples in BATCH_SIZES:
             for seq_len in SEQ_LENS:
                 for n_feats in N_VARS:
                     for i in range(n_feats):
-                        sim_data = torch.randint(0,1,(n,seq_len,n_feats)).clone().detach().numpy()
+                        sim_data = torch.randint(0,1,(n_samples,seq_len,n_feats)).clone().detach().numpy()
                         modes = data_processing.get_modes(sim_data,feat=i)
-                        self.assertEqual(modes.shape, torch.Size([n]))
+                        self.assertEqual(modes.shape, torch.Size([n_samples]))
 
 # CL task split tests
 class TestCLConstructionMethods(unittest.TestCase):
