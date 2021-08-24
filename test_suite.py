@@ -20,7 +20,7 @@ def magnitude(value):
     """
     if value < 0:
         raise ValueError
-    elif value == 0:
+    if value == 0:
         return 0
     else:
         return int(math.floor(math.log10(value)))

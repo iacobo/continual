@@ -24,7 +24,7 @@ CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'gpu' if CUDA else 'cpu'
 
-def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config={}, benchmark=None):
+def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config=None, benchmark=None):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -42,11 +42,13 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
     # JA: subfolders for datset / experiments VVV
     
     if validate:
-        tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'log' / 'val' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
+        log_dir = RESULTS_DIR / 'log' / 'val' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name
+        tb_logger = TensorboardLogger(tb_log_dir=log_dir)
         loggers = [tb_logger]
     else:
+        log_dir = RESULTS_DIR / 'log' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name
         interactive_logger = InteractiveLogger()
-        tb_logger = TensorboardLogger(tb_log_dir = RESULTS_DIR / 'log' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name)
+        tb_logger = TensorboardLogger(tb_log_dir=log_dir)
         loggers = [interactive_logger, tb_logger]
 
     eval_plugin = EvaluationPlugin(
@@ -188,14 +190,14 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
 
     if validate:
         # JA: need to save each exp/model/strat combo to a new file
-        with open(CONFIG_DIR / f'config_{data}_{demo}.json', 'w') as handle:
+        with open(CONFIG_DIR / f'config_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
             json.dump(res, handle)
         return res
         
     # PLOTTING
     else:
         # Locally saving results
-        with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w') as handle:
+        with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} 
                                                  for s, metrics in strats.items()} 
                                                  for m, strats in res.items()}

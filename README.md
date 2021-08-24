@@ -1,20 +1,20 @@
-[![python version](https://img.shields.io/badge/python-v3.9-blue)](https://www.python.org/) [![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX)
- [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)  
+ ![Python 3.7-3.9](https://github.com/iacobo/continual/workflows/Python%203.7-3.9/badge.svg) ![Windows, MacOS, Ubuntu](https://github.com/iacobo/continual/workflows/Windows,%20MacOS,%20Ubuntu/badge.svg)
 
 
-# Continual Learning of Longitudinal Health Records / ICU EHR
+# Continual Learning of Longitudinal Health Records
 
-Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arxiv).
+Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (arXiv).
 
 ## Setup
 
 1. Clone this repo to your local machine.
    
-2. Ensure you have permission to access both [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU](https://www.physionet.org/content/eicu-crd/2.0/).\*
+2. Ensure you have permission to access both [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.\*
    
 3. Download the [preprocessed FIDDLE datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the repo's `/data` subfolder.
 
-## Results from paper
+## Results
 
 To rerun all experiments from the paper:
    ```powershell
@@ -24,6 +24,8 @@ To rerun all experiments from the paper:
    ```powershell
    tensorboard --logdir=/results/log/tb_results/<tb_log_exp_name>
    ```
+
+## Individual experiments
 
 Individual experiments can be specified by the `--experiment` argument. Likewise, model architectures and continual learning strategies can be specified with the `--models` and `--strategies` args respectively e.g:
 
@@ -37,7 +39,7 @@ For a list of permissable values, use the `--help` flag:
 python main.py --help
 ```
 
-### Hyperparameters
+
 
 Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`   
 

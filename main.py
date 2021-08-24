@@ -30,7 +30,7 @@ def main(args):
 
     # Load previously tuned hyper-param config
     else:
-        with open(CONFIG_DIR / f'config_{args.data}_{args.experiment}.json') as json_file:
+        with open(CONFIG_DIR / f'config_{args.data}_{args.experiment}.json', encoding='utf-8') as json_file:
             best_params = json.load(json_file)
 
     # Train and test over all tasks (using optimised hyperparams)
@@ -60,7 +60,8 @@ if __name__ == "__main__":
     parser.add_argument('--strategies',
                         type=str,
                         default='all',
-                        choices=['Naive','Cumulative','EWC','SI','LwF','Replay','GDumb','GEM','AGEM'],
+                        choices=['Naive','Cumulative','EWC','SI','LwF',
+                                 'Replay','GDumb','GEM','AGEM'],
                         nargs='+',
                         help='Continual learning strategy(s) to evaluate.')
     parser.add_argument('--models',
@@ -74,9 +75,9 @@ if __name__ == "__main__":
                         const=True,
                         default=False,
                         help='Tune hyperparameters.')
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    main(args)
+    main(arguments)
 
 #plotting.plot_demos()
 
