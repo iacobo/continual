@@ -39,8 +39,6 @@ For a list of permissable values, use the `--help` flag:
 python main.py --help
 ```
 
-
-
 Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`   
 
 If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` instead.
@@ -57,6 +55,16 @@ If you use any of this in your work, please reference us:
   year={2021}
 }
 ```
+
+## Stack
+
+For standardisation of task definitions, feature pre-processing, and model implementations, we use the following tools:
+
+| Tool                        | Source               |
+|-----------------------------|----------------------|
+|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/)<br> [HiRID](https://physionet.org/content/hirid/1.1.1/) |
+| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
+|Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
 
 
 ## Project structure
@@ -77,17 +85,6 @@ If you use any of this in your work, please reference us:
   - `models.py` (Model definitions, continual learning strategies)
   - `training.py` (Functions for performing hyper-parameter optimisation, training, and evaluation of models)
   - `plotting.py` (Functions to plot results)
-
-## Stack
-
-For standardisation of task definitions, feature pre-processing, and model implementations, we use the following tools:
-
-| Tool                        | Source               |
-|-----------------------------|----------------------|
-|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/)<br> [HiRID](https://physionet.org/content/hirid/1.1.1/) |
-| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
-|Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
-
 
 ---
 
