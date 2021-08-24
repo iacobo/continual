@@ -1,9 +1,11 @@
-import json
-import torch
-from ray import tune
-from torch import nn, optim 
 from pathlib import Path
 from functools import partial
+
+import json
+import warnings
+import torch
+from ray import tune
+from torch import nn, optim
 
 from avalanche.logging import InteractiveLogger, TensorboardLogger
 from avalanche.training.plugins import EvaluationPlugin
@@ -14,7 +16,6 @@ from utils import models, plotting, data_processing
 from utils.metrics import balancedaccuracy_metrics
 
 # Suppressing erroneous MaxPool1d named tensors warning
-import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # GLOBALS
@@ -57,11 +58,11 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
         benchmark=benchmark)
 
     cl_strategy = strategy(
-        model, 
-        optimizer=optimizer, 
+        model,
+        optimizer=optimizer,
         device=DEVICE,
-        criterion=criterion, 
-        eval_mb_size=1024, 
+        criterion=criterion,
+        eval_mb_size=1024,
         eval_every=-1 if validate else 1,
         evaluator=eval_plugin,
         train_epochs=config['train_epochs'],
@@ -102,7 +103,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
 
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
-    scenario, n_tasks, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
+    scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
     print('Data loaded.')
     print(f'N timesteps: {n_timesteps}\n'
           f'N features:  {n_channels}')
@@ -195,7 +196,9 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
     else:
         # Locally saving results
         with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w') as handle:
-            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} for s, metrics in strats.items()} for m, strats in res.items()}
+            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} 
+                                                 for s, metrics in strats.items()} 
+                                                 for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 
         plotting.plot_all_model_strats(models, strategies, data, demo, res, results_dir=RESULTS_DIR, savefig=True)

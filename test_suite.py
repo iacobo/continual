@@ -10,14 +10,20 @@ SEQ_LENS = (4,10,30,50,100)
 N_VARS = (2,10,30,100)
 N_CLASSES = (2,3,4,10)
 
-DEMOGRAPHICS = ['age','gender','ethnicity','region','time_year','time_season','time_month']
-OUTCOMES = ['ARF','shock','mortality']
+DEMOGRAPHICS = ['age', 'gender', 'ethnicity', 'region', 'time_year', 'time_season', 'time_month']
+OUTCOMES = ['ARF', 'shock', 'mortality']
+DATASETS = ['MIMIC', 'eICU']
 
 def magnitude(value):
+    """
+    Return the magnitude of a positive number.
+    """
     if value == 0:
         return 0
+    elif value < 0:
+        raise ValueError
     else:
-        return int(math.floor(math.log10(abs(value))))
+        return int(math.floor(math.log10(value)))
 
 class TestModelMethods(unittest.TestCase):
     """
@@ -76,20 +82,25 @@ class TestDataLoadingMethods(unittest.TestCase):
 
 # CL task split tests
 class TestCLConstructionMethods(unittest.TestCase):
+    """
+    Test construction of Continual Learning task splits.
+    """
 
     def ttest_taskidsnonoverlap(self):
-        for dataset in ['MIMIC','eICU']:
+        for dataset in DATASETS:
             for experiment in OUTCOMES:
                 for demographic in DEMOGRAPHICS:
-                    tasks = data_processing(dataset, demographic, experiment)
+                    # JA: implement
+                    tasks = data_processing.load_data(dataset, demographic, experiment)
                     for pair in itertools.combinations(tasks, repeat=2):
                         self.assertTrue(pair[0][:,0].intersection(pair[0][:,0]) == {})
 
     def ttest_tasktargets(self):
-        for dataset in ['MIMIC','eICU']:
+        for dataset in DATASETS:
             for experiment in OUTCOMES:
                 for demographic in DEMOGRAPHICS:
-                    tasks = data_processing(dataset, demographic, experiment)
+                    # JA: implement
+                    tasks = data_processing.load_data(dataset, demographic, experiment)
                     for task in tasks:
                         self.assertTrue(len(task[:,-1].unique())==2)
 

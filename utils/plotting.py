@@ -99,8 +99,8 @@ def plot_demos():
     Plots demographic information of eICU dataset.
     """
 
-    df = data_processing.load_eicu(drop_dupes=True)
-    fig, axes = plt.subplots(3,2, sharey=True, figsize=(18,18), squeeze=False)
+    df = pd.DataFrame() #data_processing.load_eicu(drop_dupes=True)
+    _, axes = plt.subplots(3,2, sharey=True, figsize=(18,18), squeeze=False)
 
     df['gender'].value_counts().plot.bar(ax=axes[0,0], rot=0, title='Gender')
     df['ethnicity'].value_counts().plot.bar(ax=axes[1,0], rot=0, title='Ethnicity')

@@ -1,5 +1,3 @@
-#%%
-
 import copy
 import json
 import torch
@@ -48,7 +46,6 @@ def load_data(data, demo, validate=False):
     """
 
     # JA: Implement "Save tensor as .np object" on first load, load local copy if exists
-    data_dir = DATA_DIR / data
 
     if data=='random':
         experiences = random_data()
@@ -70,7 +67,7 @@ def load_data(data, demo, validate=False):
 
     else:
         print('Unknown data source.')
-        raise NotImplemented
+        raise NotImplementedError
 
     if validate:
         # Make method to return train/val for 'validate==True' and train/test else
@@ -104,7 +101,11 @@ def get_coarse_ethnicity(df):
     eth_map['ETHNICITY_value:ASIAN'] = [c for c in df.columns if c.startswith('ETHNICITY_value:ASIAN')]
     eth_map['ETHNICITY_value:BLACK'] = [c for c in df.columns if c.startswith('ETHNICITY_value:BLACK')]
     eth_map['ETHNICITY_value:HISPANIC'] = [c for c in df.columns if c.startswith('ETHNICITY_value:HISPANIC')]
-    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:') and c not in eth_map['ETHNICITY_value:WHITE'] + eth_map['ETHNICITY_value:BLACK'] + eth_map['ETHNICITY_value:ASIAN'] + eth_map['ETHNICITY_value:HISPANIC']]
+    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:') 
+                                                              and c not in eth_map['ETHNICITY_value:WHITE'] + 
+                                                                           eth_map['ETHNICITY_value:BLACK'] + 
+                                                                           eth_map['ETHNICITY_value:ASIAN'] + 
+                                                                           eth_map['ETHNICITY_value:HISPANIC']]
 
     for k,v in eth_map:
         df[k] = df[v].ne(0).any(axis=1) # Mutually exclusive, sum should work
@@ -359,5 +360,3 @@ def cache_processed_dataset():
     # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
     # Load numpy arrays
     return NotImplementedError
-
-# %%
