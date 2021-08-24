@@ -1,3 +1,8 @@
+"""
+Contains functions for running hyperparameter sweep and
+Continual Learning model-training and evaluation.
+"""
+
 from pathlib import Path
 from functools import partial
 
@@ -114,7 +119,10 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     # Load main data first as .np file
     # Then call CL split on given domain increment
 
-    model = models.MODELS[model_name](n_channels=n_channels, seq_len=n_timesteps, hidden_dim=config['hidden_dim'], **config['model'])
+    model = models.MODELS[model_name](n_channels=n_channels, 
+                                      seq_len=n_timesteps, 
+                                      hidden_dim=config['hidden_dim'],
+                                      **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
 
@@ -144,9 +152,14 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
     resources = {'gpu': 0.25} if CUDA else {}
-    
+
     result = tune.run(
-        partial(training_loop, data=data, demo=demo, model_name=model_name, strategy_name=strategy_name, validate=True),
+        partial(training_loop,
+                data=data,
+                demo=demo,
+                model_name=model_name,
+                strategy_name=strategy_name,
+                validate=True),
         config=config,
         progress_reporter=reporter,
         num_samples=num_samples,
@@ -164,13 +177,12 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50
     return best_trial.config
 
 def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
-
     """
     Main training loop. Takes dataset, demographic splits, 
     and evaluates model/strategies over given hyperparams over this problem.
     """
 
-    # TRAINING 
+    # TRAINING
     # Container for metrics for plotting
     res = {m:{s:None for s in strategies} for m in models}
 
@@ -178,10 +190,12 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
         for strategy in strategies:
             # Hyperparam opt
             if validate:
-                config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
+                config = {**config_generic, 
+                          'model':config_model[model], 
+                          'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, demo, model, strategy)
                 res[model][strategy] = best_params
-            # Training loop 
+            # Training loop
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
             else:
@@ -193,12 +207,12 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
         with open(CONFIG_DIR / f'config_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
             json.dump(res, handle)
         return res
-        
+
     # PLOTTING
     else:
         # Locally saving results
         with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
-            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric} 
+            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric}
                                                  for s, metrics in strats.items()} 
                                                  for m, strats in res.items()}
             json.dump(res_no_tensors, handle)

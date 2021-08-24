@@ -1,9 +1,14 @@
+"""
+Test suite.
+"""
+
 import math
 import unittest
 import itertools
 import torch
 
 from utils import models, data_processing
+from main import main
 
 BATCH_SIZES = (1,10,100)
 SEQ_LENS = (4,10,30,50,100)
@@ -38,11 +43,11 @@ class TestModelMethods(unittest.TestCase):
             for seq_len in SEQ_LENS:
                 for n_vars in N_VARS:
                     for n_classes in N_CLASSES:
-                        input = torch.randn(batch_size, seq_len, n_vars)
+                        batch = torch.randn(batch_size, seq_len, n_vars)
                         simple_models = models.MODELS.values()
                         for model in simple_models:
                             model = model(seq_len=seq_len, n_channels=n_vars, output_size=n_classes)
-                            output = model(input)
+                            output = model(batch)
                             expected_shape = torch.Size([batch_size, n_classes])
                             self.assertEqual(output.shape, expected_shape)
 
@@ -55,7 +60,7 @@ class TestModelMethods(unittest.TestCase):
                 for n_classes in N_CLASSES:
                     simple_models = models.MODELS.values()
                     n_params = [sum(p.numel()
-                                for p in m(seq_len=seq_len, 
+                                for p in m(seq_len=seq_len,
                                            n_channels=n_vars,
                                            output_size=n_classes).parameters()
                                 if p.requires_grad)
@@ -81,6 +86,32 @@ class TestDataLoadingMethods(unittest.TestCase):
                         sim_data = torch.randint(0,1,(n_samples,seq_len,n_feats)).clone().detach().numpy()
                         modes = data_processing.get_modes(sim_data,feat=i)
                         self.assertEqual(modes.shape, torch.Size([n_samples]))
+
+class TestTrainingMethods(unittest.TestCase):
+    """
+    Training tests.
+    """
+
+    def ttest_hyperparamtune(self):
+        """
+        """
+        raise NotImplementedError
+
+    def ttest_traininggeneric(self):
+        """
+        """
+        raise NotImplementedError
+
+    def ttest_trainingrehearsal(self):
+        """
+        """
+        raise NotImplementedError
+
+    def ttest_trainingregularization(self):
+        """
+        """
+        raise NotImplementedError
+
 
 # CL task split tests
 class TestCLConstructionMethods(unittest.TestCase):
