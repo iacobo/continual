@@ -1,17 +1,19 @@
+"""
+Custom binary prediction metrics using Avalanche
+https://github.com/ContinualAI/avalanche/blob/master/notebooks/from-zero-to-hero-tutorial/05_evaluation.ipynb
+
+For confusion_vector logic see:
+https://gist.github.com/the-bass/cae9f3976866776dea17a5049013258d
+"""
+
 from typing import List, Union, Dict
+from collections import defaultdict
 
 import torch
 from torch import Tensor
 from avalanche.evaluation import Metric, PluginMetric, GenericPluginMetric
 from avalanche.evaluation.metrics.mean import Mean
 from avalanche.evaluation.metric_utils import phase_and_task
-from collections import defaultdict
-
-# Custom binary prediction metrics using Avalanche
-# https://github.com/ContinualAI/avalanche/blob/master/notebooks/from-zero-to-hero-tutorial/05_evaluation.ipynb
-
-# For confusion_vector logic see:
-# https://gist.github.com/the-bass/cae9f3976866776dea17a5049013258d
 
 class BalancedAccuracy(Metric[float]):
     """
@@ -92,10 +94,10 @@ class BalancedAccuracy(Metric[float]):
             true_negatives = torch.sum(torch.isnan(confusion_vector)).item()
             false_negatives = torch.sum(confusion_vector == 0).item()
 
-            TPR = true_positives / (true_positives + false_negatives)
-            TNR = true_negatives / (true_negatives + false_positives)
+            tpr = true_positives / (true_positives + false_negatives)
+            tnr = true_negatives / (true_negatives + false_positives)
             self._mean_balancedaccuracy[task_labels].update(
-                (TPR+TNR) / 2, len(predicted_y))
+                (tpr+tnr) / 2, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
