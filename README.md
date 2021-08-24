@@ -20,10 +20,7 @@ To rerun all experiments from the paper:
 ```powershell
 python main.py
 ```
-Figures will be saved to `/results/figs`. For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
-```powershell
-tensorboard --logdir=/results/log/tb_results/<tb_log_exp_name>
-```
+Figures will be saved to `/results/figs`.
 
 ## Individual experiments
 
@@ -42,6 +39,11 @@ python main.py --help
 Experiments use the hyperparameter settings found in `/config/best_config_<dataset>_<domain>_<outcome>.json`   
 
 If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` instead.
+
+For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
+```powershell
+tensorboard --logdir=/results/log/tb_results/<tb_log_exp_name>
+```
 
 
 ## Citation
