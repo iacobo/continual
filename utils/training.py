@@ -23,11 +23,14 @@ from utils.metrics import balancedaccuracy_metrics
 # Suppressing erroneous MaxPool1d named tensors warning
 warnings.filterwarnings("ignore", category=UserWarning)
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 # GLOBALS
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
-DEVICE = 'gpu' if CUDA else 'cpu'
+DEVICE = 'cuda' if CUDA else 'cpu'
 
 def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config=None, benchmark=None):
     """
@@ -111,6 +114,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
     scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
+    weight = weight.to(DEVICE)
     print('Data loaded.')
     print(f'N timesteps: {n_timesteps}\n'
           f'N features:  {n_channels}')
@@ -151,7 +155,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
-    resources = {'gpu': 0.25} if CUDA else {}
+    resources = {'gpu':1} if CUDA else {'cpu':1}
 
     result = tune.run(
         partial(training_loop,
