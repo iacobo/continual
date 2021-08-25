@@ -10,7 +10,7 @@ from avalanche.benchmarks.generators import tensors_benchmark
 DATA_DIR = Path(__file__).parents[1] / 'data'
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Compute total dataset first, save, load, then do task splits based on column and then drop those cols
+# Compute total dataset first, save, load, then do task splits based on col and then drop those cols
 
 ########################
 # RANDOM DATA
@@ -55,8 +55,10 @@ def load_data(data, demo, validate=False):
         tasks = split_tasks_fiddle(data=data.split('_')[-1], demo=demo)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
-        experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in experiences]
-        test_experiences = [(torch.FloatTensor(feat), torch.LongTensor(target)) for feat, target in test_experiences]
+        experiences = [(torch.FloatTensor(feat),
+                        torch.LongTensor(target)) for feat, target in experiences]
+        test_experiences = [(torch.FloatTensor(feat),
+                             torch.LongTensor(target)) for feat, target in test_experiences]
 
         # Class weights for balancing
         class1_count = sum(experiences[0][1]) + sum(experiences[1][1])
@@ -100,10 +102,10 @@ def get_coarse_ethnicity(df):
     eth_map['ETHNICITY_value:ASIAN'] = [c for c in df.columns if c.startswith('ETHNICITY_value:ASIAN')]
     eth_map['ETHNICITY_value:BLACK'] = [c for c in df.columns if c.startswith('ETHNICITY_value:BLACK')]
     eth_map['ETHNICITY_value:HISPANIC'] = [c for c in df.columns if c.startswith('ETHNICITY_value:HISPANIC')]
-    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:') 
-                                                              and c not in eth_map['ETHNICITY_value:WHITE'] + 
-                                                                           eth_map['ETHNICITY_value:BLACK'] + 
-                                                                           eth_map['ETHNICITY_value:ASIAN'] + 
+    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:')
+                                                              and c not in eth_map['ETHNICITY_value:WHITE'] +
+                                                                           eth_map['ETHNICITY_value:BLACK'] +
+                                                                           eth_map['ETHNICITY_value:ASIAN'] +
                                                                            eth_map['ETHNICITY_value:HISPANIC']]
 
     for k,v in eth_map:
@@ -137,10 +139,9 @@ def recover_admission_time():
     # One hot encode, then Merge df's
 
 def get_eicu_region(df):
-    
     raise NotImplementedError
 
-    
+
 
 # Save as .json
 demo_cols = {
