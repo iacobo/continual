@@ -2,7 +2,6 @@
 Main training script.
 """
 
-import json
 import argparse
 from pathlib import Path
 from utils import training
@@ -23,26 +22,20 @@ def main(args):
 
     # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
-        best_params = training.main(data=args.data,
-                                    demo=args.experiment,
-                                    models=args.models,
-                                    strategies=args.strategies,
-                                    config_generic=config.config_generic,
-                                    config_model=config.config_model,
-                                    config_cl=config.config_cl,
-                                    validate=True)
-
-    # Load previously tuned hyper-param config
-    else:
-        with open(CONFIG_DIR / f'config_{args.data}_{args.experiment}.json', encoding='utf-8') as json_file:
-            best_params = json.load(json_file)
+        training.main(data=args.data,
+                      demo=args.experiment,
+                      models=args.models,
+                      strategies=args.strategies,
+                      config_generic=config.config_generic,
+                      config_model=config.config_model,
+                      config_cl=config.config_cl,
+                      validate=True)
 
     # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data,
                   demo=args.experiment,
                   models=args.models,
-                  strategies=args.strategies,
-                  config_cl=best_params)
+                  strategies=args.strategies)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

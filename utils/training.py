@@ -32,7 +32,22 @@ CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
 
-def load_strategy(model, model_name, strategy_name, weight=None, validate=False, config=None, benchmark=None):
+def save_hp(data, demo, model, strategy, best_params):
+    """
+    Save hyper-param config to json.
+    """
+    with open(CONFIG_DIR / f'config_{data}_{demo}_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
+        json.dump(best_params, json_file)
+
+def load_hp(data, demo, model, strategy):
+    """
+    Load hyper-param config from json.
+    """
+    with open(CONFIG_DIR / f'config_{data}_{demo}_{model}_{strategy}.json', encoding='utf-8') as json_file:
+        best_params = json.load(json_file)
+    return best_params
+
+def load_strategy(model, model_name, strategy_name, data='', demo='', weight=None, validate=False, config=None, benchmark=None):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -48,22 +63,21 @@ def load_strategy(model, model_name, strategy_name, weight=None, validate=False,
 
     # Loggers
     # JA: subfolders for datset / experiments VVV
-    
+
     if validate:
-        log_dir = RESULTS_DIR / 'log' / 'val' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name
-        tb_logger = TensorboardLogger(tb_log_dir=log_dir)
-        loggers = [tb_logger]
+        loggers = []
     else:
-        log_dir = RESULTS_DIR / 'log' / 'tb_results' / f'tb_data_{plotting.get_timestamp()}' / model_name / strategy_name
+        timestamp = plotting.get_timestamp()
+        log_dir = RESULTS_DIR / 'log' / 'tensorboard' / f'{data}_{demo}_{timestamp}' / model_name / strategy_name
         interactive_logger = InteractiveLogger()
         tb_logger = TensorboardLogger(tb_log_dir=log_dir)
         loggers = [interactive_logger, tb_logger]
 
     eval_plugin = EvaluationPlugin(
         StreamConfusionMatrix(save_image=False),
+        loss_metrics(stream=True, experience=not validate),
         accuracy_metrics(stream=True, experience=not validate),
         balancedaccuracy_metrics(stream=True, experience=not validate),
-        loss_metrics(stream=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
 
@@ -114,20 +128,14 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
     scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
-    weight = weight.to(DEVICE)
+    if weight:
+        weight = weight.to(DEVICE)
     print('Data loaded.')
     print(f'N timesteps: {n_timesteps}\n'
           f'N features:  {n_channels}')
 
-    # JA:
-    # Load main data first as .np file
-    # Then call CL split on given domain increment
-
-    model = models.MODELS[model_name](n_channels=n_channels, 
-                                      seq_len=n_timesteps, 
-                                      hidden_dim=config['hidden_dim'],
-                                      **config['model'])
-    cl_strategy = load_strategy(model, model_name, strategy_name, weight=weight, validate=validate, config=config, benchmark=scenario)
+    model = models.MODELS[model_name](n_channels, n_timesteps, config['hidden_dim'], **config['model'])
+    cl_strategy = load_strategy(model, model_name, strategy_name, data, demo, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
 
     # Garbage collection
@@ -146,7 +154,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     else:
         return results
 
-def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50):
+def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
@@ -167,7 +175,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=50
         config=config,
         progress_reporter=reporter,
         num_samples=num_samples,
-        local_dir=RESULTS_DIR / 'log' / 'ray_results' / f'{data}_{demo}',
+        local_dir=RESULTS_DIR / 'log' / 'raytune' / f'{data}_{demo}',
         name=f'{model_name}_{strategy_name}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
         resources_per_trial=resources)
@@ -192,28 +200,20 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
 
     for model in models:
         for strategy in strategies:
-            # Hyperparam opt
+            # Hyperparam opt over first 2 tasks
             if validate:
-                config = {**config_generic, 
-                          'model':config_model[model], 
-                          'strategy':config_cl.get(strategy,{})}
+                config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, demo, model, strategy)
-                res[model][strategy] = best_params
-            # Training loop
+                save_hp(data, demo, model, strategy, best_params)
+            # Training loop over all tasks
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
             else:
-                config = config_cl[model][strategy]
+                config = load_hp(data, demo, model, strategy)
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
 
-    if validate:
-        # JA: need to save each exp/model/strat combo to a new file
-        with open(CONFIG_DIR / f'config_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
-            json.dump(res, handle)
-        return res
-
     # PLOTTING
-    else:
+    if not validate:
         # Locally saving results
         with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric}
@@ -222,5 +222,3 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
             json.dump(res_no_tensors, handle)
 
         plotting.plot_all_model_strats(models, strategies, data, demo, res, results_dir=RESULTS_DIR, savefig=True)
-
-        return res
