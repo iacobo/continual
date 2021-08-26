@@ -23,23 +23,20 @@ from utils.metrics import balancedaccuracy_metrics
 # Suppressing erroneous MaxPool1d named tensors warning
 warnings.filterwarnings("ignore", category=UserWarning)
 
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
 # GLOBALS
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
 
-def save_hp(data, demo, model, strategy, best_params):
+def save_params(data, demo, model, strategy, best_params):
     """
     Save hyper-param config to json.
     """
     with open(CONFIG_DIR / f'config_{data}_{demo}_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
         json.dump(best_params, json_file)
 
-def load_hp(data, demo, model, strategy):
+def load_params(data, demo, model, strategy):
     """
     Load hyper-param config from json.
     """
@@ -163,7 +160,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
-    resources = {'gpu':1} if CUDA else {'cpu':1}
+    resources = {'cpu':4, 'gpu':1} if CUDA else {'cpu':1}
 
     result = tune.run(
         partial(training_loop,
@@ -204,12 +201,12 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
             if validate:
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, demo, model, strategy)
-                save_hp(data, demo, model, strategy, best_params)
+                save_params(data, demo, model, strategy, best_params)
             # Training loop over all tasks
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
             else:
-                config = load_hp(data, demo, model, strategy)
+                config = load_params(data, demo, model, strategy)
                 res[model][strategy] = training_loop(config, data, demo, model, strategy)
 
     # PLOTTING
