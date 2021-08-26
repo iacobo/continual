@@ -119,16 +119,16 @@ def get_coarse_ethnicity(df):
                                                                            eth_map['ETHNICITY_value:ASIAN'] +
                                                                            eth_map['ETHNICITY_value:HISPANIC']]
 
-    for k,v in eth_map:
+    for k,v in eth_map.items():
         df[k] = df[v].ne(0).any(axis=1) # Mutually exclusive, sum should work
 
     return df
 
-def recover_admission_time():
+def recover_admission_time(data, outcome):
     """
     Function to recover datetime info for admission from FIDDLE.
     """
-    *_, df_outcome = load_fiddle()
+    *_, df_outcome = load_fiddle(data, outcome)
     df_outcome['SUBJECT_ID'] = df_outcome['stay'].str.split('_', expand=True)[0].astype(int)
     df_outcome['stay_number'] = df_outcome['stay'].str.split('_', expand=True)[1].str.replace('episode','').astype(int)
 
@@ -138,8 +138,8 @@ def recover_admission_time():
     ## grab quarter (season) from data and id
     df_mimic['quarter'] = df_mimic['ADMITTIME'].dt.quarter
 
-    gr = df_mimic.sort_values('ADMITTIME').groupby('SUBJECT_ID')
-    df_mimic['stay_number'] = gr.cumcount()+1
+    admission_group = df_mimic.sort_values('ADMITTIME').groupby('SUBJECT_ID')
+    df_mimic['stay_number'] = admission_group.cumcount()+1
     df_mimic = df_mimic[['SUBJECT_ID','stay_number','quarter']]
 
     return df_outcome.merge(df_mimic, on=['SUBJECT_ID','stay_number'])
@@ -248,7 +248,7 @@ demo_cols = {
             "unittype_value:Neuro ICU", 
             "unittype_value:SICU"
         ],
-        "ward":[ 
+        "ward":[
             "wardid_value:236__", 
             "wardid_value:607__", 
             "wardid_value:646__", 
@@ -272,16 +272,18 @@ def load_fiddle(data, outcome, n=None):
     with open(data_dir / 'features' / outcome / 's.feature_names.json', 'r') as s_file:
         s_feature_names = json.load(s_file)
 
-    # Subset vars with list to reduce mem overhead
+    # Take only subset of vars to  reduce mem overhead
+    default_col_ids = range(12)
+
     var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
-    var_X_subset = sorted(list(set(range(10)).union(set(var_X_demos))))
+    var_X_subset = sorted(list(set(default_col_ids).union(set(var_X_demos))))
     X_feature_names = [X_feature_names[i] for i in var_X_subset]
 
     var_s_demos = [s_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if not key.startswith('time')]
-    var_s_subset = sorted(list(set(range(10)).union(set(var_s_demos))))
+    var_s_subset = sorted(list(set(default_col_ids).union(set(var_s_demos))))
     s_feature_names = [s_feature_names[i] for i in var_s_subset]
 
-    # Loading tensors
+    # Loading np arrays
     features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,var_X_subset].todense()
     features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n,var_s_subset].todense()
     
@@ -330,7 +332,7 @@ def split_tasks_fiddle(data, demo, outcome):
         demo_onehots = [s_feature_names.index(col) for col in demo_cols[data][demo]]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
     elif demo=='time_season':
-        seasons = recover_admission_time()['quarter']
+        seasons = recover_admission_time(data, outcome)['quarter']
         tasks_idx = [seasons==i for i in range(1,5)]
     else:
         raise NotImplementedError
@@ -348,11 +350,19 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
     """
     if val_as_test:
-        tasks_train = [(t[0][t[1]['partition']=='train'], t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
-        tasks_test = [(t[0][t[1]['partition']=='val'], t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks]
+        tasks_train = [(
+            t[0][t[1]['partition']=='train'],
+            t[1][t[1]['partition']=='train']['y_true'].values) for t in tasks]
+        tasks_test = [(
+            t[0][t[1]['partition']=='val'],
+            t[1][t[1]['partition']=='val']['y_true'].values) for t in tasks]
     else:
-        tasks_train = [(t[0][t[1]['partition'].isin(['train','val'])], t[1][t[1]['partition'].isin(['train','val'])]['y_true'].values) for t in tasks]
-        tasks_test = [(t[0][t[1]['partition']=='test'], t[1][t[1]['partition']=='test']['y_true'].values) for t in tasks]
+        tasks_train = [(
+            t[0][t[1]['partition'].isin(['train','val'])],
+            t[1][t[1]['partition'].isin(['train','val'])]['y_true'].values) for t in tasks]
+        tasks_test = [(
+            t[0][t[1]['partition']=='test'],
+            t[1][t[1]['partition']=='test']['y_true'].values) for t in tasks]
 
     return tasks_train, tasks_test
 
