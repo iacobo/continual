@@ -125,7 +125,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
     scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
-    if weight:
+    if weight is not None:
         weight = weight.to(DEVICE)
     print('Data loaded.')
     print(f'N timesteps: {n_timesteps}\n'
