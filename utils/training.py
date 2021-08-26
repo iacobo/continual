@@ -185,7 +185,9 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
 
     return best_trial.config
 
-def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_generic={}, config_model={}, config_cl={}, validate=False):
+def main(data='random', demo='', models=['MLP'], strategies=['Naive'], 
+         config_generic={}, config_model={}, config_cl={}, 
+         validate=False, num_samples=50):
     """
     Main training loop. Takes dataset, demographic splits, 
     and evaluates model/strategies over given hyperparams over this problem.
@@ -200,7 +202,7 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'], config_ge
             # Hyperparam opt over first 2 tasks
             if validate:
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
-                best_params = hyperparam_opt(config, data, demo, model, strategy)
+                best_params = hyperparam_opt(config, data, demo, model, strategy, num_samples=num_samples)
                 save_params(data, demo, model, strategy, best_params)
             # Training loop over all tasks
             # JA: (Need to rerun multiple times for mean + CI's)
