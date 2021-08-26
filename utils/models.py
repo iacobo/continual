@@ -1,3 +1,16 @@
+#%%
+
+"""
+PyTorch Neural Network model definitions.
+Consists of simple parameterised:
+
+- Feed forward network
+- 1d CNN
+- RNN
+- LSTM
+- Transformer
+"""
+
 from torch import nn
 
 # CL imports
@@ -8,6 +21,9 @@ from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
 
 
 class SimpleMLP(nn.Module):
+    """
+    Feed-forward network ("multi-layer perceptron")
+    """
     def __init__(self, n_channels, seq_len, hidden_dim=512, output_size=2, dropout=0, nonlinearity='relu'):
         super().__init__()
 
@@ -45,6 +61,9 @@ class SimpleMLP(nn.Module):
 
 
 class SimpleRNN(nn.Module):
+    """
+    RNN
+    """
     def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, nonlinearity='tanh', dropout=0):
         super().__init__()
 
@@ -63,6 +82,9 @@ class SimpleRNN(nn.Module):
 
 
 class SimpleLSTM(nn.Module):
+    """
+    LSTM
+    """
     def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
         super().__init__()
 
@@ -80,6 +102,9 @@ class SimpleLSTM(nn.Module):
         return out
 
 class SimpleCNN(nn.Module):
+    """
+    1d CNN (also known as TCN)
+    """
     def __init__(self, n_channels, seq_len, hidden_dim=512, output_size=2, nonlinearity='relu'):
         super().__init__()
 
@@ -107,20 +132,40 @@ class SimpleCNN(nn.Module):
 
         self.fc = nn.Linear((seq_len//4)*(hidden_dim//4), output_size) #(seq_len//2*num batch norm) * final hid size
 
-    # Defining the forward pass    
+    # Defining the forward pass
     def forward(self, x):
         batch_size = x.shape[0]
 
         out = x.swapdims(1,2)
         out = self.cnn_layers(out)
-        out = out.view(batch_size, -1)
+        out = out.reshape(batch_size, -1)
         out = self.fc(out)
         return out
 
-#class SimpleTransformer():
-#
-#    encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
-#    transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
+class SimpleTransformer(nn.Module):
+    """
+    Transformer.
+
+    JA: Inestigate multi-variate/channels transformer?
+    """
+    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, n_heads=8, output_size=2):
+        super().__init__()
+
+        transformer_layer = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=n_heads)
+        self.transformer = nn.TransformerEncoder(transformer_layer, num_layers=n_layers)
+
+        self.fc = nn.Linear(seq_len*n_channels*hidden_dim*n_heads, output_size)
+
+    def forward(self, x):
+        """
+        Forward pass of model.
+        """
+        batch_size = x.shape[0]
+
+        out = self.transformer(x)
+        out = out.reshape(batch_size, -1)
+        out = self.fc(out)
+        return out
 
 # CONTAINERS
 MODELS = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
@@ -128,3 +173,5 @@ STRATEGIES = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
               'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence, 
               'Replay':Replay, 'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE, 
               'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}
+
+#%%

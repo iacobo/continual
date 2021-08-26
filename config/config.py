@@ -24,7 +24,7 @@ def get_decay_from_ewc_mode(spec):
 config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2]),
                   'optimizer':tune.choice(['Adam']), #'SGD',
                   'hidden_dim':tune.choice([128,256,512,1024]),
-                  'train_epochs':400,
+                  'train_epochs':1000,
                   'train_mb_size':tune.choice([64,128,256,512,1024])
                   }
 
