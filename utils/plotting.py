@@ -1,11 +1,16 @@
-from utils import data_processing
-from collections import defaultdict
+"""
+Functions for plotting results and descriptive analysis of data.
+"""
+
 from datetime import datetime
+from collections import defaultdict
 
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+
+#from utils import data_processing
 
 METRIC_FULL_NAME = {'BalAcc': 'Balanced Accuracy',
                     'Top1_Acc': 'Accuracy',
@@ -19,29 +24,35 @@ def get_timestamp():
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def stack_results(results, metric='BalAcc'):
-
-    acc = defaultdict(list)
+    """
+    Stacks results
+    """
+    metric_dict = defaultdict(list)
 
     # Get metrics for each training "experience"'s test set
     for k,v in results.items():
         if f'{metric}_Exp' in k:
             new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
-            acc[new_k] = v[1]
+            metric_dict[new_k] = v[1]
 
-    df = pd.DataFrame.from_dict(acc)
-    df.index.rename(f'Epoch', inplace=True)
+    df = pd.DataFrame.from_dict(metric_dict)
+    df.index.rename('Epoch', inplace=True)
     stacked = df.stack().reset_index()
     stacked.rename(columns={'level_1': 'Task', 0: METRIC_FULL_NAME[metric]}, inplace=True)
 
     return stacked
 
-def plot_accuracy(method, model, results, ax=None, metric='BalAcc'):
+def plot_metric(method, model, results, ax=None, metric='BalAcc'):
+    """
+    Plots given metric from dict.
+    Stacks multiple plots (i.e. different per-task metrics) over training time.
+    """
     ax = ax or plt.gca()
 
     stacked = stack_results(results)
 
     # Only plot task accuracies after examples have been encountered
-    #stacked = stacked[stacked['Task'].astype(int) <= stacked['Epoch \n (15 epochs per task)'].astype(int)]
+    #stacked = stacked[stacked['Task'].astype(int)<=stacked['Epoch \n (15 epochs per task)'].astype(int)]
 
     sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
@@ -49,6 +60,11 @@ def plot_accuracy(method, model, results, ax=None, metric='BalAcc'):
     ax.set_xlabel('')
 
 def clean_subplot(i, j, axes):
+    """
+    Removes top/rights spines.
+    Removes titles/legend.
+    Fixes y/metric limits.
+    """
     ax = axes[i,j]
     
     ax.spines['right'].set_visible(False)
@@ -62,6 +78,9 @@ def clean_subplot(i, j, axes):
     plt.setp(axes, ylim=(0,1))
 
 def clean_plot(fig, axes):
+    """
+    Cleans all subpots. Removes duplicate legends.
+    """
     for i in range(len(axes)):
         for j in range(len(axes[0])):
             clean_subplot(i,j,axes)
@@ -70,7 +89,10 @@ def clean_plot(fig, axes):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-def annotate_plot(fig, demo, metric='BalAcc'):
+def annotate_plot(fig, demo, metric='BalAcc', outcome='48h mortality'):
+    """
+    Adds x/y labels and suptitles.
+    """
     try:
         fig.supxlabel('Epoch')
         fig.supylabel(METRIC_FULL_NAME[metric], x=0)
@@ -79,20 +101,23 @@ def annotate_plot(fig, demo, metric='BalAcc'):
         fig.text(0.04, 0.5, METRIC_FULL_NAME[metric], va='center', rotation='vertical')
 
     fig.suptitle(f'Continual Learning model comparison \n'
-                 f'Outcome: {"48h mortality"} | Domain Increment: {demo}')
+                 f'Outcome: {outcome} | Domain Increment: {demo}')
 
 def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True):
-        fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
+    """
+    Pairplot of all models vs strategies.
+    """
+    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
-        for i, model in enumerate(models):
-            for j, strategy in enumerate(strategies):
-                plot_accuracy(strategy, model, res[model][strategy], axes[i,j])
+    for i, model in enumerate(models):
+        for j, strategy in enumerate(strategies):
+            plot_metric(strategy, model, res[model][strategy], axes[i,j])
 
-        clean_plot(fig, axes)
-        annotate_plot(fig, demo)
+    clean_plot(fig, axes)
+    annotate_plot(fig, demo)
 
-        if savefig:
-            plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{get_timestamp()}.png')
+    if savefig:
+        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{get_timestamp()}.png')
 
 def plot_demos():
     """

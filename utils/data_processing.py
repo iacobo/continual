@@ -1,3 +1,18 @@
+"""
+Functions for loading data.
+
+Loads raw data into several "experiences" (tasks)
+for continual learning training scenario.
+
+Tasks split by given demographic.
+
+Loads:
+
+- MIMIC-III - ICU time-series data
+- eICU-CRD  - ICU time-series data
+- random    - sequential data
+"""
+
 import copy
 import json
 import torch
@@ -8,9 +23,6 @@ from pathlib import Path
 from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
-
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Compute total dataset first, save, load, then do task splits based on col and then drop those cols
 
 ########################
 # RANDOM DATA
@@ -52,7 +64,8 @@ def load_data(data, demo, validate=False):
         weights = None
 
     elif data in ('fiddle_mimic3', 'fiddle_eicu'):
-        tasks = split_tasks_fiddle(data=data.split('_')[-1], demo=demo)
+        data_source = data.split('_')[-1]
+        tasks = split_tasks_fiddle(data=data_source, demo=demo, outcome='mortality_48h')
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat),
@@ -88,8 +101,6 @@ def load_data(data, demo, validate=False):
     # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
 
     return scenario, n_tasks, n_timesteps, n_channels, weights
-
-
 
 
 ##########
@@ -134,13 +145,8 @@ def recover_admission_time():
     return df_outcome.merge(df_mimic, on=['SUBJECT_ID','stay_number'])
 
 
-    # Groupby.rank -> group by subject_id, rank by admit time, get n for matching
-
-    # One hot encode, then Merge df's
-
 def get_eicu_region(df):
     raise NotImplementedError
-
 
 
 # Save as .json
@@ -251,18 +257,19 @@ demo_cols = {
         }
     }
 
-def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
+def load_fiddle(data, outcome, n=None):
     """
-    - `data` ['eicu', 'mimic3']
-    - `task` ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
+    - `data`: ['eicu', 'mimic3']
+    - `task`: ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
+    - `n`:    number of samples to pick
 
     features of form N_patients x Seq_len x Features
     """
     data_dir = DATA_DIR / f'FIDDLE_{data}'
     
-    with open(data_dir / 'features' / task / 'X.feature_names.json', 'r') as X_file:
+    with open(data_dir / 'features' / outcome / 'X.feature_names.json', 'r') as X_file:
         X_feature_names = json.load(X_file)
-    with open(data_dir / 'features' / task / 's.feature_names.json', 'r') as s_file:
+    with open(data_dir / 'features' / outcome / 's.feature_names.json', 'r') as s_file:
         s_feature_names = json.load(s_file)
 
     # Subset vars with list to reduce mem overhead
@@ -275,10 +282,10 @@ def load_fiddle(data='mimic3', task='mortality_48h', n=50000):
     s_feature_names = [s_feature_names[i] for i in var_s_subset]
 
     # Loading tensors
-    features_X = sparse.load_npz(data_dir / 'features' / task / 'X.npz')[:n,:,var_X_subset].todense()
-    features_s = sparse.load_npz(data_dir / 'features' / task / 's.npz')[:n,var_s_subset].todense()
+    features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,var_X_subset].todense()
+    features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n,var_s_subset].todense()
     
-    df_outcome = pd.read_csv(data_dir / 'population' / f'{task}.csv')[:n]
+    df_outcome = pd.read_csv(data_dir / 'population' / f'{outcome}.csv')[:n]
 
     return features_X, features_s, X_feature_names, s_feature_names, df_outcome
 
@@ -290,18 +297,21 @@ def get_modes(x,feat,seq_dim=1):
     # JA: Check conversion to tnsor, dtype etc
     return torch.LongTensor(x[:,:,feat]).mode(dim=seq_dim)[0].clone().detach().numpy()
 
-def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
+def split_tasks_fiddle(data, demo, outcome):
     """
     Takes FIDDLE format data and given an outcome and demographic,
     splits the input data across that demographic into multiple
     tasks/experiences.
     """
-    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, task)
+    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, outcome)
 
     timevar_categorical_demos = []
     static_categorical_demos = []
     static_onehot_demos = ['sex','age','ethnicity','hospital']
     timevar_onehot_demos = []
+
+    if 'eICU' in data and demo=='coarse_ethnicity':
+        raise NotImplementedError
     
     # if feat is categorical
     if demo in timevar_categorical_demos:
@@ -334,9 +344,7 @@ def split_tasks_fiddle(data='mimic3', demo='age', task='mortality_48h'):
 
 def split_trainvaltest_fiddle(tasks, val_as_test=True):
     """
-    Takes a dataset of multiple tasks/experiences and splits it into 
-    train and val/test sets.
-
+    Takes a dataset of multiple tasks/experiences and splits it into train and val/test sets.
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
     """
     if val_as_test:
