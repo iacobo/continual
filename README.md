@@ -2,8 +2,6 @@
 
 <!-- [![License](https://img.shields.io/github/license/iacobo/continual.svg)](https://opensource.org/licenses/MIT) -->
 
-![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
-
 
 # Continual Learning of Longitudinal Health Records
 
@@ -90,6 +88,8 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
   - `plotting.py` (Functions to plot results)
 
 ---
+
+![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
 <sup>
 
