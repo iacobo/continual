@@ -75,6 +75,9 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 
 \* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.<br><br>
 
+</sup>
+<sup>
+
 \* Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
 
 </sup>
