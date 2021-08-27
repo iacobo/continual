@@ -67,33 +67,13 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 | Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
 |Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
 
-
-## Project structure
-
-- `main.py` (Main training program)
-- `test.py` (Test suite)
-- config
-  - `config.py` (Hyperparameter search space configuration)
-- data
-  - FIDDLE_eicu (Pre-processed eICU-CRD dataset)
-  - FIDDLE_mimic3 (Pre-processed MIMIC-III dataset)
-- results
-  - figs (Plotted results)
-  - log
-  - metrics (Results of experiments)
-- utils
-  - `data_processing.py` (Code to load and pre-process datasets, split datasets along task boundaries)
-  - `models.py` (Model definitions, continual learning strategies)
-  - `training.py` (Functions for performing hyper-parameter optimisation, training, and evaluation of models)
-  - `plotting.py` (Functions to plot results)
+---
 
 ---
 
 ![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
 <sup>
-
-### Note
 
 \* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.<br><br>
 
