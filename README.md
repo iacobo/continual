@@ -11,7 +11,7 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
 
 1. Clone this repo to your local machine.
    
-2. Apply for access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.\*
+2. Apply for access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.
    
 3. Download the [preprocessed FIDDLE datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/<repo>/data` subfolder.
 
@@ -71,12 +71,5 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 
 ![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
-<sup>
-\* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.
-</sup>
-  
-<br><br>
-  
-<sup>
+\* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.  
 \* Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
-</sup>
