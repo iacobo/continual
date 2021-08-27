@@ -140,6 +140,10 @@ class SimpleTransformer(nn.Module):
     def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, n_heads=8, output_size=2, nonlinearity='relu', dropout=0):
         super().__init__()
 
+        # JA: need to make this more elegant
+        while seq_len % n_heads != 0:
+            n_heads -=1
+
         transformer_layer = nn.TransformerEncoderLayer(
             d_model=seq_len, dim_feedforward=hidden_dim, nhead=n_heads, activation=nonlinearity, 
             dropout=dropout, batch_first=True)

@@ -11,7 +11,7 @@ from utils import models, data_processing
 from main import main
 
 BATCH_SIZES = (1,10,100)
-SEQ_LENS = (4,10,30,50,100)
+SEQ_LENS = (4,16,32,48,50,100)
 N_VARS = (2,10,30,100)
 N_CLASSES = (2,3,4,10)
 
