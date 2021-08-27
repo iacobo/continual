@@ -1,5 +1,3 @@
-#%%
-
 """
 PyTorch Neural Network model definitions.
 Consists of simple parameterised:
@@ -12,13 +10,6 @@ Consists of simple parameterised:
 """
 
 from torch import nn
-
-# CL imports
-from avalanche.training.strategies import Naive, JointTraining, Cumulative # Baselines
-from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Regularisation
-from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
-from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
-
 
 class SimpleMLP(nn.Module):
     """
@@ -145,16 +136,16 @@ class SimpleCNN(nn.Module):
 class SimpleTransformer(nn.Module):
     """
     Transformer.
-
-    JA: Inestigate multi-variate/channels transformer?
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, n_heads=8, output_size=2):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, n_heads=8, output_size=2, nonlinearity='relu', dropout=0):
         super().__init__()
 
-        transformer_layer = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=n_heads)
+        transformer_layer = nn.TransformerEncoderLayer(
+            d_model=seq_len, dim_feedforward=hidden_dim, nhead=n_heads, activation=nonlinearity, 
+            dropout=dropout, batch_first=True)
         self.transformer = nn.TransformerEncoder(transformer_layer, num_layers=n_layers)
 
-        self.fc = nn.Linear(seq_len*n_channels*hidden_dim*n_heads, output_size)
+        self.fc = nn.Linear(seq_len*n_channels, output_size)
 
     def forward(self, x):
         """
@@ -162,16 +153,12 @@ class SimpleTransformer(nn.Module):
         """
         batch_size = x.shape[0]
 
-        out = self.transformer(x)
+        out = x.swapdims(1,2)
+        out = self.transformer(out)
         out = out.reshape(batch_size, -1)
         out = self.fc(out)
         return out
 
 # CONTAINERS
-MODELS = {'MLP':SimpleMLP, 'CNN':SimpleCNN, 'RNN':SimpleRNN, 'LSTM':SimpleLSTM}
-STRATEGIES = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
-              'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence, 
-              'Replay':Replay, 'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE, 
-              'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}
-
-#%%
+MODELS = {'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,
+'Transformer':SimpleTransformer}

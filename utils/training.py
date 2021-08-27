@@ -17,7 +17,7 @@ from avalanche.training.plugins import EvaluationPlugin
 from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamConfusionMatrix
 
 # Local imports
-from utils import models, plotting, data_processing
+from utils import models, plotting, data_processing, cl_strategies
 from utils.metrics import balancedaccuracy_metrics
 
 # Suppressing erroneous MaxPool1d named tensors warning
@@ -50,7 +50,7 @@ def load_strategy(model, model_name, strategy_name, data='', demo='', weight=Non
     - `experience` Accuracy for each experience
     """
 
-    strategy = models.STRATEGIES[strategy_name]
+    strategy = cl_strategies.STRATEGIES[strategy_name]
     criterion = nn.CrossEntropyLoss(weight=weight)
 
     if config['optimizer'] == 'SGD':
@@ -170,12 +170,13 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
                 strategy_name=strategy_name,
                 validate=True),
         config=config,
-        progress_reporter=reporter,
         num_samples=num_samples,
-        local_dir=RESULTS_DIR / 'log' / 'raytune' / f'{data}_{demo}',
+        progress_reporter=reporter,
+        raise_on_failed_trial=False,
+        resources_per_trial=resources,
         name=f'{model_name}_{strategy_name}',
-        trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}',
-        resources_per_trial=resources)
+        local_dir=RESULTS_DIR / 'log' / 'raytune' / f'{data}_{demo}',
+        trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}')
 
     best_trial = result.get_best_trial('balancedaccuracy', 'max', 'last')
     print(f'Best trial config:                             {best_trial.config}')

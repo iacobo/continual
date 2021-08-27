@@ -14,7 +14,7 @@ def main(args):
     Loads and runs appropriate experiment from passed args.
     """
     if args.models=='all':
-        args.models = ['MLP','CNN','RNN','LSTM']
+        args.models = ['MLP','CNN','RNN','LSTM','Transformer']
 
     # JA: INVESTIGATE MAS, 'AGEM' (num samples > mem?)!!!
     if args.strategies=='all':
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument('--models',
                         type=str,
                         default='all',
-                        choices=['MLP','CNN','RNN','LSTM'],
+                        choices=['MLP','CNN','RNN','LSTM','Transformer'],
                         nargs='+',
                         help='Model(s) to evaluate.')
     parser.add_argument('--validate',

@@ -23,7 +23,7 @@ def get_decay_from_ewc_mode(spec):
 # Hyperparameter search-space
 config_generic = {'lr':tune.choice([1e-4,1e-3,1e-2]),
                   'optimizer':tune.choice(['Adam']), #'SGD',
-                  'hidden_dim':tune.choice([128,256,512,1024]),
+                  'hidden_dim':tune.choice([512,1024,2048]),
                   'train_epochs':1000,
                   'train_mb_size':tune.choice([64,128,256,512,1024])
                   }
@@ -38,7 +38,10 @@ config_model = {'CNN':{'nonlinearity':tune.choice(['tanh', 'relu'])},
                        'nonlinearity':tune.choice(['tanh', 'relu'])},
                 'LSTM':{'n_layers':tune.choice([1,2]),
                         'dropout':tune.sample_from(get_dropout_from_n_layers),
-                        'bidirectional':tune.choice([True,False])}
+                        'bidirectional':tune.choice([True,False])},
+                'Transformer':{'n_layers':tune.choice([1,2]),
+                        'dropout':tune.sample_from(get_dropout_from_n_layers),
+                        'nonlinearity':tune.choice(['relu', 'gelu'])}
                 }
 
 config_cl = {'Replay':{'mem_size':tune.choice([4,16,32])},
