@@ -69,8 +69,6 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 
 ---
 
----
-
 ![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
 <sup>
