@@ -72,12 +72,11 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 ![Python versions](https://img.shields.io/badge/python-3.7+-1177AA?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
 <sup>
-
-\* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.<br><br>
-
+\* As well as [HiRID](https://physionet.org/content/hirid/1.1.1/) if you wish to run advanced experiments.
 </sup>
+  
+<br><br>
+  
 <sup>
-
 \* Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
-
 </sup>
