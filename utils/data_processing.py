@@ -1,3 +1,5 @@
+#%%
+
 """
 Functions for loading data.
 
@@ -18,6 +20,7 @@ import json
 import torch
 import sparse
 import pandas as pd
+import numpy as np
 
 from pathlib import Path
 from avalanche.benchmarks.generators import tensors_benchmark
@@ -107,13 +110,17 @@ def load_data(data, demo, validate=False):
 # FIDDLE
 ##########
 
-def get_coarse_ethnicity():
+def get_ethnicity_coarse(data, outcome):
+    """
+    MIMIC-3 has detailed ethnicity values, but some of these groups have no mortality data.
+    Hence create broader groups to get better binary class balance of tasks.
+    """
 
     # Get col id's from s_feature_names
     # Get row id's from this and features_s
     # subset features_X rows
 
-    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data='mimic3', outcome='48h_mortality')
+    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data=data, outcome=outcome)
 
     eth_map = {}
     eth_map['ETHNICITY_COARSE_value:WHITE'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:WHITE')]
@@ -121,16 +128,17 @@ def get_coarse_ethnicity():
     eth_map['ETHNICITY_COARSE_value:BLACK'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:BLACK')]
     eth_map['ETHNICITY_COARSE_value:HISPA'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:HISPANIC')]
     eth_map['ETHNICITY_COARSE_value:OTHER'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:')
-                                                                          and c not in eth_map['ETHNICITY_value:WHITE'] +
-                                                                                       eth_map['ETHNICITY_value:BLACK'] +
-                                                                                       eth_map['ETHNICITY_value:ASIAN'] +
-                                                                                       eth_map['ETHNICITY_value:HISPANIC']]
+                                                                          and c not in eth_map['ETHNICITY_COARSE_value:WHITE'] +
+                                                                                       eth_map['ETHNICITY_COARSE_value:BLACK'] +
+                                                                                       eth_map['ETHNICITY_COARSE_value:ASIAN'] +
+                                                                                       eth_map['ETHNICITY_COARSE_value:HISPA']]
 
     for k, cols in eth_map.items():
         s_feature_names.append(k)
-        df_outcome[k] = features_s[[s_feature_names.index(col) for col in cols]].ne(0).any(axis=1) # Mutually exclusive, sum should work
+        idx = [s_feature_names.index(col) for col in cols]
+        features_s = np.append(features_s, features_s[:,idx].any(axis=1)[:,np.newaxis], axis=1)
 
-    return df_outcome
+    return features_X, features_s, X_feature_names, s_feature_names, df_outcome
 
 def recover_admission_time(data, outcome):
     """
@@ -193,6 +201,13 @@ demo_cols = {
             "ETHNICITY_value:WHITE - BRAZILIAN", 
             "ETHNICITY_value:WHITE - OTHER EUROPEAN", 
             "ETHNICITY_value:WHITE - RUSSIAN"
+            ],
+        "ethnicity_coarse":[
+            'ETHNICITY_COARSE_value:WHITE',
+            'ETHNICITY_COARSE_value:ASIAN',
+            'ETHNICITY_COARSE_value:BLACK',
+            'ETHNICITY_COARSE_value:HISPA',
+            'ETHNICITY_COARSE_value:OTHER'
             ]
         },
     
@@ -287,7 +302,7 @@ def load_fiddle(data, outcome, n=None):
     var_X_subset = sorted(list(set(default_col_ids).union(set(var_X_demos))))
     X_feature_names = [X_feature_names[i] for i in var_X_subset]
 
-    var_s_demos = [s_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if not key.startswith('time')]
+    var_s_demos = [s_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if not key.startswith('time') and key!='ethnicity_coarse']
     var_s_subset = sorted(list(set(default_col_ids).union(set(var_s_demos))))
     s_feature_names = [s_feature_names[i] for i in var_s_subset]
 
@@ -313,15 +328,15 @@ def split_tasks_fiddle(data, demo, outcome):
     splits the input data across that demographic into multiple
     tasks/experiences.
     """
-    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, outcome)
+    if demo=='ethnicity_coarse':
+        features_X, features_s, X_feature_names, s_feature_names, df_outcome = get_ethnicity_coarse(data,outcome)
+    else:
+        features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, outcome)
 
     timevar_categorical_demos = []
     static_categorical_demos = []
-    static_onehot_demos = ['sex','age','ethnicity','hospital']
+    static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
     timevar_onehot_demos = []
-
-    if 'eICU' in data and demo=='coarse_ethnicity':
-        raise NotImplementedError
     
     # if feat is categorical
     if demo in timevar_categorical_demos:

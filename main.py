@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument('--experiment',
                         type=str,
                         default='age',
-                        choices=['time_season','region','hospital','age','sex','ethnicity'],
+                        choices=['time_season','region','hospital','age','sex','ethnicity','ethnicity_coarse'],
                         help='Experiment to run.') # Domain incremental
     parser.add_argument('--strategies',
                         type=str,
