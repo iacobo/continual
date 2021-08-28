@@ -107,22 +107,30 @@ def load_data(data, demo, validate=False):
 # FIDDLE
 ##########
 
-def get_coarse_ethnicity(df):
+def get_coarse_ethnicity():
+
+    # Get col id's from s_feature_names
+    # Get row id's from this and features_s
+    # subset features_X rows
+
+    features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data='mimic3', outcome='48h_mortality')
+
     eth_map = {}
-    eth_map['ETHNICITY_value:WHITE'] = [c for c in df.columns if c.startswith('ETHNICITY_value:WHITE')]
-    eth_map['ETHNICITY_value:ASIAN'] = [c for c in df.columns if c.startswith('ETHNICITY_value:ASIAN')]
-    eth_map['ETHNICITY_value:BLACK'] = [c for c in df.columns if c.startswith('ETHNICITY_value:BLACK')]
-    eth_map['ETHNICITY_value:HISPANIC'] = [c for c in df.columns if c.startswith('ETHNICITY_value:HISPANIC')]
-    eth_map['ETHNICITY_value:OTHER'] = [c for c in df.columns if c.startswith('ETHNICITY_value:')
-                                                              and c not in eth_map['ETHNICITY_value:WHITE'] +
-                                                                           eth_map['ETHNICITY_value:BLACK'] +
-                                                                           eth_map['ETHNICITY_value:ASIAN'] +
-                                                                           eth_map['ETHNICITY_value:HISPANIC']]
+    eth_map['ETHNICITY_COARSE_value:WHITE'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:WHITE')]
+    eth_map['ETHNICITY_COARSE_value:ASIAN'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:ASIAN')]
+    eth_map['ETHNICITY_COARSE_value:BLACK'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:BLACK')]
+    eth_map['ETHNICITY_COARSE_value:HISPA'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:HISPANIC')]
+    eth_map['ETHNICITY_COARSE_value:OTHER'] = [c for c in s_feature_names if c.startswith('ETHNICITY_value:')
+                                                                          and c not in eth_map['ETHNICITY_value:WHITE'] +
+                                                                                       eth_map['ETHNICITY_value:BLACK'] +
+                                                                                       eth_map['ETHNICITY_value:ASIAN'] +
+                                                                                       eth_map['ETHNICITY_value:HISPANIC']]
 
-    for k,v in eth_map.items():
-        df[k] = df[v].ne(0).any(axis=1) # Mutually exclusive, sum should work
+    for k, cols in eth_map.items():
+        s_feature_names.append(k)
+        df_outcome[k] = features_s[[s_feature_names.index(col) for col in cols]].ne(0).any(axis=1) # Mutually exclusive, sum should work
 
-    return df
+    return df_outcome
 
 def recover_admission_time(data, outcome):
     """
