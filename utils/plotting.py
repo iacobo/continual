@@ -117,7 +117,7 @@ def plot_all_model_strats(models, strategies, data, demo, res, results_dir, save
     annotate_plot(fig, demo)
 
     if savefig:
-        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{get_timestamp()}.png')
+        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{metric}_{get_timestamp()}.png')
 
 def plot_demos():
     """
