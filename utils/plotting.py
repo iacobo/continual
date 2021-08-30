@@ -23,7 +23,7 @@ def get_timestamp():
     ts = time.time()
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
-def stack_results(results, metric='BalAcc'):
+def stack_results(results, metric):
     """
     Stacks results
     """
@@ -42,14 +42,14 @@ def stack_results(results, metric='BalAcc'):
 
     return stacked
 
-def plot_metric(method, model, results, ax=None, metric='BalAcc'):
+def plot_metric(method, model, results, metric, ax=None):
     """
     Plots given metric from dict.
     Stacks multiple plots (i.e. different per-task metrics) over training time.
     """
     ax = ax or plt.gca()
 
-    stacked = stack_results(results)
+    stacked = stack_results(results, metric)
 
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int)<=stacked['Epoch \n (15 epochs per task)'].astype(int)]
@@ -89,7 +89,7 @@ def clean_plot(fig, axes):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-def annotate_plot(fig, demo, metric='BalAcc', outcome='48h mortality'):
+def annotate_plot(fig, demo, metric, outcome='48h mortality'):
     """
     Adds x/y labels and suptitles.
     """
@@ -111,10 +111,10 @@ def plot_all_model_strats(models, strategies, data, demo, res, results_dir, save
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
-            plot_metric(strategy, model, res[model][strategy], axes[i,j], metric=metric)
+            plot_metric(strategy, model, res[model][strategy], metric, axes[i,j])
 
     clean_plot(fig, axes)
-    annotate_plot(fig, demo)
+    annotate_plot(fig, demo, metric)
 
     if savefig:
         plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{metric}_{get_timestamp()}.png')
