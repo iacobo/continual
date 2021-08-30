@@ -103,7 +103,7 @@ def annotate_plot(fig, demo, metric='BalAcc', outcome='48h mortality'):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {demo}')
 
-def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True):
+def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True, metric='BalAcc'):
     """
     Pairplot of all models vs strategies.
     """
@@ -111,7 +111,7 @@ def plot_all_model_strats(models, strategies, data, demo, res, results_dir, save
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
-            plot_metric(strategy, model, res[model][strategy], axes[i,j])
+            plot_metric(strategy, model, res[model][strategy], axes[i,j], metric=metric)
 
     clean_plot(fig, axes)
     annotate_plot(fig, demo)
