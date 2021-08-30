@@ -17,12 +17,12 @@ Loads:
 
 import copy
 import json
-import torch
 import sparse
 import pandas as pd
 import numpy as np
-
 from pathlib import Path
+
+import torch
 from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
@@ -54,7 +54,7 @@ def load_data(data, demo, validate=False):
     """
     Data of form:
     (
-        x:(samples, variables, time_steps), 
+        x:(samples, variables, time_steps),
         y:(outcome,)
     )
     """
@@ -172,34 +172,34 @@ demo_cols = {
             "GENDER_value:F"
             ],
         "age":[
-            "AGE_value:(18.032999999999998, 51.561]", 
-            "AGE_value:(51.561, 62.419]", 
-            "AGE_value:(62.419, 71.504]", 
-            "AGE_value:(71.504, 81.24]", 
+            "AGE_value:(18.032999999999998, 51.561]",
+            "AGE_value:(51.561, 62.419]",
+            "AGE_value:(62.419, 71.504]",
+            "AGE_value:(71.504, 81.24]",
             "AGE_value:(81.24, 91.4]"
             ],
         "ethnicity":[
-            "ETHNICITY_value:ASIAN", 
-            "ETHNICITY_value:ASIAN - ASIAN INDIAN", 
-            "ETHNICITY_value:ASIAN - CHINESE", 
-            "ETHNICITY_value:ASIAN - VIETNAMESE", 
-            "ETHNICITY_value:BLACK/AFRICAN", 
-            "ETHNICITY_value:BLACK/AFRICAN AMERICAN", 
-            "ETHNICITY_value:BLACK/CAPE VERDEAN", 
-            "ETHNICITY_value:BLACK/HAITIAN", 
-            "ETHNICITY_value:HISPANIC OR LATINO", 
-            "ETHNICITY_value:HISPANIC/LATINO - DOMINICAN", 
-            "ETHNICITY_value:HISPANIC/LATINO - PUERTO RICAN", 
-            "ETHNICITY_value:MIDDLE EASTERN", 
-            "ETHNICITY_value:MULTI RACE ETHNICITY", 
-            "ETHNICITY_value:OTHER", 
-            "ETHNICITY_value:PATIENT DECLINED TO ANSWER", 
-            "ETHNICITY_value:PORTUGUESE", 
-            "ETHNICITY_value:UNABLE TO OBTAIN", 
-            "ETHNICITY_value:UNKNOWN/NOT SPECIFIED", 
-            "ETHNICITY_value:WHITE", 
-            "ETHNICITY_value:WHITE - BRAZILIAN", 
-            "ETHNICITY_value:WHITE - OTHER EUROPEAN", 
+            "ETHNICITY_value:ASIAN",
+            "ETHNICITY_value:ASIAN - ASIAN INDIAN",
+            "ETHNICITY_value:ASIAN - CHINESE",
+            "ETHNICITY_value:ASIAN - VIETNAMESE",
+            "ETHNICITY_value:BLACK/AFRICAN",
+            "ETHNICITY_value:BLACK/AFRICAN AMERICAN",
+            "ETHNICITY_value:BLACK/CAPE VERDEAN",
+            "ETHNICITY_value:BLACK/HAITIAN",
+            "ETHNICITY_value:HISPANIC OR LATINO",
+            "ETHNICITY_value:HISPANIC/LATINO - DOMINICAN",
+            "ETHNICITY_value:HISPANIC/LATINO - PUERTO RICAN",
+            "ETHNICITY_value:MIDDLE EASTERN",
+            "ETHNICITY_value:MULTI RACE ETHNICITY",
+            "ETHNICITY_value:OTHER",
+            "ETHNICITY_value:PATIENT DECLINED TO ANSWER",
+            "ETHNICITY_value:PORTUGUESE",
+            "ETHNICITY_value:UNABLE TO OBTAIN",
+            "ETHNICITY_value:UNKNOWN/NOT SPECIFIED",
+            "ETHNICITY_value:WHITE",
+            "ETHNICITY_value:WHITE - BRAZILIAN",
+            "ETHNICITY_value:WHITE - OTHER EUROPEAN",
             "ETHNICITY_value:WHITE - RUSSIAN"
             ],
         "ethnicity_coarse":[
@@ -213,68 +213,68 @@ demo_cols = {
     
     'eicu':{
         "sex":[
-            "gender_value:Female", 
+            "gender_value:Female",
             "gender_value:Male"
-            ], 
+            ],
         "age":[
-            "age_value:(-0.001, 51.0]", 
-            "age_value:(51.0, 61.0]", 
-            "age_value:(61.0, 69.0]", 
-            "age_value:(69.0, 78.0]", 
-            "age_value:(78.0, 89.0]", 
+            "age_value:(-0.001, 51.0]",
+            "age_value:(51.0, 61.0]",
+            "age_value:(61.0, 69.0]",
+            "age_value:(69.0, 78.0]",
+            "age_value:(78.0, 89.0]",
             "age_value:> 89"
             ],
         "ethnicity":[
-            "ethnicity_value:African American", 
-            "ethnicity_value:Asian", 
-            "ethnicity_value:Caucasian", 
-            "ethnicity_value:Hispanic", 
+            "ethnicity_value:African American",
+            "ethnicity_value:Asian",
+            "ethnicity_value:Caucasian",
+            "ethnicity_value:Hispanic",
             "ethnicity_value:Other/Unknown"
             ],
         "hospital":[
             "hospitalid_value:73__",
-            "hospitalid_value:110__", 
-            "hospitalid_value:122__", 
-            "hospitalid_value:142__", 
-            "hospitalid_value:167__", 
-            "hospitalid_value:176__", 
-            "hospitalid_value:183__", 
-            "hospitalid_value:188__", 
-            "hospitalid_value:197__", 
-            "hospitalid_value:199__", 
-            "hospitalid_value:208__", 
-            "hospitalid_value:243__", 
-            "hospitalid_value:252__", 
-            "hospitalid_value:264__", 
-            "hospitalid_value:281__", 
-            "hospitalid_value:283__", 
-            "hospitalid_value:300__", 
-            "hospitalid_value:338__", 
-            "hospitalid_value:345__", 
-            "hospitalid_value:394__", 
-            "hospitalid_value:400__", 
-            "hospitalid_value:411__", 
-            "hospitalid_value:416__", 
-            "hospitalid_value:417__", 
-            "hospitalid_value:420__", 
-            "hospitalid_value:443__", 
-            "hospitalid_value:449__", 
+            "hospitalid_value:110__",
+            "hospitalid_value:122__",
+            "hospitalid_value:142__",
+            "hospitalid_value:167__",
+            "hospitalid_value:176__",
+            "hospitalid_value:183__",
+            "hospitalid_value:188__",
+            "hospitalid_value:197__",
+            "hospitalid_value:199__",
+            "hospitalid_value:208__",
+            "hospitalid_value:243__",
+            "hospitalid_value:252__",
+            "hospitalid_value:264__",
+            "hospitalid_value:281__",
+            "hospitalid_value:283__",
+            "hospitalid_value:300__",
+            "hospitalid_value:338__",
+            "hospitalid_value:345__",
+            "hospitalid_value:394__",
+            "hospitalid_value:400__",
+            "hospitalid_value:411__",
+            "hospitalid_value:416__",
+            "hospitalid_value:417__",
+            "hospitalid_value:420__",
+            "hospitalid_value:443__",
+            "hospitalid_value:449__",
             "hospitalid_value:458__"
             ],
         "unit":[
-            "unittype_value:CCU-CTICU", 
-            "unittype_value:CSICU", 
-            "unittype_value:CTICU", 
-            "unittype_value:Cardiac ICU", 
-            "unittype_value:MICU", 
-            "unittype_value:Med-Surg ICU", 
-            "unittype_value:Neuro ICU", 
+            "unittype_value:CCU-CTICU",
+            "unittype_value:CSICU",
+            "unittype_value:CTICU",
+            "unittype_value:Cardiac ICU",
+            "unittype_value:MICU",
+            "unittype_value:Med-Surg ICU",
+            "unittype_value:Neuro ICU",
             "unittype_value:SICU"
         ],
         "ward":[
-            "wardid_value:236__", 
-            "wardid_value:607__", 
-            "wardid_value:646__", 
+            "wardid_value:236__",
+            "wardid_value:607__",
+            "wardid_value:646__",
             "wardid_value:653__"
             ]
         }
