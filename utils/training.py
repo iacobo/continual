@@ -104,7 +104,7 @@ def train_cl_method(cl_strategy, scenario, validate=False):
 
     for experience in scenario.train_stream:
         print(f'Start of experience: {experience.current_experience}')
-        cl_strategy.train(experience, eval_streams=[scenario.test_stream])
+        cl_strategy.train(experience, eval_streams=[scenario.train_stream, scenario.test_stream])
         print('Training completed', '\n\n')
 
     if validate:
@@ -188,7 +188,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
 
 def main(data='random', demo='', models=['MLP'], strategies=['Naive'], 
          config_generic={}, config_model={}, config_cl={}, 
-         validate=False, num_samples=50):
+         validate=False, num_samples=5):
     """
     Main training loop. Takes dataset, demographic splits, 
     and evaluates model/strategies over given hyperparams over this problem.

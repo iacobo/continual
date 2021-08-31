@@ -23,7 +23,7 @@ def get_timestamp():
     ts = time.time()
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
-def stack_results(results, metric):
+def stack_results(results, metric, mode):
     """
     Stacks results
     """
@@ -31,7 +31,7 @@ def stack_results(results, metric):
 
     # Get metrics for each training "experience"'s test set
     for k,v in results.items():
-        if f'{metric}_Exp' in k:
+        if f'{metric}_Exp/eval_phase/{mode}_stream' in k:
             new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
             metric_dict[new_k] = v[1]
 
@@ -42,14 +42,16 @@ def stack_results(results, metric):
 
     return stacked
 
-def plot_metric(method, model, results, metric, ax=None):
+def plot_metric(method, model, results, metric, ax=None, mode='train'):
     """
     Plots given metric from dict.
     Stacks multiple plots (i.e. different per-task metrics) over training time.
+
+    `mode`: ['train','test'] (which stream to plot)
     """
     ax = ax or plt.gca()
 
-    stacked = stack_results(results, metric)
+    stacked = stack_results(results, metric, mode)
 
     # Only plot task accuracies after examples have been encountered
     #stacked = stacked[stacked['Task'].astype(int)<=stacked['Epoch \n (15 epochs per task)'].astype(int)]

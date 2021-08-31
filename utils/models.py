@@ -96,7 +96,7 @@ class SimpleCNN(nn.Module):
     """
     1d CNN (also known as TCN)
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, output_size=2, nonlinearity='relu'):
+    def __init__(self, n_channels, seq_len, hidden_dim=512, kernel_size=3, output_size=2, nonlinearity='relu'):
         super().__init__()
 
         if nonlinearity == 'relu':
@@ -105,23 +105,23 @@ class SimpleCNN(nn.Module):
             nonlinearity = nn.Tanh
 
         self.cnn_layers = nn.Sequential(
-            nn.Conv1d(n_channels, hidden_dim, kernel_size=3, stride=1, padding=1),
+            nn.Conv1d(n_channels, hidden_dim, kernel_size=kernel_size, stride=1, padding=1),
             nn.BatchNorm1d(hidden_dim),
             nonlinearity(),
             #nn.MaxPool1d(kernel_size=2, stride=2),
 
-            nn.Conv1d(hidden_dim, hidden_dim//2, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(hidden_dim//2),
+            nn.Conv1d(hidden_dim, hidden_dim, kernel_size=kernel_size, stride=1, padding=1),
+            nn.BatchNorm1d(hidden_dim),
             nonlinearity(),
             nn.MaxPool1d(kernel_size=2, stride=2),
 
-            nn.Conv1d(hidden_dim//2, hidden_dim//4, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(hidden_dim//4),
+            nn.Conv1d(hidden_dim, hidden_dim, kernel_size=kernel_size, stride=1, padding=1),
+            nn.BatchNorm1d(hidden_dim),
             nonlinearity(),
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
 
-        self.fc = nn.Linear((seq_len//4)*(hidden_dim//4), output_size) #(seq_len//2*num batch norm) * final hid size
+        self.fc = nn.Linear((seq_len//4)*hidden_dim, output_size) #(seq_len//2*num batch norm) * final hid size
 
     # Defining the forward pass
     def forward(self, x):

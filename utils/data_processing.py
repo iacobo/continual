@@ -290,13 +290,13 @@ def load_fiddle(data, outcome, n=None):
     """
     data_dir = DATA_DIR / f'FIDDLE_{data}'
     
-    with open(data_dir / 'features' / outcome / 'X.feature_names.json', 'r') as X_file:
+    with open(data_dir / 'features' / outcome / 'X.feature_names.json', encoding='utf-8') as X_file:
         X_feature_names = json.load(X_file)
-    with open(data_dir / 'features' / outcome / 's.feature_names.json', 'r') as s_file:
+    with open(data_dir / 'features' / outcome / 's.feature_names.json', encoding='utf-8') as s_file:
         s_feature_names = json.load(s_file)
 
     # Take only subset of vars to  reduce mem overhead
-    default_col_ids = range(12)
+    default_col_ids = range(48)
 
     var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
     var_X_subset = sorted(list(set(default_col_ids).union(set(var_X_demos))))
@@ -360,12 +360,27 @@ def split_tasks_fiddle(data, demo, outcome):
     else:
         raise NotImplementedError
 
-    tasks = [(features_X[idx], df_outcome[idx]) for idx in tasks_idx]
+    all_features = concat_timevar_static_feats(features_X, features_s)
+
+    tasks = [(all_features[idx], df_outcome[idx]) for idx in tasks_idx]
 
     # Displays number of outcomes per train/test/val partition per task
     print([t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks])
 
     return tasks
+
+def concat_timevar_static_feats(features_X, features_s):
+    """
+    Concatenates time-varying features with static features.
+    Static features padded to length of sequence.
+    """
+
+    s_expanded = features_s.expand_as(features_X)
+    all_feats = torch.cat((features_X, s_expanded), 1)
+
+    return all_feats
+
+
 
 def split_trainvaltest_fiddle(tasks, val_as_test=True):
     """
