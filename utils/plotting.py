@@ -42,7 +42,7 @@ def stack_results(results, metric, mode):
 
     return stacked
 
-def plot_metric(method, model, results, metric, ax=None, mode='train'):
+def plot_metric(method, model, results, mode, metric, ax=None):
     """
     Plots given metric from dict.
     Stacks multiple plots (i.e. different per-task metrics) over training time.
@@ -105,7 +105,7 @@ def annotate_plot(fig, demo, metric, outcome='48h mortality'):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {demo}')
 
-def plot_all_model_strats(models, strategies, data, demo, res, results_dir, savefig=True, metric='BalAcc'):
+def plot_all_model_strats(models, strategies, data, demo, res, results_dir, mode, metric, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
@@ -113,13 +113,13 @@ def plot_all_model_strats(models, strategies, data, demo, res, results_dir, save
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
-            plot_metric(strategy, model, res[model][strategy], metric, axes[i,j])
+            plot_metric(strategy, model, res[model][strategy], mode, metric, axes[i,j])
 
     clean_plot(fig, axes)
     annotate_plot(fig, demo, metric)
 
     if savefig:
-        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{metric}_{get_timestamp()}.png')
+        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{mode}_{metric}_{get_timestamp()}.png')
 
 def plot_demos():
     """
