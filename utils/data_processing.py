@@ -372,11 +372,16 @@ def split_tasks_fiddle(data, demo, outcome):
 def concat_timevar_static_feats(features_X, features_s):
     """
     Concatenates time-varying features with static features.
-    Static features padded to length of sequence.
+    Static features padded to length of sequence, 
+    and appended along feature axis.
     """
 
-    s_expanded = features_s.expand_as(features_X)
-    all_feats = torch.cat((features_X, s_expanded), 1)
+    #JA: Need to test this has no bugs.
+
+    # Repeat static vals length of sequence across new axis
+    s_expanded = np.expand_dims(features_s,1).repeat(features_X.shape[1],axis=1)
+    # Concatenate across feat axis
+    all_feats = np.concatenate((features_X, s_expanded), -1)
 
     return all_feats
 
@@ -416,3 +421,5 @@ def cache_processed_dataset():
     # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
     # Load numpy arrays
     return NotImplementedError
+
+#%%

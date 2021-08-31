@@ -31,7 +31,7 @@ config_model = {
               'kernel_size':tune.choice([3,5,7])
               },
        'MLP':{
-              'dropout':tune.grid_search([0,0.1,0.2,0.4,0.8]),
+              'dropout':tune.choice([0,0.1,0.2,0.4,0.8]),
               'nonlinearity':tune.choice(['tanh', 'relu'])
               },
        'RNN':{
