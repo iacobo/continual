@@ -15,15 +15,6 @@ def get_dropout_from_n_layers(spec):
     else:
         return np.random.choice([0,0.1,0.2,0.4,0.8])
 
-def get_decay_from_ewc_mode(spec):
-    """
-    Return decay factor if usig Online EWC.
-    """
-    if spec.config.strategy.mode=='online':
-        return 0.1 * np.random.randint(0,11)
-    else:
-        return None
-
 # Hyperparameter search-space
 config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
@@ -71,13 +62,12 @@ config_cl = {
               },
        'EWC':{
               'mode':'separate',
-              'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]),
-              'decay_factor':tune.sample_from(get_decay_from_ewc_mode)
+              'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])
               },
        'OnlineEWC':{
               'mode':'online',
               'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]),
-              'decay_factor':tune.sample_from(get_decay_from_ewc_mode)
+              'decay_factor':tune.quniform(0,1,0.1)
               },
        'SI':{
               'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])
