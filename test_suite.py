@@ -11,11 +11,11 @@ from utils import models, data_processing
 from main import main
 
 BATCH_SIZES = (1,10,100)
-SEQ_LENS = (4,16,32,48,50,100)
-N_VARS = (2,10,30,100)
-N_CLASSES = (2,3,4,10)
+SEQ_LENS = (4,12,48)
+N_VARS = (2,10,100)
+N_CLASSES = (2,10)
 N_LAYERS = (1,2,3,4)
-HIDDEN_SIZES = (32,56,128,256)
+HIDDEN_SIZES = (32,64,128)
 
 
 DEMOGRAPHICS = ['age', 'gender', 'ethnicity', 'region', 'time_year', 'time_season', 'time_month']
