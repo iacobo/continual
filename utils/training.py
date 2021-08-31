@@ -221,4 +221,6 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'],
                                                  for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 
-        plotting.plot_all_model_strats(models, strategies, data, demo, res, results_dir=RESULTS_DIR, savefig=True)
+        for mode in ['train','test']:
+            for metric in ['Loss','Top1_Acc','BalAcc']:
+                plotting.plot_all_model_strats(models, strategies, data, demo, res, results_dir=RESULTS_DIR, savefig=True, mode=mode, metric=metric)
