@@ -19,9 +19,10 @@ def get_dropout_from_n_layers(spec):
 config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
        'optimizer':tune.choice(['Adam']), #'SGD', #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
-       'hidden_dim':tune.grid_search([16,32,64,128]),
        'train_epochs':15,
-       'train_mb_size':tune.grid_search([16,32,56,128])
+       'train_mb_size':tune.grid_search([16,32,56,128]),
+       'hidden_dim':tune.grid_search([16,32,64,128]),
+       'n_layers':tune.choice([1,2,3]),
        }
 
 # JA: use ModuleList(?) to parameterise n_layers for MLP and CNN
@@ -35,18 +36,15 @@ config_model = {
               'nonlinearity':tune.choice(['tanh', 'relu'])
               },
        'RNN':{
-              'n_layers':tune.choice([1,2,3]),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'bidirectional':tune.choice([True,False]),
               'nonlinearity':tune.choice(['tanh', 'relu'])
               },
        'LSTM':{
-              'n_layers':tune.choice([1,2,3]),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'bidirectional':tune.choice([True,False])
               },
        'Transformer':{
-              'n_layers':tune.choice([1,2,3]),
               'n_heads':tune.choice([4,8,16]),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'nonlinearity':tune.choice(['relu', 'gelu'])

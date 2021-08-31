@@ -14,6 +14,9 @@ BATCH_SIZES = (1,10,100)
 SEQ_LENS = (4,16,32,48,50,100)
 N_VARS = (2,10,30,100)
 N_CLASSES = (2,3,4,10)
+N_LAYERS = (1,2,3,4)
+HIDDEN_SIZES = (32,56,128,256)
+
 
 DEMOGRAPHICS = ['age', 'gender', 'ethnicity', 'region', 'time_year', 'time_season', 'time_month']
 OUTCOMES = ['ARF', 'shock', 'mortality']
@@ -43,13 +46,17 @@ class TestModelMethods(unittest.TestCase):
             for seq_len in SEQ_LENS:
                 for n_vars in N_VARS:
                     for n_classes in N_CLASSES:
-                        batch = torch.randn(batch_size, seq_len, n_vars)
-                        simple_models = models.MODELS.values()
-                        for model in simple_models:
-                            model = model(seq_len=seq_len, n_channels=n_vars, output_size=n_classes)
-                            output = model(batch)
-                            expected_shape = torch.Size([batch_size, n_classes])
-                            self.assertEqual(output.shape, expected_shape)
+                        for n_layers in N_LAYERS:
+                            for hidden_size in HIDDEN_SIZES:
+                                batch = torch.randn(batch_size, seq_len, n_vars)
+                                simple_models = models.MODELS.values()
+                                for model in simple_models:
+                                    model = model(seq_len=seq_len, n_channels=n_vars, hidden_dim=hidden_size, output_size=n_classes, n_layers=n_layers)
+                                    # Set in eval mode to avoid batch-norm error when subtracting mean from val training on 1 datapoint
+                                    model.eval()
+                                    output = model(batch)
+                                    expected_shape = torch.Size([batch_size, n_classes])
+                                    self.assertEqual(output.shape, expected_shape)
 
     def ttest_modelcapacity(self):
         """
