@@ -1,4 +1,5 @@
 .vscode/settings.json
+venv/*
 data/
 results/
 config/*.json
