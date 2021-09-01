@@ -1,6 +1,9 @@
-.vscode/settings.json
-venv/*
+# Env files
+*.pyc
+.venv/
+.vscode/
+
+# Results files
 data/
 results/
 config/*.json
-*.pyc
