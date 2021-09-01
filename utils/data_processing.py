@@ -296,19 +296,20 @@ def load_fiddle(data, outcome, n=None):
         s_feature_names = json.load(s_file)
 
     # Take only subset of vars to  reduce mem overhead
-    default_col_ids = range(256)
+    if data == 'eicu':
+        vitals = ['Vital Signs|']
+    elif data == 'mimic3':
+        vitals = ['HR','RR','SpO2','SBP','Heart Rhythm','SysBP','DiaBP']
+    
+    vital_col_ids = [X_feature_names.index(var) for var in X_feature_names for prefix in vitals if var.startswith(prefix)]
 
     var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
-    var_X_subset = sorted(list(set(default_col_ids).union(set(var_X_demos))))
+    var_X_subset = sorted(list(set(vital_col_ids).union(set(var_X_demos))))
     X_feature_names = [X_feature_names[i] for i in var_X_subset]
-
-    var_s_demos = [s_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if not key.startswith('time') and key!='ethnicity_coarse']
-    var_s_subset = sorted(list(set(default_col_ids).union(set(var_s_demos))))
-    s_feature_names = [s_feature_names[i] for i in var_s_subset]
 
     # Loading np arrays
     features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,var_X_subset].todense()
-    features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n,var_s_subset].todense()
+    features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n].todense()
     
     df_outcome = pd.read_csv(data_dir / 'population' / f'{outcome}.csv')[:n]
 
