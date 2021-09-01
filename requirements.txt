@@ -3,9 +3,12 @@ sparse==0.12.0
 pandas==1.2.4
 ray==1.4.1
 ray[tune]
+ray[rllib]
+ray[default]
 matplotlib==3.4.2
 torch==1.9.0
 numpy==1.20.3
 git+https://github.com/ContinualAI/avalanche.git@fa9201f1a38dc57621f3a5b02f833aa7cdc8b6ca
 torchvision==0.10.0
 gdown==3.3.1
+#aioredis<2
