@@ -64,7 +64,7 @@ def plot_metric(method, model, results, mode, metric, ax=None):
     ax.set_ylabel(model)
     ax.set_xlabel('')
 
-def clean_subplot(i, j, axes):
+def clean_subplot(i, j, axes, metric):
     """
     Removes top/rights spines.
     Removes titles/legend.
@@ -80,15 +80,16 @@ def clean_subplot(i, j, axes):
     if i>0 or j>0:
         ax.get_legend().remove()
 
-    plt.setp(axes, ylim=(0,1))
+    if metric != 'Loss':
+        plt.setp(axes, ylim=(0,1))
 
-def clean_plot(fig, axes):
+def clean_plot(fig, axes, metric):
     """
     Cleans all subpots. Removes duplicate legends.
     """
     for i in range(len(axes)):
         for j in range(len(axes[0])):
-            clean_subplot(i,j,axes)
+            clean_subplot(i,j,axes,metric)
             
     handles, labels = axes[0,0].get_legend_handles_labels()
     axes[0,0].get_legend().remove()
@@ -118,7 +119,7 @@ def plot_all_model_strats(models, strategies, data, demo, res, mode, metric, sav
         for j, strategy in enumerate(strategies):
             plot_metric(strategy, model, res[model][strategy], mode, metric, axes[i,j])
 
-    clean_plot(fig, axes)
+    clean_plot(fig, axes, metric)
     annotate_plot(fig, demo, metric)
 
     if savefig:

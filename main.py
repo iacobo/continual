@@ -84,3 +84,4 @@ if __name__ == "__main__":
 # Sensitivity to replay size Naive -> replay -> Cumulative
 # Sensitivity to hyperparams of reg methods (Tune hyperparams over increasing number of tasks?)
 # Sensitivity to number of variables
+# Sensitivity to size of domains - e.g. white ethnicity much larger than all other groups, affect of order of sequence

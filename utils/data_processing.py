@@ -296,7 +296,7 @@ def load_fiddle(data, outcome, n=None):
         s_feature_names = json.load(s_file)
 
     # Take only subset of vars to  reduce mem overhead
-    default_col_ids = range(64)
+    default_col_ids = range(256)
 
     var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
     var_X_subset = sorted(list(set(default_col_ids).union(set(var_X_demos))))

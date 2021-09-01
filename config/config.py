@@ -21,7 +21,7 @@ config_generic = {
        'optimizer':tune.choice(['Adam']), #'SGD', #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
        'train_epochs':100,
        'train_mb_size':tune.choice([16,32,64,128]),
-       'hidden_dim':tune.choice([16,32,64,128]),
+       'hidden_dim':tune.choice([32,64,128]),
        'n_layers':tune.choice([1,2,3]),
        }
 
@@ -51,36 +51,39 @@ config_model = {
               }
        }
 
+LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
+POW2_COUNTS = [32,64]
+
 config_cl = {
        'Replay':{
-              'mem_size':tune.choice([4,16,32])
+              'mem_size':tune.choice(POW2_COUNTS)
               },
        'GDumb':{
-              'mem_size':tune.choice([4,16,32])
+              'mem_size':tune.choice(POW2_COUNTS)
               },
        'EWC':{
               'mode':'separate',
-              'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])
+              'ewc_lambda':tune.choice(LOG_WEIGHTS)
               },
        'OnlineEWC':{
               'mode':'online',
-              'ewc_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]),
+              'ewc_lambda':tune.choice(LOG_WEIGHTS),
               'decay_factor':tune.quniform(0,1,0.1)
               },
        'SI':{
-              'si_lambda':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2])
+              'si_lambda':tune.choice(LOG_WEIGHTS)
               },
        'LwF':{
-              'alpha':tune.choice([1e-3,1e-2,1e-1,1e0,1e1,1e2]),
+              'alpha':tune.choice(LOG_WEIGHTS),
               'temperature':tune.quniform(0,3,0.5)
               },
        'GEM':{
-              'patterns_per_exp':tune.choice([4,16,32]),
+              'patterns_per_exp':tune.choice(POW2_COUNTS),
               'memory_strength':tune.quniform(0,1,0.1)
               },
        'AGEM':{
-              'patterns_per_exp':tune.choice([4,16,32]),
-              'sample_size':tune.choice([4,16,32])
+              'patterns_per_exp':tune.choice(POW2_COUNTS),
+              'sample_size':tune.choice(POW2_COUNTS)
               }
        #'CoPE':
        }
