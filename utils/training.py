@@ -160,7 +160,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
-    resources = {'cpu':4, 'gpu':1} if CUDA else {'cpu':1}
+    resources = {'cpu':2, 'gpu':0.5} if CUDA else {'cpu':1}
 
     result = tune.run(
         partial(training_loop,
@@ -188,7 +188,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples=5)
 
 def main(data='random', demo='', models=['MLP'], strategies=['Naive'], 
          config_generic={}, config_model={}, config_cl={}, 
-         validate=False, num_samples=5):
+         validate=False, num_samples=50):
     """
     Main training loop. Takes dataset, demographic splits, 
     and evaluates model/strategies over given hyperparams over this problem.
@@ -223,4 +223,4 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'],
 
         for mode in ['train','test']:
             for metric in ['Loss','Top1_Acc','BalAcc']:
-                plotting.plot_all_model_strats(models, strategies, data, demo, res, RESULTS_DIR, mode, metric)
+                plotting.plot_all_model_strats(models, strategies, data, demo, res, mode, metric)

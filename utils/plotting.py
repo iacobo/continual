@@ -2,6 +2,7 @@
 Functions for plotting results and descriptive analysis of data.
 """
 
+from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 
@@ -11,6 +12,8 @@ import pandas as pd
 import seaborn as sns
 
 #from utils import data_processing
+
+RESULTS_DIR = Path(__file__).parents[1] / 'results'
 
 METRIC_FULL_NAME = {'BalAcc': 'Balanced Accuracy',
                     'Top1_Acc': 'Accuracy',
@@ -105,7 +108,7 @@ def annotate_plot(fig, demo, metric, outcome='48h mortality'):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {demo}')
 
-def plot_all_model_strats(models, strategies, data, demo, res, results_dir, mode, metric, savefig=True):
+def plot_all_model_strats(models, strategies, data, demo, res, mode, metric, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
@@ -119,7 +122,7 @@ def plot_all_model_strats(models, strategies, data, demo, res, results_dir, mode
     annotate_plot(fig, demo, metric)
 
     if savefig:
-        plt.savefig(results_dir / 'figs' / f'fig_{data}_{demo}_{mode}_{metric}_{get_timestamp()}.png')
+        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{demo}_{mode}_{metric}_{get_timestamp()}.png')
 
 def plot_demos():
     """
