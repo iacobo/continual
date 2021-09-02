@@ -160,7 +160,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples):
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
-    resources = {'cpu':2, 'gpu':0.25} if CUDA else {'cpu':1}
+    resources = {'cpu':4, 'gpu':0.5} if CUDA else {'cpu':1}
 
     result = tune.run(
         partial(training_loop,
