@@ -8,12 +8,13 @@ import numpy as np
 # Conditional hyper-param functions
 def get_dropout_from_n_layers(spec):
     """
-    Has dropout of 0 if n_layers==1, else random dropout.
+    Returns dropout of 0 if n_layers==1
+    else random dropout.
     """
     if spec.config.model.n_layers==1:
         return 0
     else:
-        return np.random.choice([0,0.1,0.2,0.4,0.8])
+        return np.random.choice([0,0.1,0.2,0.4])
 
 # Hyperparameter search-space
 config_generic = {
@@ -32,7 +33,7 @@ config_model = {
               'kernel_size':tune.choice([3,5,7])
               },
        'MLP':{
-              'dropout':tune.choice([0,0.1,0.2,0.4]),
+              'dropout':tune.choice(get_dropout_from_n_layers),
               'nonlinearity':tune.choice(['tanh', 'relu'])
               },
        'RNN':{

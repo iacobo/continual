@@ -5,9 +5,10 @@ sparse==0.12.0
 seaborn==0.11.1
 matplotlib==3.4.2
 
-# PyTorch (CPU versions)
-torch==1.9.0
-torchvision==0.10.0
+# PyTorch (GPU versions)
+torch==1.9.0+cu111
+torchvision==0.10.0+cu111
+--find-links https://download.pytorch.org/whl/torch_stable.html
 
 # Ray[tune]
 ray==1.6.0
