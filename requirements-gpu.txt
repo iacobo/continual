@@ -12,6 +12,7 @@ torchvision==0.10.0+cu111
 
 # Ray[tune]
 ray==1.6.0
+ray[tune]
 
 # Avalanche + Avalanche specific library versions not included in its requirements
 git+https://github.com/ContinualAI/avalanche.git@fa9201f1a38dc57621f3a5b02f833aa7cdc8b6ca
