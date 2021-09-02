@@ -29,6 +29,7 @@ def main(args):
                       config_generic=config.config_generic,
                       config_model=config.config_model,
                       config_cl=config.config_cl,
+                      num_samples=args.num_samples,
                       validate=True)
 
     # Train and test over all tasks (using optimised hyperparams)
@@ -71,6 +72,10 @@ if __name__ == "__main__":
                         const=True,
                         default=False,
                         help='Tune hyperparameters.')
+    parser.add_argument('--num_samples',
+                        type=int,
+                        default=50,
+                        help='Number of samples to draw during hyperparameter search.')
     arguments = parser.parse_args()
 
     main(arguments)

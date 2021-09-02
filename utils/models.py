@@ -3,11 +3,11 @@ PyTorch Neural Network model definitions.
 
 Consists of simple parameterised:
 
-- MLP:         Dense Feedforward ANN / "Multilayer Perceptron"
-- CNN:         1d CNN / TCN "Temporal CNN"
+- MLP:         Dense Feedforward ANN      / "Multilayer Perceptron"
+- CNN:         1d CNN                     / "Temporal CNN" (TCN)
 - RNN:         Recurrent Neural network
 - LSTM:        Long-short term memory RNN
-- Transformer: -
+- Transformer: 
 
 Models generally of format:
 
