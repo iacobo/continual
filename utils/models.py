@@ -1,14 +1,15 @@
 """
 PyTorch Neural Network model definitions.
+
 Consists of simple parameterised:
 
-- MLP:         Feed forward network / Dense network / Multilayer Perceptron
-- CNN:         1d CNN / Temporal CNN
+- MLP:         Dense Feedforward ANN / "Multilayer Perceptron"
+- CNN:         1d CNN / TCN "Temporal CNN"
 - RNN:         Recurrent Neural network
 - LSTM:        Long-short term memory RNN
-- Transformer: 
+- Transformer: -
 
-Models of format:
+Models generally of format:
 
 =================================================================
 Layer (type:depth-idx)                   Output Shape             
@@ -32,6 +33,14 @@ SimpleMLP                                --
 │    │    └─Dropout: 3-9               
 ├─Linear: 1-2                            [n, output_size]      
 =================================================================
+
+Where the number of layers, nonlinearity, and degree of dropout are parameterised.
+
+Model specific parameters:
+
+- CNN          Kernel width
+- RNN/LSTM     Bidirectionality
+- Transformer  Number of heads
 
 """
 
@@ -192,8 +201,8 @@ class SimpleTransformer(nn.Module):
         out = self.fc(out)
         return out
 
-# CONTAINERS
-MODELS = {'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,
-'Transformer':SimpleTransformer}
+MODELS = {
+    'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,'Transformer':SimpleTransformer
+    }
 
 #%%
