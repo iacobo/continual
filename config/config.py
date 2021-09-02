@@ -11,7 +11,7 @@ def get_dropout_from_n_layers(spec):
     Returns dropout of 0 if n_layers==1
     else random dropout.
     """
-    if spec.config.model.n_layers==1:
+    if spec.config.n_layers==1:
         return 0
     else:
         return np.random.choice([0,0.1,0.2,0.4])
@@ -33,7 +33,7 @@ config_model = {
               'kernel_size':tune.choice([3,5,7])
               },
        'MLP':{
-              'dropout':tune.choice(get_dropout_from_n_layers),
+              'dropout':tune.sample_from(get_dropout_from_n_layers),
               'nonlinearity':tune.choice(['tanh', 'relu'])
               },
        'RNN':{
