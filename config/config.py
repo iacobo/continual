@@ -31,17 +31,17 @@ config_generic = {
 
 config_model = {
        'CNN':{
-              'nonlinearity':tune.choice(['tanh', 'relu']),
-              'kernel_size':tune.choice([3,5,7])
+              'kernel_size':tune.choice([3,5,7]),
+              'nonlinearity':tune.choice(['tanh','relu']),
               },
        'MLP':{
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['tanh', 'relu'])
+              'nonlinearity':tune.choice(['tanh','relu'])
               },
        'RNN':{
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'bidirectional':tune.choice([True,False]),
-              'nonlinearity':tune.choice(['tanh', 'relu'])
+              'nonlinearity':tune.choice(['tanh','relu']),
+              'bidirectional':tune.choice([True,False])
               },
        'LSTM':{
               'dropout':tune.sample_from(get_dropout_from_n_layers),
@@ -50,7 +50,7 @@ config_model = {
        'Transformer':{
               'n_heads':tune.choice([4,8,16]),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['relu', 'gelu'])
+              'nonlinearity':tune.choice(['relu','gelu'])
               }
        }
 
