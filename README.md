@@ -34,23 +34,28 @@ Figures will be saved to `/results/figs`.
 
 ## Individual experiments
 
-Individual experiments can be specified by the `--experiment` (domain increment to use) and `--outcome` (outcome to predict) arguments. Likewise, model architectures and continual learning strategies can be specified with the `--models` and `--strategies` args respectively e.g:
+Individual experiments can be specified with appropriate flags:
+
+Flag           | Arg(s)      | Meaning
+---------------|-------------|------------------------
+`--experiment` | `region hospital age ethnicity` | Domain increment to use
+`--outcome`    |`mortality_48h shock_4h shock_12h ARF_4h ARF_12h`       | Outcome to predict
+`--models`     |`MLP CNN RNN LSTM Transformer`   | Model(s) to evaluate
+`--strategies` |`Naive Cumulative EWC LwF SI GEM AGEM Replay GDumb` | Continual learning strategy(s) to evaluate
+`--validate`   |             | Rerun hyper-parameter search
+`--num_samples` |`<int>`         | Budget for hyper-parameter search
+
+e.g.
 
 ```powershell
 python main.py --experiment region --models CNN --strategies EWC Replay
 ```
 
-For a list of permissable values, use the `--help` flag:
-
-```powershell
-python main.py --help
-```
-
-If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` using `--num_samples` samples. Otherwise, experiments use the hyperparameter settings discovered in the original paper (located in `/config/best_config_<dataset>_<domain>_<outcome>.json`). 
+Hyper-parameter search-space is specificed in `/config/config.py`. Pre-tuned settings are defined in `/config/best_config_<dataset>_<domain>_<outcome>.json`.
 
 For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
 ```powershell
-tensorboard --logdir=/results/log/tb_results/<tb_log_exp_name>
+tensorboard --logdir=/results/log/tensorboard/<tb_log_exp_name>
 ```
 
 
