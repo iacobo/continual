@@ -12,7 +12,12 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
 1. Clone this repo to your local machine.
 2. Request access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/<repo>/data` subfolder.
-4. Upgrade the build tools and install dependencies:
+4. *(Recommended)* Create a new virtual environment:
+   ```
+   python -m pip install --user virtualenv
+   python -m venv .venv
+   ```
+5. Upgrade the build tools and install dependencies:
    ```
    pip install --upgrade pip setuptools wheel
    pip install -r requirements.txt
@@ -40,7 +45,7 @@ For a list of permissable values, use the `--help` flag:
 python main.py --help
 ```
 
-If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` using `--num_samples` samples. Otherwise, experiments use the hyperparameter settings discovered in the original paper (located in`/config/best_config_<dataset>_<domain>_<outcome>.json`). 
+If `--validate`, experiments will run a hyperparameter sweep over the search-space specificed in `/config/config.py` using `--num_samples` samples. Otherwise, experiments use the hyperparameter settings discovered in the original paper (located in `/config/best_config_<dataset>_<domain>_<outcome>.json`). 
 
 For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
 ```powershell
