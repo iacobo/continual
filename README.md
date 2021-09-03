@@ -17,7 +17,8 @@ Repo for reproducing the experiments in *Continual Learning of Longitudinal Heal
    python -m pip install --user virtualenv
    python -m venv .venv
    ```
-5. Upgrade the build tools and install dependencies:
+5. [Activate](https://docs.python.org/3/library/venv.html) virtual environment.
+6. Upgrade the build tools and install dependencies:
    ```
    pip install --upgrade pip setuptools wheel
    pip install -r requirements.txt
