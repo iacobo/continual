@@ -36,13 +36,13 @@ Figures will be saved to `/results/figs`.
 
 Individual experiments can be specified with appropriate flags e.g:
 
-```powershell
-python main.py --experiment region --models CNN --strategies EWC Replay
+```bash
+python main.py --experiment hospital --outcome mortality_48h --models CNN --strategies EWC Replay
 ```
 
 A complete list of available options can be found [here](/config/README.md) or by passing the `--help` flag:
 
-```powershell
+```bash
 python main.py --help
 ```
 
