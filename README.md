@@ -34,24 +34,17 @@ Figures will be saved to `/results/figs`.
 
 ## Individual experiments
 
-Individual experiments can be specified with appropriate flags:
-
-Flag           | Arg(s)      | Meaning
----------------|-------------|------------------------
-`--experiment` | `region hospital age ethnicity` | Domain increment to use
-`--outcome`    |`mortality_48h shock_4h shock_12h ARF_4h ARF_12h`       | Outcome to predict
-`--models`     |`MLP CNN RNN LSTM Transformer`   | Model(s) to evaluate
-`--strategies` |`Naive Cumulative EWC LwF SI GEM AGEM Replay GDumb` | Continual learning strategy(s) to evaluate
-`--validate`   |             | Rerun hyper-parameter search
-`--num_samples` |`<int>`         | Budget for hyper-parameter search
-
-e.g.
+Individual experiments can be specified with appropriate flags e.g:
 
 ```powershell
 python main.py --experiment region --models CNN --strategies EWC Replay
 ```
 
-Hyper-parameter search-space is specificed in `/config/config.py`. Pre-tuned settings are defined in `/config/best_config_<dataset>_<domain>_<outcome>.json`.
+A complete list of available options can be found [here](/config/README.md) or by passing the `--help` flag:
+
+```powershell
+python main.py --help
+```
 
 ## Citation
 
