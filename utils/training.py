@@ -205,10 +205,13 @@ def main(data, demo, outcome, models, strategies, config_generic={}, config_mode
                 best_params = hyperparam_opt(config, data, demo, outcome, model, strategy, num_samples=num_samples)
                 save_params(data, demo, outcome, model, strategy, best_params)
             # Training loop over all tasks
-            # JA: (Need to rerun multiple times for mean + CI's)
-            # for i in range(5): res[model][strategy].append(...)
             else:
                 config = load_params(data, demo, outcome, model, strategy)
+
+                # JA: (Need to rerun multiple times for mean + CI's)
+                # for i in range(5): 
+                #     curr_results = training_loop(config, data, demo, outcome, model, strategy)
+                #     res[model][strategy].append(curr_results)
                 res[model][strategy] = training_loop(config, data, demo, outcome, model, strategy)
 
     # PLOTTING
