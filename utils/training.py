@@ -112,7 +112,7 @@ def train_cl_method(cl_strategy, scenario, validate=False):
     else:
         return cl_strategy.evaluator.get_all_metrics()
 
-def training_loop(config, data, demo, model_name, strategy_name, validate=False, checkpoint_dir=None):
+def training_loop(config, data, demo, outcome, model_name, strategy_name, validate=False, checkpoint_dir=None):
     """
     Training wrapper:
         - loads data
@@ -124,7 +124,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
 
     # Loading data into 'stream' of 'experiences' (tasks)
     print('Loading data...')
-    scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, validate)
+    scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, demo, outcome, validate)
     if weight is not None:
         weight = weight.to(DEVICE)
     print('Data loaded.')
@@ -151,7 +151,7 @@ def training_loop(config, data, demo, model_name, strategy_name, validate=False,
     else:
         return results
 
-def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples):
+def hyperparam_opt(config, data, demo, outcome, model_name, strategy_name, num_samples):
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
@@ -166,6 +166,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples):
         partial(training_loop,
                 data=data,
                 demo=demo,
+                outcome=outcome,
                 model_name=model_name,
                 strategy_name=strategy_name,
                 validate=True),
@@ -186,7 +187,7 @@ def hyperparam_opt(config, data, demo, model_name, strategy_name, num_samples):
 
     return best_trial.config
 
-def main(data='random', demo='', models=['MLP'], strategies=['Naive'], 
+def main(data, demo, outcome, models, strategies, 
          config_generic={}, config_model={}, config_cl={}, 
          validate=False, num_samples=50):
     """
@@ -203,14 +204,14 @@ def main(data='random', demo='', models=['MLP'], strategies=['Naive'],
             # Hyperparam opt over first 2 tasks
             if validate:
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
-                best_params = hyperparam_opt(config, data, demo, model, strategy, num_samples=num_samples)
+                best_params = hyperparam_opt(config, data, demo, outcome, model, strategy, num_samples=num_samples)
                 save_params(data, demo, model, strategy, best_params)
             # Training loop over all tasks
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
             else:
                 config = load_params(data, demo, model, strategy)
-                res[model][strategy] = training_loop(config, data, demo, model, strategy)
+                res[model][strategy] = training_loop(config, data, demo, outcome, model, strategy)
 
     # PLOTTING
     if not validate:

@@ -24,6 +24,7 @@ def main(args):
     if args.validate:
         training.main(data=args.data,
                       demo=args.experiment,
+                      outcome=args.outcome,
                       models=args.models,
                       strategies=args.strategies,
                       config_generic=config.config_generic,
@@ -35,6 +36,7 @@ def main(args):
     # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data,
                   demo=args.experiment,
+                  outcome=args.outcome,
                   models=args.models,
                   strategies=args.strategies)
 

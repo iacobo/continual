@@ -50,7 +50,7 @@ def random_data(seq_len=48, n_vars=4, n_tasks=4, n_samples=100, p_outcome=0.1):
 # ALL
 #######################
 
-def load_data(data, demo, validate=False):
+def load_data(data, demo, outcome, validate=False):
     """
     Data of form:
     (
@@ -67,7 +67,7 @@ def load_data(data, demo, validate=False):
         weights = None
 
     elif data in ('mimic3', 'eicu'):
-        tasks = split_tasks_fiddle(data, demo, outcome='mortality_48h')
+        tasks = split_tasks_fiddle(data, demo, outcome)
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat),
