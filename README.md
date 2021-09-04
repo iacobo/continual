@@ -15,13 +15,13 @@ Experiments compare a series of simple Neural Network models equipped with one o
 2. Request access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/data` subfolder.
 4. *(Recommended)* Create a new virtual environment:
-   ```
+   ```posh
    python -m pip install --user virtualenv
    python -m venv .venv
    ```
 5. [Activate](https://docs.python.org/3/library/venv.html) virtual environment.
 6. Upgrade the build tools and install dependencies:
-   ```
+   ```posh
    pip install --upgrade pip setuptools wheel
    pip install -r requirements.txt
    ```
@@ -29,7 +29,7 @@ Experiments compare a series of simple Neural Network models equipped with one o
 ## Results
 
 To rerun all experiments:
-```shell
+```posh
 python main.py
 ```
 Figures will be saved to `/results/figs`.
@@ -37,13 +37,13 @@ Figures will be saved to `/results/figs`.
 ## Individual experiments
 
 Individual experiments can be specified with appropriate flags e.g:
-```shell
+```posh
 python main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
 ```
 
 A complete list of available options can be found [here](/config/README.md) or by passing the `--help` flag:
 
-```shell
+```posh
 python main.py --help
 ```
 

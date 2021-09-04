@@ -6,9 +6,13 @@ Hyper-parameter search-space is specificed in `/config/config.py`. Default value
 
 ## `main.py` arguments
 
-Individual experiments can be specified with a combination of `--experiment` `--outcome` parameters. A subset of models and Continual learning strategies can be evaluated with `--models` and `--strategies` respectively.
+Individual experiments can be specified with a combination of `--experiment` `--outcome` parameters. A subset of models and Continual learning strategies can be evaluated with `--models` and `--strategies` respectively. To re-run hyperparameter tuning pass the `--validate` flag.
 
-To re-run hyperparameter tuning pass the `--validate` flag.
+Example:
+
+```posh
+python main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
+```
 
 Flag             | Arg(s)      | Meaning
 -----------------|-------------|------------------------
