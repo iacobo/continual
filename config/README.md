@@ -10,11 +10,11 @@ Individual experiments can be specified with a combination of `--experiment` `--
 
 To re-run hyperparameter tuning pass the `--validate` flag.
 
-Flag           | Arg(s)      | Meaning
----------------|-------------|------------------------
-`--experiment` | `region hospital age ethnicity` | Domain increment to use
-`--outcome`    |`mortality_48h shock_4h shock_12h ARF_4h ARF_12h`       | Outcome to predict
-`--models`     |`MLP CNN RNN LSTM Transformer`   | Model(s) to evaluate
-`--strategies` |`Naive Cumulative EWC LwF SI GEM AGEM Replay GDumb` | Continual learning strategy(s) to evaluate
-`--validate`   |             | Rerun hyper-parameter search
-`--num_samples` |`<int>`         | Budget for hyper-parameter search
+Flag             | Arg(s)      | Meaning
+-----------------|-------------|------------------------
+`--domain_shift` | `region` `hospital` `age` `ethnicity`                      | Domain shif exhibited between tasks
+`--outcome`      |`mortality_48h` `shock_4h` `shock_12h` `ARF_4h` `ARF_12h`   | Outcome to predict
+`--models`       |`MLP` `CNN` `RNN` `LSTM` `Transformer`                      | Model(s) to evaluate
+`--strategies`   |`Naive` `Cumulative` `EWC` `LwF` `SI` `GEM` `AGEM` `Replay` `GDumb` | Continual learning strategy(s) to evaluate
+`--validate`     |                                                            | Re-tune hyper-parameters
+`--num_samples`  |`<int>`                                                     | Budget for hyper-parameter search

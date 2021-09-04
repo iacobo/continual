@@ -23,7 +23,7 @@ def main(args):
     # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
         training.main(data=args.data,
-                      demo=args.experiment,
+                      demo=args.domain_shift,
                       outcome=args.outcome,
                       models=args.models,
                       strategies=args.strategies,
@@ -35,7 +35,7 @@ def main(args):
 
     # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data,
-                  demo=args.experiment,
+                  demo=args.domain_shift,
                   outcome=args.outcome,
                   models=args.models,
                   strategies=args.strategies)
@@ -52,11 +52,11 @@ if __name__ == "__main__":
                         default='mortality_48h',
                         choices=['ARF_4h','ARF_12h','shock_4h','shock_12h','mortality_48h'],
                         help='Outcome to predict.')
-    parser.add_argument('--experiment',
+    parser.add_argument('--domain_shift',
                         type=str,
                         default='age',
                         choices=['time_season','region','hospital','age','sex','ethnicity','ethnicity_coarse'],
-                        help='Experiment to run.') # Domain incremental
+                        help='Domain shift exhibited in tasks.') # Domain incremental
     parser.add_argument('--strategies',
                         type=str,
                         default='all',
