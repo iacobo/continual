@@ -42,8 +42,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--data',
                         type=str,
-                        default='fiddle_mimic3',
-                        choices=['fiddle_mimic3','fiddle_eicu','random'],
+                        default='mimic3',
+                        choices=['mimic3','eicu','random'],
                         help='Dataset to use.')
     parser.add_argument('--outcome',
                         type=str,

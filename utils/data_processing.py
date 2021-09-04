@@ -66,9 +66,8 @@ def load_data(data, demo, validate=False):
         test_experiences = copy.deepcopy(experiences)
         weights = None
 
-    elif data in ('fiddle_mimic3', 'fiddle_eicu'):
-        data_source = data.split('_')[-1]
-        tasks = split_tasks_fiddle(data=data_source, demo=demo, outcome='mortality_48h')
+    elif data in ('mimic3', 'eicu'):
+        tasks = split_tasks_fiddle(data, demo, outcome='mortality_48h')
 
         experiences, test_experiences = split_trainvaltest_fiddle(tasks)
         experiences = [(torch.FloatTensor(feat),
