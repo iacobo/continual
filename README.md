@@ -5,7 +5,11 @@
 
 # Continual Learning of Longitudinal Health Records
 
-Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records*.
+Repo for reproducing the experiments in *Continual Learning of Longitudinal Health Records* (2021). 
+
+Release `x.x.x` of the project corresponds to the published reuslts. Later releases refer to code improvements and bug fixes. 
+
+Experiments compare a series of simple Neural Network models equipped with one of `??` continual learning strategies on a series of standard ICU predictive tasks. Tasks are binary prediction, and input data is multi-modal patient time-series data from routinely recorded ICU variables.
 
 ## Setup
 
