@@ -29,18 +29,18 @@ CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
 
-def save_params(data, demo, model, strategy, best_params):
+def save_params(data, demo, outcome, model, strategy, best_params):
     """
     Save hyper-param config to json.
     """
-    with open(CONFIG_DIR / f'config_{data}_{demo}_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
+    with open(CONFIG_DIR / f'config_{data}_{outcome}_{demo}_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
         json.dump(best_params, json_file)
 
-def load_params(data, demo, model, strategy):
+def load_params(data, demo, outcome, model, strategy):
     """
     Load hyper-param config from json.
     """
-    with open(CONFIG_DIR / f'config_{data}_{demo}_{model}_{strategy}.json', encoding='utf-8') as json_file:
+    with open(CONFIG_DIR / f'config_{data}_{outcome}_{demo}_{model}_{strategy}.json', encoding='utf-8') as json_file:
         best_params = json.load(json_file)
     return best_params
 
@@ -176,7 +176,7 @@ def hyperparam_opt(config, data, demo, outcome, model_name, strategy_name, num_s
         raise_on_failed_trial=False,
         resources_per_trial=resources,
         name=f'{model_name}_{strategy_name}',
-        local_dir=RESULTS_DIR / 'log' / 'raytune' / f'{data}_{demo}',
+        local_dir=RESULTS_DIR / 'log' / 'raytune' / f'{data}_{outcome}_{demo}',
         trial_name_creator=lambda t: f'{model_name}_{strategy_name}_{t.trial_id}')
 
     best_trial = result.get_best_trial('balancedaccuracy', 'max', 'last')
@@ -187,9 +187,7 @@ def hyperparam_opt(config, data, demo, outcome, model_name, strategy_name, num_s
 
     return best_trial.config
 
-def main(data, demo, outcome, models, strategies, 
-         config_generic={}, config_model={}, config_cl={}, 
-         validate=False, num_samples=50):
+def main(data, demo, outcome, models, strategies, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
     """
     Main training loop. Takes dataset, demographic splits, 
     and evaluates model/strategies over given hyperparams over this problem.
@@ -205,18 +203,18 @@ def main(data, demo, outcome, models, strategies,
             if validate:
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, demo, outcome, model, strategy, num_samples=num_samples)
-                save_params(data, demo, model, strategy, best_params)
+                save_params(data, demo, outcome, model, strategy, best_params)
             # Training loop over all tasks
             # JA: (Need to rerun multiple times for mean + CI's)
             # for i in range(5): res[model][strategy].append(...)
             else:
-                config = load_params(data, demo, model, strategy)
+                config = load_params(data, demo, outcome, model, strategy)
                 res[model][strategy] = training_loop(config, data, demo, outcome, model, strategy)
 
     # PLOTTING
     if not validate:
         # Locally saving results
-        with open(RESULTS_DIR / f'results_{data}_{demo}.json', 'w', encoding='utf-8') as handle:
+        with open(RESULTS_DIR / f'results_{data}_{outcome}_{demo}.json', 'w', encoding='utf-8') as handle:
             res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric}
                                                  for s, metrics in strats.items()} 
                                                  for m, strats in res.items()}
@@ -224,4 +222,4 @@ def main(data, demo, outcome, models, strategies,
 
         for mode in ['train','test']:
             for metric in ['Loss','Top1_Acc','BalAcc']:
-                plotting.plot_all_model_strats(models, strategies, data, demo, res, mode, metric)
+                plotting.plot_all_model_strats(models, strategies, data, demo, outcome, res, mode, metric)

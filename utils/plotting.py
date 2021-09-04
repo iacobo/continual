@@ -11,13 +11,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-#from utils import data_processing
-
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 
-METRIC_FULL_NAME = {'BalAcc': 'Balanced Accuracy',
-                    'Top1_Acc': 'Accuracy',
-                    'Loss': 'Loss'}
+METRIC_FULL_NAME = {
+    'Top1_Acc': 'Accuracy',
+    'BalAcc': 'Balanced Accuracy',
+    'Loss': 'Loss'
+    }
 
 def get_timestamp():
     """
@@ -95,7 +95,7 @@ def clean_plot(fig, axes, metric):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-def annotate_plot(fig, demo, metric, outcome='48h mortality'):
+def annotate_plot(fig, demo, outcome, metric):
     """
     Adds x/y labels and suptitles.
     """
@@ -109,7 +109,7 @@ def annotate_plot(fig, demo, metric, outcome='48h mortality'):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {demo}')
 
-def plot_all_model_strats(models, strategies, data, demo, res, mode, metric, savefig=True):
+def plot_all_model_strats(models, strategies, data, demo, outcome, res, mode, metric, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
@@ -120,7 +120,7 @@ def plot_all_model_strats(models, strategies, data, demo, res, mode, metric, sav
             plot_metric(strategy, model, res[model][strategy], mode, metric, axes[i,j])
 
     clean_plot(fig, axes, metric)
-    annotate_plot(fig, demo, metric)
+    annotate_plot(fig, demo, outcome, metric)
 
     if savefig:
         plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{demo}_{mode}_{metric}_{get_timestamp()}.png')
