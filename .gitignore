@@ -5,8 +5,8 @@
 .ipynb_checkpoints/
 
 # Results files
-data/
-results/
+data/*
+results/*
 config/*.json
 
 # Exceptions
