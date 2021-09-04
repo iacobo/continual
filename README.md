@@ -53,12 +53,6 @@ python main.py --experiment region --models CNN --strategies EWC Replay
 
 Hyper-parameter search-space is specificed in `/config/config.py`. Pre-tuned settings are defined in `/config/best_config_<dataset>_<domain>_<outcome>.json`.
 
-For real-time plotting of results via [tensorboard](https://www.tensorflow.org/tensorboard), run:
-```powershell
-tensorboard --logdir=/results/log/tensorboard/<tb_log_exp_name>
-```
-
-
 ## Citation
 
 If you use any of this code in your work, please reference us:

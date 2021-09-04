@@ -8,3 +8,6 @@
 data/
 results/
 config/*.json
+
+# Exceptions
+!README.md
