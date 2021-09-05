@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('--models',
                         type=str,
                         default='all',
-                        choices=['MLP','CNN','RNN','LSTM','Transformer'],
+                        choices=['MLP','CNN','RNN','LSTM','GRU','Transformer'],
                         nargs='+',
                         help='Model(s) to evaluate.')
     parser.add_argument('--validate',

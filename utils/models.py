@@ -6,6 +6,7 @@ Consists of simple parameterised:
 - MLP:         Dense Feedforward ANN      / "Multilayer Perceptron"
 - CNN:         1d CNN                     / "Temporal CNN" (TCN)
 - RNN:         Recurrent Neural network
+- GRU:         Gated Recurrent Unit
 - LSTM:        Long-short term memory RNN
 - Transformer: 
 
@@ -130,6 +131,28 @@ class SimpleLSTM(nn.Module):
         out = self.fc(out)
         return out
 
+
+class SimpleGRU(nn.Module):
+    """
+    GRU
+    """
+    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
+        super().__init__()
+
+        scalar = 2 if bidirectional else 1
+
+        self.lstm = nn.GRU(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
+        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
+
+    def forward(self, x):
+        batch_size = x.shape[0]
+
+        out, _ = self.lstm(x)
+        out = out.reshape(batch_size, -1)
+        out = self.fc(out)
+        return out
+
+
 class SimpleCNN(nn.Module):
     """
     1d CNN (also known as TCN)
@@ -202,7 +225,7 @@ class SimpleTransformer(nn.Module):
         return out
 
 MODELS = {
-    'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,'Transformer':SimpleTransformer
+    'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,'GRU':SimpleGRU,'Transformer':SimpleTransformer
     }
 
 #%%
