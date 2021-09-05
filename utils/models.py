@@ -179,7 +179,7 @@ class SimpleCNN(nn.Module):
             layers.append(current_layer)
 
             # Ensure MaxPools don't wash out entire sequence
-            if seq_len // 2**n_pools > 2:
+            if seq_len // 2**(n_pools+1) > 2:
                 n_pools += 1
                 layers.append(nn.MaxPool1d(kernel_size=2, stride=2))
 
