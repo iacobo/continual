@@ -82,6 +82,9 @@ class SimpleMLP(nn.Module):
         self.fc = nn.Linear(in_features=hidden_dim, out_features=output_size, bias=True)
 
     def forward(self, x):
+        """
+        Forward pass of model.
+        """
         batch_size = x.shape[0]
 
         out = x.view(batch_size, -1)
@@ -103,6 +106,9 @@ class SimpleRNN(nn.Module):
         self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
+        """
+        Forward pass of model.
+        """
         batch_size = x.shape[0]
 
         out, _ = self.rnn(x)
@@ -124,6 +130,9 @@ class SimpleLSTM(nn.Module):
         self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
+        """
+        Forward pass of model.
+        """
         batch_size = x.shape[0]
 
         out, _ = self.lstm(x)
@@ -145,6 +154,9 @@ class SimpleGRU(nn.Module):
         self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
 
     def forward(self, x):
+        """
+        Forward pass of model.
+        """
         batch_size = x.shape[0]
 
         out, _ = self.lstm(x)
@@ -186,8 +198,10 @@ class SimpleCNN(nn.Module):
         self.cnn_layers = nn.Sequential(*layers)
         self.fc = nn.Linear(hidden_dim * (seq_len // 2**n_pools), output_size)
 
-    # Defining the forward pass
     def forward(self, x):
+        """
+        Forward pass of model.
+        """
         batch_size = x.shape[0]
 
         out = x.swapdims(1,2)
@@ -209,7 +223,6 @@ class SimpleTransformer(nn.Module):
 
         transformer_layer = nn.TransformerEncoderLayer(d_model=seq_len, dim_feedforward=hidden_dim, nhead=n_heads, activation=nonlinearity, dropout=dropout, batch_first=True)
         self.transformer = nn.TransformerEncoder(transformer_layer, num_layers=n_layers)
-
         self.fc = nn.Linear(seq_len*n_channels, output_size)
 
     def forward(self, x):
@@ -225,7 +238,10 @@ class SimpleTransformer(nn.Module):
         return out
 
 MODELS = {
-    'MLP':SimpleMLP,'CNN':SimpleCNN,'RNN':SimpleRNN,'LSTM':SimpleLSTM,'GRU':SimpleGRU,'Transformer':SimpleTransformer
+    'MLP':SimpleMLP,
+    'CNN':SimpleCNN,
+    'RNN':SimpleRNN,'LSTM':SimpleLSTM,'GRU':SimpleGRU,
+    'Transformer':SimpleTransformer
     }
 
 #%%
