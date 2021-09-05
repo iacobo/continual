@@ -23,7 +23,7 @@ def main(args):
     # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
         training.main(data=args.data,
-                      demo=args.domain_shift,
+                      domain=args.domain_shift,
                       outcome=args.outcome,
                       models=args.models,
                       strategies=args.strategies,
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     main(arguments)
 
-#plotting.plot_demos()
+#plotting.plot_demographics()
 
 # Secondary experiments:
 ########################

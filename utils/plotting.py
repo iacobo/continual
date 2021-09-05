@@ -95,7 +95,7 @@ def clean_plot(fig, axes, metric):
     axes[0,0].get_legend().remove()
     fig.legend(handles, labels, loc='center right', title='Task')
 
-def annotate_plot(fig, demo, outcome, metric):
+def annotate_plot(fig, domain, outcome, metric):
     """
     Adds x/y labels and suptitles.
     """
@@ -107,9 +107,9 @@ def annotate_plot(fig, demo, outcome, metric):
         fig.text(0.04, 0.5, METRIC_FULL_NAME[metric], va='center', rotation='vertical')
 
     fig.suptitle(f'Continual Learning model comparison \n'
-                 f'Outcome: {outcome} | Domain Increment: {demo}')
+                 f'Outcome: {outcome} | Domain Increment: {domain}')
 
-def plot_all_model_strats(models, strategies, data, demo, outcome, res, mode, metric, savefig=True):
+def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, metric, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
@@ -120,12 +120,12 @@ def plot_all_model_strats(models, strategies, data, demo, outcome, res, mode, me
             plot_metric(strategy, model, res[model][strategy], mode, metric, axes[i,j])
 
     clean_plot(fig, axes, metric)
-    annotate_plot(fig, demo, outcome, metric)
+    annotate_plot(fig, domain, outcome, metric)
 
     if savefig:
-        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{demo}_{mode}_{metric}_{get_timestamp()}.png')
+        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{domain}_{mode}_{metric}_{get_timestamp()}.png')
 
-def plot_demos():
+def plot_demographics():
     """
     Plots demographic information of eICU dataset.
     """
