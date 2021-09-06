@@ -34,8 +34,6 @@ python main.py
 ```
 Figures will be saved to `/results/figs`.
 
-## Individual experiments
-
 Individual experiments can be specified with appropriate flags e.g:
 ```posh
 python main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
