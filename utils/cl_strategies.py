@@ -13,7 +13,12 @@ from avalanche.training.strategies import EWC, LwF, SynapticIntelligence   # Reg
 from avalanche.training.strategies import Replay, GDumb, GEM, AGEM         # Rehearsal
 from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
 
-STRATEGIES = {'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
-'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence,
-'Replay':Replay, 'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE,
-'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}
+STRATEGIES = {
+    # Baselines
+    'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
+    # Regularization based
+    'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence,
+    # Replay
+    'Replay':Replay, 'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE,
+    # Misc.
+    'AR1':AR1, 'StreamingLDA':StreamingLDA, 'CWRStar':CWRStar}

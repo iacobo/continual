@@ -35,7 +35,7 @@ def main(args):
 
     # Train and test over all tasks (using optimised hyperparams)
     training.main(data=args.data,
-                  demo=args.domain_shift,
+                  domain=args.domain_shift,
                   outcome=args.outcome,
                   models=args.models,
                   strategies=args.strategies)
