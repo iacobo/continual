@@ -84,7 +84,7 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
         device=DEVICE,
         criterion=criterion,
         eval_mb_size=1024,
-        eval_every=-1 if validate else 1,
+        eval_every=0 if validate else 1,
         evaluator=eval_plugin,
         train_epochs=config['train_epochs'],
         train_mb_size=config['train_mb_size'],
@@ -108,7 +108,7 @@ def train_cl_method(cl_strategy, scenario, validate=False):
         print('Training completed', '\n\n')
 
     if validate:
-        return cl_strategy.eval(scenario.test_stream)
+        return cl_strategy.evaluator.get_last_metrics()
     else:
         return cl_strategy.evaluator.get_all_metrics()
 
@@ -134,11 +134,6 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
     model = models.MODELS[model_name](n_channels, n_timesteps, config['hidden_dim'], **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
-
-    # Garbage collection
-    del cl_strategy
-    del model
-    torch.cuda.empty_cache()
 
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
