@@ -40,7 +40,7 @@ Where the number of layers, nonlinearity, and degree of dropout are parameterise
 Model specific parameters:
 
 - CNN          Kernel width
-- RNN/LSTM     Bidirectionality
+- RNN/LSTM/GRU Bidirectionality
 - Transformer  Number of heads
 
 """
