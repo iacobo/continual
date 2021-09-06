@@ -38,6 +38,11 @@ config_model = {
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'nonlinearity':tune.choice(['tanh','relu'])
               },
+       'Transformer':{
+              'n_heads':tune.choice([4,8,16]),
+              'dropout':tune.sample_from(get_dropout_from_n_layers),
+              'nonlinearity':tune.choice(['relu','gelu'])
+              },
        'RNN':{
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'nonlinearity':tune.choice(['tanh','relu']),
@@ -47,10 +52,9 @@ config_model = {
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'bidirectional':tune.choice([True,False])
               },
-       'Transformer':{
-              'n_heads':tune.choice([4,8,16]),
+       'GRU':{
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['relu','gelu'])
+              'bidirectional':tune.choice([True,False])
               }
        }
 
