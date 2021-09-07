@@ -113,7 +113,11 @@ def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, 
     """
     Pairplot of all models vs strategies.
     """
-    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
+
+    # Loss can blow up orders of magnitude in some experiments
+    sharey = False if metric=='Loss' else True
+
+    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=sharey, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
