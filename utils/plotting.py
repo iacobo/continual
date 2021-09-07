@@ -129,6 +129,9 @@ def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, 
     if savefig:
         plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{domain}_{mode}_{metric}_{get_timestamp()}.png')
 
+
+# JA: Include option to plot average (stream) vals as opposed to per-task (experience)
+
 def plot_demographics():
     """
     Plots demographic information of eICU dataset.
