@@ -168,6 +168,8 @@ class SimpleGRU(nn.Module):
 class SimpleCNN(nn.Module):
     """
     1d CNN (also known as TCN)
+
+    `kernel_size` must be odd for `padding` to work as expected.
     """
     def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=3, output_size=2, kernel_size=3, nonlinearity='relu'):
         super().__init__()
@@ -184,7 +186,7 @@ class SimpleCNN(nn.Module):
             in_channels = n_channels if i==0 else hidden_dim
 
             current_layer = nn.Sequential(
-                nn.Conv1d(in_channels, hidden_dim, kernel_size, stride=1, padding=1),
+                nn.Conv1d(in_channels, hidden_dim, kernel_size, stride=1, padding=kernel_size//2),
                 nn.BatchNorm1d(hidden_dim),
                 nonlinearity()
                 )

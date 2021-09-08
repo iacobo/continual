@@ -33,14 +33,19 @@ def save_params(data, domain, outcome, model, strategy, best_params):
     """
     Save hyper-param config to json.
     """
-    with open(CONFIG_DIR / f'config_{data}_{outcome}_{domain}_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
+    file_loc = CONFIG_DIR / data / outcome / domain
+    file_loc.mkdir(parents=True, exist_ok=True)
+
+    with open(file_loc / f'config_{model}_{strategy}.json', 'w', encoding='utf-8') as json_file:
         json.dump(best_params, json_file)
 
 def load_params(data, domain, outcome, model, strategy):
     """
     Load hyper-param config from json.
     """
-    with open(CONFIG_DIR / f'config_{data}_{outcome}_{domain}_{model}_{strategy}.json', encoding='utf-8') as json_file:
+    file_loc = CONFIG_DIR / data / outcome / domain
+    
+    with open(file_loc / f'config_{model}_{strategy}.json', encoding='utf-8') as json_file:
         best_params = json.load(json_file)
     return best_params
 

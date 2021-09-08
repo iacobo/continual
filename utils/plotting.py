@@ -80,8 +80,12 @@ def clean_subplot(i, j, axes, metric):
     if i>0 or j>0:
         ax.get_legend().remove()
 
-    if metric != 'Loss':
-        plt.setp(axes, ylim=(0,1))
+    if metric == 'Loss':
+        ylim = (0,2)
+    else:
+        ylim = (0,1)
+    
+    plt.setp(axes, ylim=ylim)
 
 def clean_plot(fig, axes, metric):
     """
@@ -114,10 +118,7 @@ def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, 
     Pairplot of all models vs strategies.
     """
 
-    # Loss can blow up orders of magnitude in some experiments
-    sharey = False if metric=='Loss' else True
-
-    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=sharey, figsize=(8,8*(len(models)/len(strategies))), squeeze=False)
+    fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(20,20*(len(models)/len(strategies))), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
@@ -127,7 +128,9 @@ def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, 
     annotate_plot(fig, domain, outcome, metric)
 
     if savefig:
-        plt.savefig(RESULTS_DIR / 'figs' / f'fig_{data}_{domain}_{mode}_{metric}_{get_timestamp()}.png')
+        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain
+        file_loc.mkdir(parents=True, exist_ok=True)
+        plt.savefig(file_loc / f'fig_{mode}_{metric}_{get_timestamp()}.png')
 
 
 # JA: Include option to plot average (stream) vals as opposed to per-task (experience)

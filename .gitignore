@@ -7,7 +7,7 @@
 # Results files
 data/*
 results/*
-config/*.json
+config/**/config_*.json
 
 # Exceptions
 !README.md
