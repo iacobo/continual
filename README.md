@@ -17,12 +17,12 @@ Experiments compare a series of simple Neural Network models equipped with one o
 4. *(Recommended)* Create a new virtual environment:
    ```posh
    python -m pip install --user virtualenv
-   python -m venv .venv
+   python -m venv .venv --upgrade-deps
    ```
 5. [Activate](https://docs.python.org/3/library/venv.html) virtual environment.
-6. Upgrade the build tools and install dependencies:
+6. Install dependencies:
    ```posh
-   pip install --upgrade pip setuptools wheel
+   pip install -U wheel
    pip install -r requirements.txt
    ```
 
