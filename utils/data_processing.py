@@ -279,7 +279,7 @@ demo_cols = {
         }
     }
 
-def load_fiddle(data, outcome, n=None):
+def load_fiddle(data, outcome, n=None, vitals_only=False):
     """
     - `data`: ['eicu', 'mimic3']
     - `task`: ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
@@ -299,15 +299,17 @@ def load_fiddle(data, outcome, n=None):
         vitals = ['Vital Signs|']
     elif data == 'mimic3':
         vitals = ['HR','RR','SpO2','SBP','Heart Rhythm','SysBP','DiaBP']
-    
+
     vital_col_ids = [X_feature_names.index(var) for var in X_feature_names for prefix in vitals if var.startswith(prefix)]
 
-    var_X_demos = [X_feature_names.index(col) for key, cols in demo_cols[data].items() for col in cols if key.startswith('time')]
-    var_X_subset = sorted(list(set(vital_col_ids).union(set(var_X_demos))))
-    X_feature_names = [X_feature_names[i] for i in var_X_subset]
+    if vitals_only:
+        X_feature_names = [X_feature_names[i] for i in vital_col_ids]
+        features_X_subset_ids = vital_col_ids
+    else:
+        features_X_subset_ids = list(set(range(400)).union(set(vital_col_ids)))
 
     # Loading np arrays
-    features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,var_X_subset].todense()
+    features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,features_X_subset_ids].todense()
     features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n].todense()
     
     df_outcome = pd.read_csv(data_dir / 'population' / f'{outcome}.csv')[:n]
