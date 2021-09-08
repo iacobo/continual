@@ -28,22 +28,19 @@ Experiments compare a series of simple Neural Network models equipped with one o
 
 ## Results
 
-To rerun all experiments:
+To reproduce all experiments:
+
 ```posh
 python main.py
 ```
-Figures will be saved to `/results/figs`.
 
-Individual experiments can be specified with appropriate flags e.g:
+Figures will be saved to `/results/figs`. Individual experiments can be specified with appropriate flags e.g:
+
 ```posh
 python main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
 ```
 
-A complete list of available options can be found [here](/config/README.md) or by passing the `--help` flag:
-
-```posh
-python main.py --help
-```
+A complete list of available options can be found [here](/config/README.md) or with `python main.py --help`.
 
 ## Citation
 
