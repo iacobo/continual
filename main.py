@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--outcome',
                         type=str,
                         default='mortality_48h',
-                        choices=['ARF_4h','ARF_12h','shock_4h','shock_12h','mortality_48h'],
+                        choices=['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h'],
                         help='Outcome to predict.')
     parser.add_argument('--domain_shift',
                         type=str,

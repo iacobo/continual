@@ -23,7 +23,7 @@ def get_dropout_from_n_layers(spec):
 config_generic = {
        'lr':tune.choice([1e-4,1e-3,1e-2]),
        'optimizer':tune.choice(['Adam']), #'SGD', #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
-       'train_epochs':5,
+       'train_epochs':15,
        'train_mb_size':tune.choice([16,32,64,128]),
        'hidden_dim':tune.choice([32,64,128]),
        'n_layers':tune.choice([1,2,3]),

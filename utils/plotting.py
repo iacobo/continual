@@ -111,12 +111,17 @@ def annotate_plot(fig, domain, outcome, metric):
         fig.text(0.04, 0.5, METRIC_FULL_NAME[metric], va='center', rotation='vertical')
 
     fig.suptitle(f'Continual Learning model comparison \n'
-                 f'Outcome: {outcome} | Domain Increment: {domain}')
+                 f'Outcome: {outcome} | Domain Increment: {domain}', y=1.1)
 
 def plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, metric, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
+    models = res.keys()
+    strategies = res[0].keys()
+
+    n_cols = len(models)
+    n_rows = len(strategies)
 
     fig, axes = plt.subplots(len(models), len(strategies), sharex=True, sharey=True, figsize=(20,20*(len(models)/len(strategies))), squeeze=False, dpi=250)
 
