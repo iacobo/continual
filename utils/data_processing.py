@@ -279,7 +279,7 @@ demo_cols = {
         }
     }
 
-def load_fiddle(data, outcome, n=None, vitals_only=False):
+def load_fiddle(data, outcome, n=None, vitals_only=True):
     """
     - `data`: ['eicu', 'mimic3']
     - `task`: ['ARF_4h','ARF_12h','Shock_4h','Shock_12h','mortality_48h']
@@ -313,6 +313,7 @@ def load_fiddle(data, outcome, n=None, vitals_only=False):
     features_s = sparse.load_npz(data_dir / 'features' / outcome / 's.npz')[:n].todense()
     
     df_outcome = pd.read_csv(data_dir / 'population' / f'{outcome}.csv')[:n]
+    df_outcome['y_true'] = df_outcome[f'{outcome.split("_")[0]}_LABEL']
 
     return features_X, features_s, X_feature_names, s_feature_names, df_outcome
 
@@ -339,22 +340,24 @@ def split_tasks_fiddle(data, demo, outcome):
     static_categorical_demos = []
     static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
     timevar_onehot_demos = []
+
+    cols = [c for c in s_feature_names if c.startswith(demo_cols[data][demo][0].split(':')[0])]
     
     # if feat is categorical
     if demo in timevar_categorical_demos:
-        assert len(demo_cols[data][demo]) == 1, "More than one categorical col specified!"
-        demo_cat = X_feature_names.index(demo_cols[data][demo][0])
+        assert len(cols) == 1, "More than one categorical col specified!"
+        demo_cat = X_feature_names.index(cols[0])
         tasks = get_modes(features_X,demo_cat)
         tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
     elif demo in static_categorical_demos:
-        demo_cat = s_feature_names.index(demo_cols[data][demo][0])
+        demo_cat = s_feature_names.index(cols[0])
         tasks = features_s[:,demo_cat]
         tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
     elif demo in timevar_onehot_demos:
-        demo_onehots = [X_feature_names.index(col) for col in demo_cols[data][demo]]
+        demo_onehots = [X_feature_names.index(col) for col in cols]
         tasks_idx = [get_modes(features_X,i)==1 for i in demo_onehots]
     elif demo in static_onehot_demos:
-        demo_onehots = [s_feature_names.index(col) for col in demo_cols[data][demo]]
+        demo_onehots = [s_feature_names.index(col) for col in cols]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
     elif demo=='time_season':
         seasons = recover_admission_time(data, outcome)['quarter']
@@ -365,9 +368,6 @@ def split_tasks_fiddle(data, demo, outcome):
     all_features = concat_timevar_static_feats(features_X, features_s)
 
     tasks = [(all_features[idx], df_outcome[idx]) for idx in tasks_idx]
-
-    # Displays number of outcomes per train/test/val partition per task
-    print([t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),) for t in tasks])
 
     return tasks
 
@@ -394,6 +394,25 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
     Takes a dataset of multiple tasks/experiences and splits it into train and val/test sets.
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
     """
+
+    # Only MIMIC-III mortality_48h has train/val/test split
+
+    # JA: This currently splits on sample/admission. DOES NOT SPLIT ON PATIENT ID
+    # Need to incorporate patient ID split from 
+    # https://github.com/MLD3/FIDDLE-experiments/blob/master/mimic3_experiments/1_data_extraction/extract_data.py
+    # elsewhere defined?
+
+    # Train/val/test/split
+    for i in range(len(tasks)):
+        if 'partition' not in tasks[i][1]:
+            n = len(tasks[i][1])
+            partition = np.random.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
+            tasks[i][1]['partition'] = partition
+
+    # Displays number of outcomes per train/test/val partition per task
+    for t in tasks:
+        print(t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),))
+
     if val_as_test:
         tasks_train = [(
             t[0][t[1]['partition']=='train'],

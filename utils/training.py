@@ -225,4 +225,4 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
 
         for mode in ['train','test']:
             for metric in ['Loss','Top1_Acc','BalAcc']:
-                plotting.plot_all_model_strats(models, strategies, data, domain, outcome, res, mode, metric)
+                plotting.plot_all_model_strats(data, domain, outcome, mode, metric)
