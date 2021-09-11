@@ -2,6 +2,8 @@
 Functions for plotting results and descriptive analysis of data.
 """
 
+#%%
+
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
@@ -58,7 +60,9 @@ def plot_metric(method, model, results, mode, metric, ax=None):
     stacked = stack_results(results, metric, mode)
 
     # Only plot task accuracies after examples have been encountered
-    #stacked = stacked[stacked['Task'].astype(int)<=stacked['Epoch \n (15 epochs per task)'].astype(int)]
+    tasks = stacked['Task'].str.split(' ',expand=True)[1].astype(int)
+    n_epochs = len(stacked['Epoch']) // (tasks.max()+1)**2
+    stacked = stacked[tasks*n_epochs<=stacked['Epoch'].astype(int)]
 
     sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
@@ -121,7 +125,7 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
 
     # Load results
     with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', encoding='utf-8') as handle:
-            res = json.load(handle)
+        res = json.load(handle)
 
     models = res.keys()
     strategies = next(iter(res.values())).keys()
@@ -162,3 +166,4 @@ def plot_demographics():
     df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
     plt.show()
     plt.close()
+# %%
