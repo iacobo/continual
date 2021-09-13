@@ -94,8 +94,16 @@ class BalancedAccuracy(Metric[float]):
             true_negatives = torch.sum(torch.isnan(confusion_vector)).item()
             false_negatives = torch.sum(confusion_vector == 0).item()
 
-            tpr = true_positives / (true_positives + false_negatives)
-            tnr = true_negatives / (true_negatives + false_positives)
+            try:
+                tpr = true_positives / (true_positives + false_negatives)
+            except ZeroDivisionError:
+                tpr = 0
+
+            try:
+                tnr = true_negatives / (true_negatives + false_positives)
+            except ZeroDivisionError:
+                tnr = 0
+                
             self._mean_balancedaccuracy[task_labels].update(
                 (tpr+tnr) / 2, len(predicted_y))
         elif isinstance(task_labels, Tensor):

@@ -187,6 +187,7 @@ class SimpleCNN(nn.Module):
 
             current_layer = nn.Sequential(
                 nn.Conv1d(in_channels, hidden_dim, kernel_size, stride=1, padding=kernel_size//2),
+                # JA: Investigate removing BatchNorm as bad for CL
                 nn.BatchNorm1d(hidden_dim),
                 nonlinearity()
                 )

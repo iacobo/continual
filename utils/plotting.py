@@ -31,7 +31,7 @@ def get_timestamp():
 
 def stack_results(results, metric, mode):
     """
-    Stacks results
+    Stacks results for multiple 'experiences' along same axis in df.
     """
     metric_dict = defaultdict(list)
 
@@ -83,7 +83,10 @@ def clean_subplot(i, j, axes, metric):
     if i>0:
         ax.set_title('')
     if i>0 or j>0:
-        ax.get_legend().remove()
+        try:
+            ax.get_legend().remove()
+        except AttributeError:
+            pass
 
     if metric == 'Loss':
         ylim = (0,2)
@@ -130,10 +133,13 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
     models = res.keys()
     strategies = next(iter(res.values())).keys()
 
-    n_cols = len(models)
-    n_rows = len(strategies)
+    n_rows = len(models)
+    n_cols = len(strategies)
 
-    fig, axes = plt.subplots(n_cols, n_rows, sharex=True, sharey=True, figsize=(20,20*n_cols/n_rows), squeeze=False, dpi=250)
+    timestamp = get_timestamp()
+
+    # Experience plots
+    fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(20,20*n_rows/n_cols), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
@@ -143,12 +149,25 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
     annotate_plot(fig, domain, outcome, metric)
 
     if savefig:
-        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain
+        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp
         file_loc.mkdir(parents=True, exist_ok=True)
-        plt.savefig(file_loc / f'fig_{mode}_{metric}_{get_timestamp()}.png')
+        plt.savefig(file_loc / f'Exp_{mode}_{metric}.png')
+    
+    # Stream plots
+    fig, axes = plt.subplots(n_rows, 2, sharex=False, sharey=True, gridspec_kw={'width_ratios':[2,1]}, figsize=(20/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
 
+    for i, model in enumerate(models):
+        plot_avg_metric(model, res[model], mode, metric, axes[i,0])
+        barplot_avg_metric(model, res[model], mode, metric, axes[i,1])
 
-# JA: Include option to plot average (stream) vals as opposed to per-task (experience)
+    clean_plot(fig, axes, metric)
+    annotate_plot(fig, domain, outcome, metric)
+
+    if savefig:
+        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp
+        file_loc.mkdir(parents=True, exist_ok=True)
+        plt.savefig(file_loc / f'Stream_{mode}_{metric}.png')
+
 
 def plot_demographics():
     """
@@ -166,4 +185,50 @@ def plot_demographics():
     df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
     plt.show()
     plt.close()
+
+def stack_avg_results(results_strats, metric, mode):
+    metric_dict = defaultdict(list)
+
+    # Get avg (stream) metrics for each strategy
+    for strat, metrics in results_strats.items():
+        for k, v in metrics.items():
+            if f'{metric}_Stream/eval_phase/{mode}_stream' in k:
+                metric_dict[strat] = v[1]
+
+    df = pd.DataFrame.from_dict(metric_dict)
+    df.index.rename('Epoch', inplace=True)
+    stacked = df.stack().reset_index()
+    stacked.rename(columns={'level_1': 'Strategy', 0: METRIC_FULL_NAME[metric]}, inplace=True)
+
+    return stacked
+
+def plot_avg_metric(model, results, mode, metric, ax=None):
+    """
+    Plots given metric from dict.
+    Stacks multiple plots (i.e. different strategies' metrics) over training time.
+
+    `mode`: ['train','test'] (which stream to plot)
+    """
+    ax = ax or plt.gca()
+
+    stacked = stack_avg_results(results, metric, mode)
+
+    sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Strategy', ax=ax)
+    ax.set_title('Average performance over all tasks', size=10)
+    ax.set_ylabel(model)
+    ax.set_xlabel('')
+
+def barplot_avg_metric(model, results, mode, metric, ax=None):
+    ax = ax or plt.gca()
+
+    stacked = stack_avg_results(results, metric, mode)
+    stacked = stacked[stacked['Epoch']==stacked['Epoch'].max()]
+
+    sns.barplot(data=stacked, x='Strategy', y=METRIC_FULL_NAME[metric], ax=ax)
+    ax.set_title('Final average performance over all tasks', size=10)
+    ax.set_xlabel('')
+
+def results_to_latex():
+    raise NotImplementedError
+
 # %%
