@@ -6,7 +6,7 @@ from ray import tune
 import numpy as np
 
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
-SAMPLE_COUNTS = [32,64]
+SAMPLE_COUNTS = [32,64,128]
 
 # Conditional hyper-param functions
 def get_dropout_from_n_layers(spec):

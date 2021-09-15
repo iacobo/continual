@@ -33,18 +33,25 @@ def stack_results(results, metric, mode):
     """
     Stacks results for multiple 'experiences' along same axis in df.
     """
-    metric_dict = defaultdict(list)
+
+    results_dfs = []
 
     # Get metrics for each training "experience"'s test set
-    for k,v in results.items():
-        if f'{metric}_Exp/eval_phase/{mode}_stream' in k:
-            new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
-            metric_dict[new_k] = v[1]
+    for i in range(5):
+        metric_dict = defaultdict(list)
+        for k,v in results[i].items():
+            if f'{metric}_Exp/eval_phase/{mode}_stream' in k:
+                new_k = k.split('/')[-1].replace('Exp00','Task ').replace('Exp0','Task ')
+                metric_dict[new_k] = v[1]
 
-    df = pd.DataFrame.from_dict(metric_dict)
-    df.index.rename('Epoch', inplace=True)
-    stacked = df.stack().reset_index()
-    stacked.rename(columns={'level_1': 'Task', 0: METRIC_FULL_NAME[metric]}, inplace=True)
+        df = pd.DataFrame.from_dict(metric_dict)
+        df.index.rename('Epoch', inplace=True)
+        stacked = df.stack().reset_index()
+        stacked.rename(columns={'level_1': 'Task', 0: METRIC_FULL_NAME[metric]}, inplace=True)
+
+        results_dfs.append(stacked)
+
+    stacked = pd.concat(results_dfs, sort=False)
 
     return stacked
 
@@ -60,9 +67,12 @@ def plot_metric(method, model, results, mode, metric, ax=None):
     stacked = stack_results(results, metric, mode)
 
     # Only plot task accuracies after examples have been encountered
+    # JA: this len() etc will screw up when plotting CI's
     tasks = stacked['Task'].str.split(' ',expand=True)[1].astype(int)
-    n_epochs = len(stacked['Epoch']) // (tasks.max()+1)**2
+    n_epochs = 15
     stacked = stacked[tasks*n_epochs<=stacked['Epoch'].astype(int)]
+
+    print(stacked)
 
     sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
@@ -121,10 +131,12 @@ def annotate_plot(fig, domain, outcome, metric):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {domain}', y=1.1)
 
-def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
+def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True, timestamp=None):
     """
     Pairplot of all models vs strategies.
     """
+
+    timestamp = timestamp or get_timestamp()
 
     # Load results
     with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', encoding='utf-8') as handle:
@@ -135,8 +147,6 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
 
     n_rows = len(models)
     n_cols = len(strategies)
-
-    timestamp = get_timestamp()
 
     # Experience plots
     fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(20,20*n_rows/n_cols), squeeze=False, dpi=250)
@@ -167,24 +177,6 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True):
         file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp
         file_loc.mkdir(parents=True, exist_ok=True)
         plt.savefig(file_loc / f'Stream_{mode}_{metric}.png')
-
-
-def plot_demographics():
-    """
-    Plots demographic information of eICU dataset.
-    """
-
-    df = pd.DataFrame() #data_processing.load_eicu(drop_dupes=True)
-    _, axes = plt.subplots(3,2, sharey=True, figsize=(18,18), squeeze=False)
-
-    df['gender'].value_counts().plot.bar(ax=axes[0,0], rot=0, title='Gender')
-    df['ethnicity'].value_counts().plot.bar(ax=axes[1,0], rot=0, title='Ethnicity')
-    df['ethnicity_coarse'].value_counts().plot.bar(ax=axes[1,1], rot=0, title='Ethnicity (coarse)')
-    df['age'].plot.hist(bins=20, label='age', ax=axes[0,1], title='Age')
-    df['region'].value_counts().plot.bar(ax=axes[2,0], rot=0, title='Region (North America)')
-    df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
-    plt.show()
-    plt.close()
 
 def stack_avg_results(results_strats, metric, mode):
     metric_dict = defaultdict(list)
@@ -230,5 +222,26 @@ def barplot_avg_metric(model, results, mode, metric, ax=None):
 
 def results_to_latex():
     raise NotImplementedError
+
+
+
+# DESCRIPTIVE PLOTS
+
+def plot_demographics():
+    """
+    Plots demographic information of eICU dataset.
+    """
+
+    df = pd.DataFrame() #data_processing.load_eicu(drop_dupes=True)
+    _, axes = plt.subplots(3,2, sharey=True, figsize=(18,18), squeeze=False)
+
+    df['gender'].value_counts().plot.bar(ax=axes[0,0], rot=0, title='Gender')
+    df['ethnicity'].value_counts().plot.bar(ax=axes[1,0], rot=0, title='Ethnicity')
+    df['ethnicity_coarse'].value_counts().plot.bar(ax=axes[1,1], rot=0, title='Ethnicity (coarse)')
+    df['age'].plot.hist(bins=20, label='age', ax=axes[0,1], title='Age')
+    df['region'].value_counts().plot.bar(ax=axes[2,0], rot=0, title='Region (North America)')
+    df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
+    plt.show()
+    plt.close()
 
 # %%

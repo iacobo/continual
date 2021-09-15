@@ -5,7 +5,10 @@ Continual Learning model-training and evaluation.
 
 from pathlib import Path
 from functools import partial
+from datetime import datetime
 
+import time
+import datetime
 import json
 import warnings
 import torch
@@ -187,6 +190,13 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
 
     return best_trial.config
 
+def get_timestamp():
+    """
+    Returns current timestamp as string.
+    """
+    ts = time.time()
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
+
 def main(data, domain, outcome, models, strategies, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
     """
     Main training loop. Defines dataset given outcome/domain 
@@ -195,7 +205,7 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
 
     # TRAINING
     # Container for metrics for plotting
-    res = {m:{s:None for s in strategies} for m in models}
+    res = {m:{s:[] for s in strategies} for m in models}
 
     for model in models:
         for strategy in strategies:
@@ -208,21 +218,22 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
             else:
                 config = load_params(data, domain, outcome, model, strategy)
 
-                # JA: (Need to rerun multiple times for mean + CI's)
-                # for i in range(5): 
-                #     curr_results = training_loop(config, data, domain, outcome, model, strategy)
-                #     res[model][strategy].append(curr_results)
-                res[model][strategy] = training_loop(config, data, domain, outcome, model, strategy)
+                # Multiple runs for Confidence Intervals
+                for i in range(5): 
+                    curr_results = training_loop(config, data, domain, outcome, model, strategy)
+                    res[model][strategy].append(curr_results)
 
-    # PLOTTING
     if not validate:
         # Locally saving results
         with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', 'w', encoding='utf-8') as handle:
-            res_no_tensors = {m:{s:{metric:value for metric, value in metrics.items() if 'Confusion' not in metric}
-                                                 for s, metrics in strats.items()} 
+            res_no_tensors = {m:{s:[{metric:value for metric, value in run.items() if 'Confusion' not in metric} for run in runs]
+                                                 for s, runs in strats.items()} 
                                                  for m, strats in res.items()}
             json.dump(res_no_tensors, handle)
 
+        # Plot results
+        timestamp = get_timestamp()
+
         for mode in ['train','test']:
             for metric in ['Loss','Top1_Acc','BalAcc']:
-                plotting.plot_all_model_strats(data, domain, outcome, mode, metric)
+                plotting.plot_all_model_strats(data, domain, outcome, mode, metric, timestamp)
