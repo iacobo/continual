@@ -23,13 +23,20 @@ from utils import models, plotting, data_processing, cl_strategies
 from utils.metrics import balancedaccuracy_metrics
 
 # Suppressing erroneous MaxPool1d named tensors warning
-warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("once", category=UserWarning)
 
 # GLOBALS
 RESULTS_DIR = Path(__file__).parents[1] / 'results'
 CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
+
+def get_timestamp():
+    """
+    Returns current timestamp as string.
+    """
+    ts = time.time()
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def save_params(data, domain, outcome, model, strategy, best_params):
     """
@@ -71,7 +78,7 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
     if validate:
         loggers = []
     else:
-        timestamp = plotting.get_timestamp()
+        timestamp = get_timestamp()
         log_dir = RESULTS_DIR / 'log' / 'tensorboard' / f'{data}_{domain}_{timestamp}' / model_name / strategy_name
         interactive_logger = InteractiveLogger()
         tb_logger = TensorboardLogger(tb_log_dir=log_dir)
@@ -138,7 +145,7 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
     print(f'N timesteps: {n_timesteps}\n'
           f'N features:  {n_channels}')
 
-    model = models.MODELS[model_name](n_channels, n_timesteps, config['hidden_dim'], **config['model'])
+    model = models.MODELS[model_name](n_channels, n_timesteps, **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
 
@@ -188,13 +195,6 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
     print(f'Best trial final validation balanced accuracy: {best_trial.last_result["balancedaccuracy"]}')
 
     return best_trial.config
-
-def get_timestamp():
-    """
-    Returns current timestamp as string.
-    """
-    ts = time.time()
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def main(data, domain, outcome, models, strategies, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
     """

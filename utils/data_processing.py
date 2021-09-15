@@ -31,7 +31,7 @@ DATA_DIR = Path(__file__).parents[1] / 'data'
 # Simulated (random) DATA
 ########################
 
-def random_data(seq_len=48, n_vars=4, n_tasks=3, n_samples=50, p_outcome=0.1):
+def random_data(seq_len=48, n_vars=4, n_tasks=3, n_samples=150, p_outcome=0.1):
     """
     Returns random data of form:
 

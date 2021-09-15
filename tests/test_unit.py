@@ -78,6 +78,8 @@ class TestModelMethods(unittest.TestCase):
                     # RNN/LSTM order bigger
                     self.assertTrue(max(param_magnitudes)-min(param_magnitudes)<=1)
 
+    # JA: Implement test to check params passed by config actually change model structure.
+
 
 class TestDataLoadingMethods(unittest.TestCase):
     """
