@@ -5,7 +5,6 @@ Functions for plotting results and descriptive analysis of data.
 #%%
 
 from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
 
 import time
@@ -21,13 +20,6 @@ METRIC_FULL_NAME = {
     'BalAcc': 'Balanced Accuracy',
     'Loss': 'Loss'
     }
-
-def get_timestamp():
-    """
-    Returns current timestamp as string.
-    """
-    ts = time.time()
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
 
 def stack_results(results, metric, mode):
     """
@@ -129,7 +121,7 @@ def annotate_plot(fig, domain, outcome, metric):
     fig.suptitle(f'Continual Learning model comparison \n'
                  f'Outcome: {outcome} | Domain Increment: {domain}', y=1.1)
 
-def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True, timestamp=None):
+def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefig=True):
     """
     Pairplot of all models vs strategies.
     """
@@ -160,7 +152,7 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True, tim
         plt.savefig(file_loc / f'Exp_{mode}_{metric}.png')
     
     # Stream plots
-    fig, axes = plt.subplots(n_rows, 2, sharex=False, sharey=True, gridspec_kw={'width_ratios':[2,1]}, figsize=(20/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
+    fig, axes = plt.subplots(n_rows, 2, sharex=False, sharey=True, gridspec_kw={'width_ratios':[2,1]}, figsize=(2*20/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         plot_avg_metric(model, res[model], mode, metric, axes[i,0])
