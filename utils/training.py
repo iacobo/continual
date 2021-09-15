@@ -3,13 +3,11 @@ Contains functions for running hyperparameter sweep and
 Continual Learning model-training and evaluation.
 """
 
-from pathlib import Path
-from functools import partial
-from datetime import datetime
-
-import time
 import json
 import warnings
+from pathlib import Path
+from functools import partial
+
 import torch
 from ray import tune
 from torch import nn, optim
@@ -31,17 +29,9 @@ CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
 
-def get_timestamp():
-    """
-    Returns current timestamp as string.
-    """
-    ts = time.time()
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-
 def save_params(data, domain, outcome, model, strategy, best_params):
-    """
-    Save hyper-param config to json.
-    """
+    """Save hyper-param config to json."""
+
     file_loc = CONFIG_DIR / data / outcome / domain
     file_loc.mkdir(parents=True, exist_ok=True)
 
@@ -49,14 +39,21 @@ def save_params(data, domain, outcome, model, strategy, best_params):
         json.dump(best_params, json_file)
 
 def load_params(data, domain, outcome, model, strategy):
-    """
-    Load hyper-param config from json.
-    """
+    """Load hyper-param config from json."""
+
     file_loc = CONFIG_DIR / data / outcome / domain
     
     with open(file_loc / f'config_{model}_{strategy}.json', encoding='utf-8') as json_file:
         best_params = json.load(json_file)
     return best_params
+
+def save_results(data, outcome, domain, res):
+    """Saves results to .json (excluding tensor confusion matrix)."""
+    with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', 'w', encoding='utf-8') as handle:
+        res_no_tensors = {m:{s:[{metric:value for metric, value in run.items() if 'Confusion' not in metric} for run in runs]
+                                                for s, runs in strats.items()} 
+                                                for m, strats in res.items()}
+        json.dump(res_no_tensors, handle)
 
 def load_strategy(model, model_name, strategy_name, data='', domain='', weight=None, validate=False, config=None, benchmark=None):
     """
@@ -72,13 +69,10 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
     elif config['optimizer'] == 'Adam':
         optimizer = optim.Adam(model.parameters(), lr=config['lr'])
 
-    # Loggers
-    # JA: subfolders for datset / experiments VVV
-
     if validate:
         loggers = []
     else:
-        timestamp = get_timestamp()
+        timestamp = plotting.get_timestamp()
         log_dir = RESULTS_DIR / 'log' / 'tensorboard' / f'{data}_{domain}_{timestamp}' / model_name / strategy_name
         interactive_logger = InteractiveLogger()
         tb_logger = TensorboardLogger(tb_log_dir=log_dir)
@@ -112,7 +106,7 @@ def train_cl_method(cl_strategy, scenario, validate=False):
     Avalanche Cl training loop. For each 'experience' in scenario's train_stream:
 
         - Trains method on experience
-        - evaluates model on test_stream
+        - evaluates model on train_stream and test_stream
     """
     print('Starting experiment...')
 
@@ -141,7 +135,7 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
     scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, domain, outcome, validate)
     if weight is not None:
         weight = weight.to(DEVICE)
-    print('Data loaded.')
+    print('Data loaded.\n')
     print(f'N timesteps: {n_timesteps}\n'
           f'N features:  {n_channels}')
 
@@ -164,8 +158,6 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
     """
     Hyperparameter optimisation for the given model/strategy.
     Runs over the validation data for the first 2 tasks.
-
-    Can use returned optimal values to later run full training and testing over all n>=2 tasks.
     """
 
     reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
@@ -202,19 +194,18 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
     and evaluates model/strategies over given hyperparams over this problem.
     """
 
-    # TRAINING
-    # Container for metrics for plotting
+    # Container for metrics results
     res = {m:{s:[] for s in strategies} for m in models}
 
     for model in models:
         for strategy in strategies:
-            # Hyperparam opt over first 2 tasks
             if validate:
+                # Hyperparam opt over first 2 tasks
                 config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 best_params = hyperparam_opt(config, data, domain, outcome, model, strategy, num_samples=num_samples)
                 save_params(data, domain, outcome, model, strategy, best_params)
-            # Training loop over all tasks
             else:
+                # Training loop over all tasks
                 config = load_params(data, domain, outcome, model, strategy)
 
                 # Multiple runs for Confidence Intervals
@@ -223,16 +214,5 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
                     res[model][strategy].append(curr_results)
 
     if not validate:
-        # Locally saving results
-        with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', 'w', encoding='utf-8') as handle:
-            res_no_tensors = {m:{s:[{metric:value for metric, value in run.items() if 'Confusion' not in metric} for run in runs]
-                                                 for s, runs in strats.items()} 
-                                                 for m, strats in res.items()}
-            json.dump(res_no_tensors, handle)
-
-        # Plot results
-        timestamp = get_timestamp()
-
-        for mode in ['train','test']:
-            for metric in ['Loss','Top1_Acc','BalAcc']:
-                plotting.plot_all_model_strats(data, domain, outcome, mode, metric, timestamp)
+        save_results(data, outcome, domain, res)
+        plotting.plot_all_figs()

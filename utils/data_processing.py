@@ -1,5 +1,3 @@
-#%%
-
 """
 Functions for loading data.
 
@@ -27,28 +25,49 @@ from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
 
+# JA: Save as .json?
+demo_col_prefixes = {
+    'mimic3':{
+        "sex":"GENDER_value:F",
+        "age":"AGE_value:",
+        "ethnicity":"ETHNICITY_value:",
+        "ethnicity_coarse":"ETHNICITY_COARSE_value:"
+        },
+    
+    'eicu':{
+        "sex":"gender_value:",
+        "age":"age_value:",
+        "ethnicity":"ethnicity_value:",
+        "hospital":"hospitalid_value:",
+        "unit":"unittype_value:",
+        "ward":"wardid_value:"
+        }
+    }
+
 ########################
 # Simulated (random) DATA
 ########################
 
 def random_data(seq_len=48, n_vars=4, n_tasks=3, n_samples=150, p_outcome=0.1):
     """
-    Returns random data of form:
-
-    [
-        (
-            Features (standard normal): (n_samples,seq_len,n_vars),
-            Target (binary):            (n_samples,)
-        ),
-        ...
-    ]
+    Returns a sequence of random sequential data and associated binary targets.
     """
-    tasks = [(torch.randn(n_samples,seq_len,n_vars), (torch.rand(n_samples) < p_outcome).long()) for _ in range(n_tasks)]
+    tasks = [
+        (torch.randn(n_samples,seq_len,n_vars), 
+        (torch.rand(n_samples) < p_outcome).long()) for _ in range(n_tasks)
+        ]
     return tasks
 
 #######################
 # ALL
 #######################
+
+def cache_processed_dataset():
+    # Given dataset/demo/outcome
+    # Create train and val, and train and test datasets
+    # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
+    # Load numpy arrays
+    return NotImplementedError
 
 def load_data(data, demo, outcome, validate=False):
     """
@@ -81,12 +100,7 @@ def load_data(data, demo, outcome, validate=False):
 
         weights = class1_count / torch.LongTensor([class0_count, class1_count])
 
-    else:
-        print('Unknown data source.')
-        raise NotImplementedError
-
     if validate:
-        # Make method to return train/val for 'validate==True' and train/test else
         experiences = experiences[:2]
         test_experiences = test_experiences[:2]
 
@@ -100,7 +114,7 @@ def load_data(data, demo, outcome, validate=False):
         task_labels=[0 for _ in range(n_tasks)],  # Task label of each train exp
         complete_test_set_only=False
     )
-    # Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
+    # JA: Investigate from avalanche.benchmarks.utils.avalanche_dataset import AvalancheDataset
 
     return scenario, n_tasks, n_timesteps, n_channels, weights
 
@@ -114,10 +128,6 @@ def get_ethnicity_coarse(data, outcome):
     MIMIC-3 has detailed ethnicity values, but some of these groups have no mortality data.
     Hence create broader groups to get better binary class balance of tasks.
     """
-
-    # Get col id's from s_feature_names
-    # Get row id's from this and features_s
-    # subset features_X rows
 
     features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data=data, outcome=outcome)
 
@@ -147,10 +157,10 @@ def recover_admission_time(data, outcome):
     df_outcome['SUBJECT_ID'] = df_outcome['stay'].str.split('_', expand=True)[0].astype(int)
     df_outcome['stay_number'] = df_outcome['stay'].str.split('_', expand=True)[1].str.replace('episode','').astype(int)
 
-    ## load original MIMIC-III csv
+    # load original MIMIC-III csv
     df_mimic = pd.read_csv(DATA_DIR / 'mimic3' / 'ADMISSIONS.csv', parse_dates=['ADMITTIME'])
 
-    ## grab quarter (season) from data and id
+    # grab quarter (season) from data and id
     df_mimic['quarter'] = df_mimic['ADMITTIME'].dt.quarter
 
     admission_group = df_mimic.sort_values('ADMITTIME').groupby('SUBJECT_ID')
@@ -163,121 +173,6 @@ def recover_admission_time(data, outcome):
 def get_eicu_region(df):
     raise NotImplementedError
 
-
-# Save as .json
-demo_cols = {
-    'mimic3':{
-        "sex":[
-            "GENDER_value:F"
-            ],
-        "age":[
-            "AGE_value:(18.032999999999998, 51.561]",
-            "AGE_value:(51.561, 62.419]",
-            "AGE_value:(62.419, 71.504]",
-            "AGE_value:(71.504, 81.24]",
-            "AGE_value:(81.24, 91.4]"
-            ],
-        "ethnicity":[
-            "ETHNICITY_value:ASIAN",
-            "ETHNICITY_value:ASIAN - ASIAN INDIAN",
-            "ETHNICITY_value:ASIAN - CHINESE",
-            "ETHNICITY_value:ASIAN - VIETNAMESE",
-            "ETHNICITY_value:BLACK/AFRICAN",
-            "ETHNICITY_value:BLACK/AFRICAN AMERICAN",
-            "ETHNICITY_value:BLACK/CAPE VERDEAN",
-            "ETHNICITY_value:BLACK/HAITIAN",
-            "ETHNICITY_value:HISPANIC OR LATINO",
-            "ETHNICITY_value:HISPANIC/LATINO - DOMINICAN",
-            "ETHNICITY_value:HISPANIC/LATINO - PUERTO RICAN",
-            "ETHNICITY_value:MIDDLE EASTERN",
-            "ETHNICITY_value:MULTI RACE ETHNICITY",
-            "ETHNICITY_value:OTHER",
-            "ETHNICITY_value:PATIENT DECLINED TO ANSWER",
-            "ETHNICITY_value:PORTUGUESE",
-            "ETHNICITY_value:UNABLE TO OBTAIN",
-            "ETHNICITY_value:UNKNOWN/NOT SPECIFIED",
-            "ETHNICITY_value:WHITE",
-            "ETHNICITY_value:WHITE - BRAZILIAN",
-            "ETHNICITY_value:WHITE - OTHER EUROPEAN",
-            "ETHNICITY_value:WHITE - RUSSIAN"
-            ],
-        "ethnicity_coarse":[
-            'ETHNICITY_COARSE_value:WHITE',
-            'ETHNICITY_COARSE_value:ASIAN',
-            'ETHNICITY_COARSE_value:BLACK',
-            'ETHNICITY_COARSE_value:HISPA',
-            'ETHNICITY_COARSE_value:OTHER'
-            ]
-        },
-    
-    'eicu':{
-        "sex":[
-            "gender_value:Female",
-            "gender_value:Male"
-            ],
-        "age":[
-            "age_value:(-0.001, 51.0]",
-            "age_value:(51.0, 61.0]",
-            "age_value:(61.0, 69.0]",
-            "age_value:(69.0, 78.0]",
-            "age_value:(78.0, 89.0]",
-            "age_value:> 89"
-            ],
-        "ethnicity":[
-            "ethnicity_value:African American",
-            "ethnicity_value:Asian",
-            "ethnicity_value:Caucasian",
-            "ethnicity_value:Hispanic",
-            "ethnicity_value:Other/Unknown"
-            ],
-        "hospital":[
-            "hospitalid_value:73__",
-            "hospitalid_value:110__",
-            "hospitalid_value:122__",
-            "hospitalid_value:142__",
-            "hospitalid_value:167__",
-            "hospitalid_value:176__",
-            "hospitalid_value:183__",
-            "hospitalid_value:188__",
-            "hospitalid_value:197__",
-            "hospitalid_value:199__",
-            "hospitalid_value:208__",
-            "hospitalid_value:243__",
-            "hospitalid_value:252__",
-            "hospitalid_value:264__",
-            "hospitalid_value:281__",
-            "hospitalid_value:283__",
-            "hospitalid_value:300__",
-            "hospitalid_value:338__",
-            "hospitalid_value:345__",
-            "hospitalid_value:394__",
-            "hospitalid_value:400__",
-            "hospitalid_value:411__",
-            "hospitalid_value:416__",
-            "hospitalid_value:417__",
-            "hospitalid_value:420__",
-            "hospitalid_value:443__",
-            "hospitalid_value:449__",
-            "hospitalid_value:458__"
-            ],
-        "unit":[
-            "unittype_value:CCU-CTICU",
-            "unittype_value:CSICU",
-            "unittype_value:CTICU",
-            "unittype_value:Cardiac ICU",
-            "unittype_value:MICU",
-            "unittype_value:Med-Surg ICU",
-            "unittype_value:Neuro ICU",
-            "unittype_value:SICU"
-        ],
-        "ward":[
-            "wardid_value:236__",
-            "wardid_value:607__",
-            "wardid_value:646__",
-            "wardid_value:653__"
-            ]
-        }
-    }
 
 def load_fiddle(data, outcome, n=None, vitals_only=True):
     """
@@ -341,7 +236,7 @@ def split_tasks_fiddle(data, demo, outcome):
     static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
     timevar_onehot_demos = []
 
-    cols = [c for c in s_feature_names if c.startswith(demo_cols[data][demo][0].split(':')[0])]
+    cols = [c for c in s_feature_names if c.startswith(demo_col_prefixes[data][demo])]
     
     # if feat is categorical
     if demo in timevar_categorical_demos:
@@ -387,6 +282,20 @@ def concat_timevar_static_feats(features_X, features_s):
 
     return all_feats
 
+def print_task_partition_sizes(tasks):
+    """
+    Prints the number of positive and negative samples in each train/val/test split
+    for each task.
+    """
+
+    for t in tasks:
+        print(
+            t[1][['partition', 'y_true']].groupby('partition').agg(
+                Total=('y_true','count'),
+                Outcome=('y_true','sum')
+                )
+            )
+
 
 
 def split_trainvaltest_fiddle(tasks, val_as_test=True):
@@ -409,10 +318,8 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
             partition = np.random.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
             tasks[i][1]['partition'] = partition
 
-    # Displays number of outcomes per train/test/val partition per task
-    for t in tasks:
-        print(t[1][['partition', 'y_true']].groupby('partition').agg(Total=('y_true','count'), Outcome=('y_true','sum'),))
-
+    print_task_partition_sizes(tasks)
+    
     if val_as_test:
         tasks_train = [(
             t[0][t[1]['partition']=='train'],
@@ -430,17 +337,20 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
 
     return tasks_train, tasks_test
 
-def get_hospital_ids():
-    """
-    Gets hospial id's from df cols.
-    """
-    return list(map(lambda x: x.split(':')[-1].replace('_',''), demo_cols['eicu']['hospital']))
 
-def cache_processed_dataset():
-    # Given dataset/demo/outcome
-    # Create train and val, and train and test datasets
-    # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
-    # Load numpy arrays
-    return NotImplementedError
+#############################
+# Helper funcs for figs, data, info for paper
+#############################
 
-#%%
+def get_demo_labels(data, demo, outcome):
+    """
+    Gets labels for demo splits from feature col names.
+    """
+    data_dir = DATA_DIR / f'FIDDLE_{data}'
+
+    with open(data_dir / 'features' / outcome / 's.feature_names.json', encoding='utf-8') as s_file:
+        s_feature_names = json.load(s_file)
+        
+    cols = [col for col in s_feature_names if col.startswith(demo_col_prefixes[data][demo])]
+
+    return cols
