@@ -72,8 +72,6 @@ def plot_metric(method, model, results, mode, metric, ax=None):
     n_epochs = 15
     stacked = stacked[tasks*n_epochs<=stacked['Epoch'].astype(int)]
 
-    print(stacked)
-
     sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
     ax.set_ylabel(model)
@@ -136,8 +134,6 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True, tim
     Pairplot of all models vs strategies.
     """
 
-    timestamp = timestamp or get_timestamp()
-
     # Load results
     with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', encoding='utf-8') as handle:
         res = json.load(handle)
@@ -179,18 +175,26 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, savefig=True, tim
         plt.savefig(file_loc / f'Stream_{mode}_{metric}.png')
 
 def stack_avg_results(results_strats, metric, mode):
-    metric_dict = defaultdict(list)
+    results_dfs = []
 
-    # Get avg (stream) metrics for each strategy
-    for strat, metrics in results_strats.items():
-        for k, v in metrics.items():
-            if f'{metric}_Stream/eval_phase/{mode}_stream' in k:
-                metric_dict[strat] = v[1]
+    # Get metrics for each training "experience"'s test set
+    for i in range(5):
+        metric_dict = defaultdict(list)
 
-    df = pd.DataFrame.from_dict(metric_dict)
-    df.index.rename('Epoch', inplace=True)
-    stacked = df.stack().reset_index()
-    stacked.rename(columns={'level_1': 'Strategy', 0: METRIC_FULL_NAME[metric]}, inplace=True)
+        # Get avg (stream) metrics for each strategy
+        for strat, metrics in results_strats.items():
+            for k, v in metrics[i].items():
+                if f'{metric}_Stream/eval_phase/{mode}_stream' in k:
+                    metric_dict[strat] = v[1]
+
+        df = pd.DataFrame.from_dict(metric_dict)
+        df.index.rename('Epoch', inplace=True)
+        stacked = df.stack().reset_index()
+        stacked.rename(columns={'level_1': 'Strategy', 0: METRIC_FULL_NAME[metric]}, inplace=True)
+
+        results_dfs.append(stacked)
+
+    stacked = pd.concat(results_dfs, sort=False)
 
     return stacked
 
