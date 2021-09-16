@@ -17,7 +17,7 @@ STRATEGIES = {
     # Baselines
     'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
     # Regularization based
-    'EWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence,
+    'EWC':EWC, 'OnlineEWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence,
     # Replay
     'Replay':Replay, 'GEM':GEM, 'AGEM':AGEM, 'GDumb':GDumb, 'CoPE':CoPE,
     # Misc.
