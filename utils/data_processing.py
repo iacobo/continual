@@ -88,7 +88,7 @@ def load_data(data, demo, outcome, validate=False):
     elif data in ('mimic3', 'eicu'):
         tasks = split_tasks_fiddle(data, demo, outcome)
 
-        experiences, test_experiences = split_trainvaltest_fiddle(tasks)
+        experiences, test_experiences = split_trainvaltest_fiddle(tasks, print_task_partitions=not validate)
         experiences = [(torch.FloatTensor(feat),
                         torch.LongTensor(target)) for feat, target in experiences]
         test_experiences = [(torch.FloatTensor(feat),
@@ -298,7 +298,7 @@ def print_task_partition_sizes(tasks):
 
 
 
-def split_trainvaltest_fiddle(tasks, val_as_test=True):
+def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True):
     """
     Takes a dataset of multiple tasks/experiences and splits it into train and val/test sets.
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
@@ -318,7 +318,8 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True):
             partition = np.random.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
             tasks[i][1]['partition'] = partition
 
-    print_task_partition_sizes(tasks)
+    if print_task_partitions:
+        print_task_partition_sizes(tasks)
     
     if val_as_test:
         tasks_train = [(

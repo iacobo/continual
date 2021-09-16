@@ -108,12 +108,12 @@ def train_cl_method(cl_strategy, scenario, validate=False):
         - Trains method on experience
         - evaluates model on train_stream and test_stream
     """
-    print('Starting experiment...')
+    if not validate: print('Starting experiment...')
 
     for experience in scenario.train_stream:
-        print(f'Start of experience: {experience.current_experience}')
+        if not validate: print(f'Start of experience: {experience.current_experience}')
         cl_strategy.train(experience, eval_streams=[scenario.train_stream, scenario.test_stream])
-        print('Training completed', '\n\n')
+        if not validate: print('Training completed', '\n\n')
 
     if validate:
         return cl_strategy.evaluator.get_last_metrics()
@@ -131,13 +131,13 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
     """
 
     # Loading data into 'stream' of 'experiences' (tasks)
-    print('Loading data...')
+    if not validate: print('Loading data...')
     scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, domain, outcome, validate)
     if weight is not None:
         weight = weight.to(DEVICE)
-    print('Data loaded.\n')
-    print(f'N timesteps: {n_timesteps}\n'
-          f'N features:  {n_channels}')
+    if not validate: print('Data loaded.\n')
+    if not validate: print(f'N timesteps: {n_timesteps}\n'
+                           f'N features:  {n_channels}')
 
     model = models.MODELS[model_name](n_channels, n_timesteps, **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, weight=weight, validate=validate, config=config, benchmark=scenario)
@@ -215,4 +215,4 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
 
     if not validate:
         save_results(data, outcome, domain, res)
-        plotting.plot_all_figs()
+        plotting.plot_all_figs(data, domain, outcome)
