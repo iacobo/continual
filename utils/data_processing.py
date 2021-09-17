@@ -282,21 +282,6 @@ def concat_timevar_static_feats(features_X, features_s):
 
     return all_feats
 
-def print_task_partition_sizes(tasks):
-    """
-    Prints the number of positive and negative samples in each train/val/test split
-    for each task.
-    """
-
-    for t in tasks:
-        print(
-            t[1][['partition', 'y_true']].groupby('partition').agg(
-                Total=('y_true','count'),
-                Outcome=('y_true','sum')
-                )
-            )
-
-
 
 def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True):
     """
@@ -355,3 +340,17 @@ def get_demo_labels(data, demo, outcome):
     cols = [col for col in s_feature_names if col.startswith(demo_col_prefixes[data][demo])]
 
     return cols
+
+def print_task_partition_sizes(tasks):
+    """
+    Prints the number of positive and negative samples in each train/val/test split
+    for each task.
+    """
+
+    for t in tasks:
+        print(
+            t[1][['partition', 'y_true']].groupby('partition').agg(
+                Total=('y_true','count'),
+                Outcome=('y_true','sum')
+                )
+            )
