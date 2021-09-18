@@ -64,10 +64,10 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
     strategy = cl_strategies.STRATEGIES[strategy_name]
     criterion = nn.CrossEntropyLoss(weight=weight)
 
-    if config['optimizer'] == 'SGD':
-        optimizer = optim.SGD(model.parameters(), lr=config['lr'], momentum=0.9)
-    elif config['optimizer'] == 'Adam':
-        optimizer = optim.Adam(model.parameters(), lr=config['lr'])
+    if config['generic']['optimizer'] == 'SGD':
+        optimizer = optim.SGD(model.parameters(), lr=config['generic']['lr'], momentum=0.9)
+    elif config['generic']['optimizer'] == 'Adam':
+        optimizer = optim.Adam(model.parameters(), lr=config['generic']['lr'])
 
     if validate:
         loggers = []
@@ -94,8 +94,8 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
         eval_mb_size=1024,
         eval_every=0 if validate else 1,
         evaluator=eval_plugin,
-        train_epochs=config['train_epochs'],
-        train_mb_size=config['train_mb_size'],
+        train_epochs=config['generic']['train_epochs'],
+        train_mb_size=config['generic']['train_mb_size'],
         **config['strategy']
     )
 
@@ -188,7 +188,7 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
 
     return best_trial.config
 
-def main(data, domain, outcome, models, strategies, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
+def main(data, domain, outcome, models, strategies, dropout=False, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
     """
     Main training loop. Defines dataset given outcome/domain 
     and evaluates model/strategies over given hyperparams over this problem.
@@ -201,8 +201,19 @@ def main(data, domain, outcome, models, strategies, config_generic={}, config_mo
         for strategy in strategies:
             if validate:
                 # Hyperparam opt over first 2 tasks
-                config = {**config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
-                best_params = hyperparam_opt(config, data, domain, outcome, model, strategy, num_samples=num_samples)
+
+                # Load generic tuned hyper-params
+                if strategy == 'Naive':
+                    config = {'generic':config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
+                else:
+                    naive_params = load_params(data, domain, outcome, model, 'Naive')
+                    config = {'generic':naive_params['generic'], 'model':naive_params['model'], 'strategy':config_cl.get(strategy,{})}
+
+                # JA: Investigate adding dropout to CNN
+                if not dropout and model != 'CNN':
+                    config['model']['dropout'] = 0
+
+                best_params = hyperparam_opt(config, data, domain, outcome, model, strategy, num_samples=1 if strategy=='Naive' else num_samples)
                 save_params(data, domain, outcome, model, strategy, best_params)
             else:
                 # Training loop over all tasks

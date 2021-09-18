@@ -23,50 +23,50 @@ def get_dropout_from_n_layers(spec):
 
 # Hyperparameter search-space
 config_generic = {
-       'lr':tune.choice([1e-4,1e-3,1e-2]),
-       'optimizer':tune.choice(['Adam']), #'SGD', #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
+       'lr':tune.grid_search([1e-4,1e-3,1e-2]),
+       'optimizer':'Adam', #tune.choice(['Adam','SGD']), #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
        'train_epochs':5,
-       'train_mb_size':tune.choice([16,32,64,128]),
+       'train_mb_size':tune.grid_search([16,32,64,128]),
        }
 
 config_model = {
        'CNN':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
-              'kernel_size':tune.choice([3,5,7]),
-              'nonlinearity':tune.choice(['tanh','relu']),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
+              'kernel_size':tune.grid_search([3,5,7]),
+              'nonlinearity':tune.grid_search(['tanh','relu']),
               },
        'MLP':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['tanh','relu'])
+              'nonlinearity':tune.grid_search(['tanh','relu'])
               },
        'Transformer':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
-              'n_heads':tune.choice([4,8,16]),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
+              'n_heads':tune.grid_search([4,8,16]),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['relu','gelu'])
+              'nonlinearity':tune.grid_search(['relu','gelu'])
               },
        'RNN':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'nonlinearity':tune.choice(['tanh','relu']),
-              'bidirectional':tune.choice([True,False])
+              'nonlinearity':tune.grid_search(['tanh','relu']),
+              'bidirectional':tune.grid_search([True,False])
               },
        'LSTM':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'bidirectional':tune.choice([True,False])
+              'bidirectional':tune.grid_search([True,False])
               },
        'GRU':{
-              'hidden_dim':tune.choice(HIDDEN_DIMS),
-              'n_layers':tune.choice(N_LAYERS),
+              'hidden_dim':tune.grid_search(HIDDEN_DIMS),
+              'n_layers':tune.grid_search(N_LAYERS),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
-              'bidirectional':tune.choice([True,False])
+              'bidirectional':tune.grid_search([True,False])
               }
        }
 
@@ -79,15 +79,15 @@ config_cl = {
               },
        'EWC':{
               'mode':'separate',
-              'ewc_lambda':tune.choice(LOG_WEIGHTS)
+              'ewc_lambda':tune.grid_search(LOG_WEIGHTS)
               },
        'OnlineEWC':{
               'mode':'online',
-              'ewc_lambda':tune.choice(LOG_WEIGHTS),
+              'ewc_lambda':tune.grid_search(LOG_WEIGHTS),
               'decay_factor':tune.quniform(0,1,0.1)
               },
        'SI':{
-              'si_lambda':tune.choice(LOG_WEIGHTS)
+              'si_lambda':tune.grid_search(LOG_WEIGHTS)
               },
        'LwF':{
               'alpha':tune.choice(LOG_WEIGHTS),

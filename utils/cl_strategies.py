@@ -15,7 +15,7 @@ from avalanche.training.strategies import AR1, CWRStar, CoPE, StreamingLDA
 
 STRATEGIES = {
     # Baselines
-    'Naive':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
+    'Naive':Naive, 'Naive_no_reg':Naive, 'Joint':JointTraining, 'Cumulative':Cumulative,
     # Regularization based
     'EWC':EWC, 'OnlineEWC':EWC, 'LwF':LwF, 'SI':SynapticIntelligence,
     # Replay

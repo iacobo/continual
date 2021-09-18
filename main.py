@@ -16,7 +16,7 @@ def main(args):
 
     # JA: INVESTIGATE MAS, 'AGEM' (num samples > mem?)!!!
     if args.strategies=='all':
-        args.strategies = ['Naive','Cumulative','EWC','OnlineEWC','SI','LwF','Replay','GDumb','GEM','AGEM']
+        args.strategies = ['Naive','Cumulative','EWC','OnlineEWC','SI','LwF','Replay','GEM','AGEM']
 
     # Hyperparam optimisation over validation data for first 2 tasks
     if args.validate:
@@ -24,7 +24,8 @@ def main(args):
                       domain=args.domain_shift,
                       outcome=args.outcome,
                       models=args.models,
-                      strategies=args.strategies,
+                      strategies=args.strategies, 
+                      dropout=args.dropout,
                       config_generic=config.config_generic,
                       config_model=config.config_model,
                       config_cl=config.config_cl,
@@ -72,6 +73,12 @@ if __name__ == "__main__":
                         choices=['MLP','CNN','RNN','LSTM','GRU','Transformer'],
                         nargs='+',
                         help='Model(s) to evaluate.')
+
+    parser.add_argument('--dropout',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='Add dropout to model(s).')
 
     parser.add_argument('--validate',
                         action='store_const',

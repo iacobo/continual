@@ -2,6 +2,8 @@
 Functions for plotting results and descriptive analysis of data.
 """
 
+#%%
+
 import time
 import json
 import pandas as pd
@@ -102,8 +104,8 @@ def plot_metric(method, model, results, mode, metric, ax=None):
     # Only plot task accuracies after examples have been encountered
     # JA: this len() etc will screw up when plotting CI's
     tasks = stacked['Task'].str.split(' ',expand=True)[1].astype(int)
-    n_epochs = 15
-    stacked = stacked[tasks*n_epochs<=stacked['Epoch'].astype(int)]
+    n_epochs_per_task = (stacked['Epoch'].max()+1) // stacked['Task'].nunique()
+    stacked = stacked[tasks*n_epochs_per_task<=stacked['Epoch'].astype(int)]
 
     sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Task', ax=ax)
     ax.set_title(method, size=10)
@@ -155,7 +157,7 @@ def clean_subplot(i, j, axes, metric):
             pass
 
     if metric=='Loss':
-        ylim = (0,2)
+        ylim = (0,4)
     else:
         ylim = (0,1)
     
@@ -197,7 +199,7 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefi
     n_cols = len(strategies)
 
     # Experience plots
-    fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(20,20*n_rows/n_cols), squeeze=False, dpi=250)
+    fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(20*4/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
@@ -207,12 +209,12 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefi
     annotate_plot(fig, domain, outcome, metric)
 
     if savefig:
-        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp
+        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp / mode
         file_loc.mkdir(parents=True, exist_ok=True)
-        plt.savefig(file_loc / f'Exp_{mode}_{metric}.png')
+        plt.savefig(file_loc / f'Exp_{metric}.png')
     
     # Stream plots
-    fig, axes = plt.subplots(n_rows, 2, sharex=False, sharey=True, gridspec_kw={'width_ratios':[2,1]}, figsize=(2*20/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
+    fig, axes = plt.subplots(n_rows, 2, sharex=False, sharey=True, figsize=(20,20*n_rows/n_cols), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         plot_avg_metric(model, res[model], mode, metric, axes[i,0])
@@ -222,9 +224,9 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefi
     annotate_plot(fig, domain, outcome, metric)
 
     if savefig:
-        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp
+        file_loc = RESULTS_DIR / 'figs' / data / outcome / domain / timestamp / mode
         file_loc.mkdir(parents=True, exist_ok=True)
-        plt.savefig(file_loc / f'Stream_{mode}_{metric}.png')
+        plt.savefig(file_loc / f'Stream_{metric}.png')
 
 def results_to_latex():
     """Returns results in LaTeX format for paper tables."""
@@ -258,3 +260,5 @@ def plot_demographics():
     df['hospitaldischargestatus'].value_counts().plot.bar(ax=axes[2,1], rot=0, title='Outcome')
     plt.show()
     plt.close()
+
+# %%
