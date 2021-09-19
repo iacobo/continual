@@ -28,14 +28,16 @@ SimpleMLP                                --
 |    |
                       ... (n_layers) ...
 |    |
-│    └─Sequential: 2-3                   [n, hidden_dim]                
-│    │    └─Linear: 3-7                     
-│    │    └─Nonlinearity: 3-8                           
-│    │    └─Dropout: 3-9               
-├─Linear: 1-2                            [n, output_size]      
+│    └─Sequential: 2-n                   [n, hidden_dim]                
+│    │    └─Linear: 3-3n+1                     
+│    │    └─Nonlinearity: 3-3n+2                           
+│    │    └─Dropout: 3-3n+3               
+├─Sequential: 1-2                        [n, hidden_dim//2]  
+│    └─Linear: 2-1                       
+|    └─Linear: 2-2                       [n, output_size]      
 =================================================================
 
-Where the number of layers, nonlinearity, and degree of dropout are parameterised.
+Where the number of layers, layer width, nonlinearity, and degree of dropout are parameterised.
 
 Model specific parameters:
 
@@ -51,7 +53,7 @@ class SimpleMLP(nn.Module):
     """
     Feed-forward network ("multi-layer perceptron")
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=3, output_size=2, dropout=0, nonlinearity='relu'):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, dropout=0, nonlinearity='relu'):
         super().__init__()
 
         if nonlinearity == 'relu':
@@ -77,7 +79,10 @@ class SimpleMLP(nn.Module):
             layers.append(current_layer)
 
         self.features = nn.Sequential(*layers)
-        self.fc = nn.Linear(in_features=hidden_dim, out_features=output_size, bias=True)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=hidden_dim, out_features=hidden_dim//2, bias=True),
+            nn.Linear(in_features=hidden_dim//2, out_features=output_size, bias=True)
+        )
 
     def forward(self, x):
         """
@@ -95,13 +100,16 @@ class SimpleRNN(nn.Module):
     """
     RNN
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, nonlinearity='tanh', dropout=0):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, nonlinearity='tanh', dropout=0):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
         self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout, nonlinearity=nonlinearity)
-        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
+            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+        )
 
     def forward(self, x):
         """
@@ -119,13 +127,16 @@ class SimpleLSTM(nn.Module):
     """
     LSTM
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, dropout=0):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
         self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
-        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
+            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+        )
 
     def forward(self, x):
         """
@@ -143,13 +154,16 @@ class SimpleGRU(nn.Module):
     """
     GRU
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=1, output_size=2, bidirectional=True, dropout=0):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, dropout=0):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
         self.lstm = nn.GRU(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
-        self.fc = nn.Linear(scalar*seq_len*hidden_dim, output_size)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
+            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+        )
 
     def forward(self, x):
         """
@@ -169,7 +183,7 @@ class SimpleCNN(nn.Module):
 
     `kernel_size` must be odd for `padding` to work as expected.
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=3, output_size=2, kernel_size=3, nonlinearity='relu'):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, kernel_size=3, nonlinearity='relu'):
         super().__init__()
 
         if nonlinearity == 'relu':
@@ -197,7 +211,10 @@ class SimpleCNN(nn.Module):
                 layers.append(nn.MaxPool1d(kernel_size=2, stride=2))
 
         self.cnn_layers = nn.Sequential(*layers)
-        self.fc = nn.Linear(hidden_dim * (seq_len // 2**n_pools), output_size)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=hidden_dim * (seq_len // 2**n_pools), out_features=(hidden_dim * (seq_len // 2**n_pools))//2, bias=True),
+            nn.Linear(in_features=(hidden_dim * (seq_len // 2**n_pools))//2, out_features=output_size, bias=True)
+        )
 
     def forward(self, x):
         """
@@ -215,7 +232,7 @@ class SimpleTransformer(nn.Module):
     """
     Transformer.
     """
-    def __init__(self, n_channels, seq_len, hidden_dim=512, n_layers=3, n_heads=8, output_size=2, nonlinearity='relu', dropout=0):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, n_heads, output_size=2, nonlinearity='relu', dropout=0):
         super().__init__()
 
         # JA: need to make this more elegant

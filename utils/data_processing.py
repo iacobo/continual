@@ -48,7 +48,7 @@ demo_col_prefixes = {
 # Simulated (random) DATA
 ########################
 
-def random_data(seq_len=48, n_vars=4, n_tasks=3, n_samples=150, p_outcome=0.1):
+def random_data(seq_len=48, n_vars=6, n_tasks=3, n_samples=150, p_outcome=0.1):
     """
     Returns a sequence of random sequential data and associated binary targets.
     """
@@ -238,20 +238,7 @@ def split_tasks_fiddle(data, demo, outcome):
 
     cols = [c for c in s_feature_names if c.startswith(demo_col_prefixes[data][demo])]
     
-    # if feat is categorical
-    if demo in timevar_categorical_demos:
-        assert len(cols) == 1, "More than one categorical col specified!"
-        demo_cat = X_feature_names.index(cols[0])
-        tasks = get_modes(features_X,demo_cat)
-        tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
-    elif demo in static_categorical_demos:
-        demo_cat = s_feature_names.index(cols[0])
-        tasks = features_s[:,demo_cat]
-        tasks_idx = [tasks==i for i in range(min(tasks), max(tasks)+1)]
-    elif demo in timevar_onehot_demos:
-        demo_onehots = [X_feature_names.index(col) for col in cols]
-        tasks_idx = [get_modes(features_X,i)==1 for i in demo_onehots]
-    elif demo in static_onehot_demos:
+    if demo in static_onehot_demos:
         demo_onehots = [s_feature_names.index(col) for col in cols]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
     elif demo=='time_season':

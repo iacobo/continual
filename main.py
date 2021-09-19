@@ -12,7 +12,7 @@ def main(args):
     Runs appropriate experiment(s) from passed args.
     """
     if args.models=='all':
-        args.models = ['MLP','CNN','RNN','LSTM','GRU','Transformer']
+        args.models = ['MLP','CNN','LSTM','Transformer']
 
     # JA: INVESTIGATE MAS, 'AGEM' (num samples > mem?)!!!
     if args.strategies=='all':

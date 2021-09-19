@@ -5,10 +5,12 @@ Hyperparameter search-space configuration.
 from ray import tune
 import numpy as np
 
+N_SAMPLES = [128] #[32,64,128]
+DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9]
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
-SAMPLE_COUNTS = [32,64,128]
 HIDDEN_DIMS = [32,64,128]
-N_LAYERS = [1,2,3]
+N_LAYERS = [2,3,4]
+N_HEADS = [4,8,16]
 
 # Conditional hyper-param functions
 def get_dropout_from_n_layers(spec):
@@ -24,7 +26,7 @@ def get_dropout_from_n_layers(spec):
 # Hyperparameter search-space
 config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
-       'optimizer':'Adam', #tune.choice(['Adam','SGD']), #'momentum':tune.choice([0.0, 0.2, 0.4, 0.6, 0.8, 0.9]),
+       'optimizer':'Adam', #tune.choice(['Adam','SGD']), #'momentum':tune.choice(DECAY_WEIGHTS),
        'train_epochs':5,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
@@ -45,7 +47,7 @@ config_model = {
        'Transformer':{
               'hidden_dim':tune.grid_search(HIDDEN_DIMS),
               'n_layers':tune.grid_search(N_LAYERS),
-              'n_heads':tune.grid_search([4,8,16]),
+              'n_heads':tune.grid_search(N_HEADS),
               'dropout':tune.sample_from(get_dropout_from_n_layers),
               'nonlinearity':tune.grid_search(['relu','gelu'])
               },
@@ -72,10 +74,10 @@ config_model = {
 
 config_cl = {
        'Replay':{
-              'mem_size':tune.choice(SAMPLE_COUNTS)
+              'mem_size':tune.grid_search(N_SAMPLES)
               },
        'GDumb':{
-              'mem_size':tune.choice(SAMPLE_COUNTS)
+              'mem_size':tune.grid_search(N_SAMPLES)
               },
        'EWC':{
               'mode':'separate',
@@ -84,22 +86,22 @@ config_cl = {
        'OnlineEWC':{
               'mode':'online',
               'ewc_lambda':tune.grid_search(LOG_WEIGHTS),
-              'decay_factor':tune.quniform(0,1,0.1)
+              'decay_factor':tune.grid_search(DECAY_WEIGHTS)
               },
        'SI':{
               'si_lambda':tune.grid_search(LOG_WEIGHTS)
               },
        'LwF':{
-              'alpha':tune.choice(LOG_WEIGHTS),
-              'temperature':tune.quniform(0,3,0.5)
+              'alpha':tune.grid_search(LOG_WEIGHTS),
+              'temperature':tune.grid_search([0.5,1.0,1.5,2.0,2.5,3.0])
               },
        'GEM':{
-              'patterns_per_exp':tune.choice(SAMPLE_COUNTS),
-              'memory_strength':tune.quniform(0,1,0.1)
+              'patterns_per_exp':tune.grid_search(N_SAMPLES),
+              'memory_strength':tune.grid_search(DECAY_WEIGHTS)
               },
        'AGEM':{
-              'patterns_per_exp':tune.choice(SAMPLE_COUNTS),
-              'sample_size':tune.choice(SAMPLE_COUNTS)
+              'patterns_per_exp':tune.grid_search(N_SAMPLES),
+              'sample_size':tune.grid_search(N_SAMPLES)
               }
        #'CoPE':
        }
