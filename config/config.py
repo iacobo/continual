@@ -27,8 +27,8 @@ def get_dropout_from_n_layers(spec):
 config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
        'optimizer':'SGD', #tune.choice(['Adam','SGD']),
-       'momentum':tune.grid_search(DECAY_WEIGHTS),
-       'train_epochs':5,
+       'momentum':0.9, #tune.grid_search(DECAY_WEIGHTS),
+       'train_epochs':10,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
 

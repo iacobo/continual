@@ -209,7 +209,7 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
                     naive_params = load_params(data, domain, outcome, model, 'Naive')
                     config = {'generic':naive_params['generic'], 'model':naive_params['model'], 'strategy':config_cl.get(strategy,{})}
 
-                # JA: Investigate adding dropout to CNN
+                # JA: Investigate adding dropout to CNN (final FC layers only?)
                 if not dropout and model != 'CNN':
                     config['model']['dropout'] = 0
 

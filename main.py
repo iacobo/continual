@@ -14,7 +14,6 @@ def main(args):
     if args.models=='all':
         args.models = ['MLP','CNN','LSTM','Transformer']
 
-    # JA: INVESTIGATE MAS, 'AGEM' (num samples > mem?)!!!
     if args.strategies=='all':
         args.strategies = ['Naive','Cumulative','EWC','OnlineEWC','SI','LwF','Replay','GEM','AGEM']
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--domain_shift',
                         type=str,
                         default='age',
-                        choices=['time_season','region','hospital','age','sex','ethnicity','ethnicity_coarse'],
+                        choices=['time_season','region','hospital','unit','ward','age','sex','ethnicity','ethnicity_coarse'],
                         help='Domain shift exhibited in tasks.')
 
     parser.add_argument('--strategies',
