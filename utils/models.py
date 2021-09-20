@@ -232,7 +232,7 @@ class SimpleTransformer(nn.Module):
     """
     Transformer.
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, n_heads, output_size=2, nonlinearity='relu', dropout=0):
+    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, n_heads=8, output_size=2, nonlinearity='relu', dropout=0):
         super().__init__()
 
         # JA: need to make this more elegant
