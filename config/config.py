@@ -26,7 +26,8 @@ def get_dropout_from_n_layers(spec):
 # Hyperparameter search-space
 config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
-       'optimizer':'Adam', #tune.choice(['Adam','SGD']), #'momentum':tune.choice(DECAY_WEIGHTS),
+       'optimizer':'SGD', #tune.choice(['Adam','SGD']),
+       'momentum':tune.grid_search(DECAY_WEIGHTS),
        'train_epochs':5,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
@@ -94,6 +95,9 @@ config_cl = {
        'LwF':{
               'alpha':tune.grid_search(LOG_WEIGHTS),
               'temperature':tune.grid_search([0.5,1.0,1.5,2.0,2.5,3.0])
+              },
+       'LFL':{
+              'lambda_e':tune.grid_search([LOG_WEIGHTS])
               },
        'GEM':{
               'patterns_per_exp':tune.grid_search(N_SAMPLES),
