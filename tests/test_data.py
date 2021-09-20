@@ -2,13 +2,11 @@
 Test suite.
 """
 
-import math
 import unittest
 import itertools
 import torch
 
-from utils import models, data_processing
-from main import main
+from continual.utils import data_processing
 
 BATCH_SIZES = (1,10,100)
 SEQ_LENS = (4,12,48)
