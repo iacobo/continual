@@ -199,6 +199,9 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
 
     for model in models:
         for strategy in strategies:
+            # Garbage collection
+            torch.cuda.empty_cache()
+            
             if validate:
                 # Hyperparam opt over first 2 tasks
 
@@ -215,6 +218,7 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
 
                 best_params = hyperparam_opt(config, data, domain, outcome, model, strategy, num_samples=1 if strategy=='Naive' else num_samples)
                 save_params(data, domain, outcome, model, strategy, best_params)
+
             else:
                 # Training loop over all tasks
                 config = load_params(data, domain, outcome, model, strategy)

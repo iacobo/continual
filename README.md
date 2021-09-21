@@ -14,12 +14,11 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 1. Clone this repo to your local machine.
 2. Request access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.<sup>1</sup>
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/data` subfolder.
-4. *(Recommended)* Create a new [virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/):
+4. *(Recommended)* [Create](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) and [activate](https://docs.python.org/3/library/venv.html) a new virtual environment:
    ```posh
    python3 -m venv .venv --upgrade-deps
    ```
-5. [Activate](https://docs.python.org/3/library/venv.html) virtual environment.
-6. Install dependencies:
+5. Install dependencies:
    ```posh
    pip install -U wheel
    pip install -r requirements.txt
@@ -33,7 +32,7 @@ To reproduce all experiments:
 python3 main.py
 ```
 
-Figures will be saved to `/results/figs`. Individual experiments can be specified with appropriate flags e.g:
+Figures will be saved to `/results/figs`. Bespoke experiments can be specified with appropriate flags e.g:
 
 ```posh
 python3 main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay

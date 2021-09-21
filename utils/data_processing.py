@@ -270,7 +270,7 @@ def concat_timevar_static_feats(features_X, features_s):
     return all_feats
 
 
-def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True):
+def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True, seed=12345):
     """
     Takes a dataset of multiple tasks/experiences and splits it into train and val/test sets.
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
@@ -286,8 +286,11 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=Tru
     # Train/val/test/split
     for i in range(len(tasks)):
         if 'partition' not in tasks[i][1]:
+            # Reproducible RNG
+            rng = np.random.default_rng(seed)
+
             n = len(tasks[i][1])
-            partition = np.random.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
+            partition = rng.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
             tasks[i][1]['partition'] = partition
 
     if print_task_partitions:
