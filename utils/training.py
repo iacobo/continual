@@ -55,7 +55,7 @@ def save_results(data, outcome, domain, res):
                                                 for m, strats in res.items()}
         json.dump(res_no_tensors, handle)
 
-def load_strategy(model, model_name, strategy_name, data='', domain='', weight=None, validate=False, config=None, benchmark=None):
+def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=0, weight=None, validate=False, config=None, benchmark=None):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -92,7 +92,7 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', weight=N
         device=DEVICE,
         criterion=criterion,
         eval_mb_size=1024,
-        eval_every=0 if validate else 1,
+        eval_every=0 if validate or n_tasks > 5 else 1,
         evaluator=eval_plugin,
         train_epochs=config['generic']['train_epochs'],
         train_mb_size=config['generic']['train_mb_size'],
@@ -132,7 +132,7 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
 
     # Loading data into 'stream' of 'experiences' (tasks)
     if not validate: print('Loading data...')
-    scenario, _, n_timesteps, n_channels, weight = data_processing.load_data(data, domain, outcome, validate)
+    scenario, n_tasks, n_timesteps, n_channels, weight = data_processing.load_data(data, domain, outcome, validate)
     if weight is not None:
         weight = weight.to(DEVICE)
     if not validate: print('Data loaded.\n')
@@ -140,7 +140,7 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
                            f'N features:  {n_channels}')
 
     model = models.MODELS[model_name](n_channels, n_timesteps, **config['model'])
-    cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, weight=weight, validate=validate, config=config, benchmark=scenario)
+    cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, n_tasks=n_tasks, weight=weight, validate=validate, config=config, benchmark=scenario)
     results = train_cl_method(cl_strategy, scenario, validate=validate)
 
     if validate:
@@ -201,10 +201,8 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
         for strategy in strategies:
             # Garbage collection
             torch.cuda.empty_cache()
-            
-            if validate:
-                # Hyperparam opt over first 2 tasks
 
+            if validate: # Hyperparam opt over first 2 tasks
                 # Load generic tuned hyper-params
                 if strategy == 'Naive':
                     config = {'generic':config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
@@ -219,8 +217,7 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
                 best_params = hyperparam_opt(config, data, domain, outcome, model, strategy, num_samples=1 if strategy=='Naive' else num_samples)
                 save_params(data, domain, outcome, model, strategy, best_params)
 
-            else:
-                # Training loop over all tasks
+            else: # Training loop over all tasks
                 config = load_params(data, domain, outcome, model, strategy)
 
                 # Multiple runs for Confidence Intervals
