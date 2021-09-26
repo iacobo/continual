@@ -12,7 +12,7 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 ## Setup
 
 1. Clone this repo to your local machine.
-2. Request access to the [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) datasets.<sup>1</sup>
+2. Request access to [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/).<sup>1</sup>
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/data` subfolder.
 4. *(Recommended)* [Create](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) and [activate](https://docs.python.org/3/library/venv.html) a new virtual environment:
    ```posh
