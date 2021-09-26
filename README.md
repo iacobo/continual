@@ -26,13 +26,13 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 
 ## Results
 
-To reproduce all experiments:
+To reproduce main results:
 
 ```posh
 python3 main.py
 ```
 
-Figures will be saved to `/results/figs`. Bespoke experiments can be specified with appropriate flags e.g:
+Figures will be saved to `/results/figs`. Commands for full results can be found [here](/results/README.md). Bespoke experiments can be specified with appropriate flags e.g:
 
 ```posh
 python3 main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
