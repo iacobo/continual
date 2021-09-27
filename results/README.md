@@ -14,7 +14,7 @@ Logs of hyper-parameter tuning runs are found in `/log` and can similarly be dis
 
 To run all experiments from the paper:
 
-- Main results
+- Main Domain Incremental results (outcome is 48h mortality):
     ```python
     python3 main.py --domain_shift hospital
     python3 main.py --domain_shift region
