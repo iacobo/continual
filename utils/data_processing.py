@@ -104,6 +104,11 @@ def load_data(data, demo, outcome, validate=False):
         experiences = experiences[:2]
         test_experiences = test_experiences[:2]
 
+    else:
+        # Cap n tasks
+        experiences = experiences[:20]
+        test_experiences = test_experiences[:20]
+
     n_tasks = len(experiences)
     n_timesteps = experiences[0][0].shape[-2]
     n_channels = experiences[0][0].shape[-1]

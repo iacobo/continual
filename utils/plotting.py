@@ -159,7 +159,7 @@ def clean_subplot(i, j, axes, metric):
     if metric=='Loss':
         ylim = (0,4)
     else:
-        ylim = (0,1)
+        ylim = (0.45,0.9)
     
     plt.setp(axes, ylim=ylim)
 
@@ -182,7 +182,7 @@ def annotate_plot(fig, domain, outcome, metric):
                  f'Outcome: {outcome} | Domain Increment: {domain}', y=1.1)
 
 ###################################
-# Decorating fucntions for plotting everything
+# Decorating functions for plotting everything
 ###################################
 
 def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefig=True):

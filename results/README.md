@@ -15,7 +15,7 @@ Logs of hyper-parameter tuning runs are found in `/log` and can similarly be dis
 To run all experiments from the paper:
 
 - Main results
-    ```python
+    ```posh
     python3 main.py --domain_shift hospital
     python3 main.py --domain_shift region
     python3 main.py --domain_shift ward
@@ -24,21 +24,21 @@ To run all experiments from the paper:
     python3 main.py --domain_shift age
     ```
 - Alternative outcome definitions:
-    ```python
+    ```posh
     python3 main.py --outcome Shock_4h
     python3 main.py --outcome Shock_12h
     python3 main.py --outcome ARF_4h
     python3 main.py --outcome ARF_12h
     ```
 - Additional sequential models:
-    ```python
+    ```posh
     python3 main.py --models RNN GRU LSTM
     ```
 - Regularization experiments:
-    ```python
+    ```posh
     python3 main.py --dropout
     ```
 - Class incremental experiments:
-    ```python
+    ```posh
     python3 main.py --class_shift
     ```
