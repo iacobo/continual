@@ -56,11 +56,11 @@ If you use any of this code in your work, please reference us:
 
 ![Python versions](https://img.shields.io/badge/python-3.7+-1177AA.svg?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
 
+<sup>
 
 ### Notes
 
-1. MIMIC-III access required to download eICU data from the combined FIDDLE package. MIMIC-III and [HiRID](https://physionet.org/content/hirid/1.1.1/) required to run advanced experiments (in supplementary of paper).  
-2. Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III and eICU-CRD datasets. Scripts to post-process can be found in `.../.../....py`
+Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III dataset. Requires downloading `ADMISSIONS.csv` from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/) to the `/data/mimic3/` folder.
 
 
 ### Stack
@@ -69,6 +69,8 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 
 | Tool                        | Source               |
 |-----------------------------|----------------------|
-|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/)<br> [HiRID](https://physionet.org/content/hirid/1.1.1/) |
-| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/)<br> [HiRID-ICU-Benchmark](https://openreview.net/forum?id=SnC9rUeqiqd) |
+|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) |
+| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/) |
 |Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
+
+</sup>
