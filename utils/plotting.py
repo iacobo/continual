@@ -288,7 +288,7 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
     with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', encoding='utf-8') as handle:
         res = json.load(handle)
 
-    models = res.keys()
+    models = [k for k in res.keys() if k in ['MLP', 'CNN', 'LSTM', 'Transformer']]
     dfs = []
 
     for model in models:
@@ -310,9 +310,9 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
         stats[domain] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
     else:
         bold = "\\textbf"
-        stats[domain] = stats.apply(lambda x: f'{bold if x["mean"] == stats["mean"].nlargest(2)[-1] else ""}{{{x["mean"]:.3f}}} \\mp{x.ci95:.3f}', axis=1)
-        bold_best = stats["mean"] == stats["mean"].nlargest(2)[-1]
-        stats[domain] = bold if bold_best else "" + stats[domain]
+        stats[domain] = stats.apply(lambda x: f'{{{x["mean"]:.3f}}} \\mp{x.ci95:.3f}', axis=1)
+        #bold_best = stats["mean"] == stats["mean"].nlargest(2)[-1]
+        #stats[domain][bold_best] = bold + stats[domain][bold_best]
 
     stats = pd.DataFrame(stats[domain])
     stats.reset_index(inplace=True) 
@@ -321,4 +321,12 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
     stats = stats.pivot(['Category','Strategy'], 'Model')
 
     return stats
+
+def generate_table1(data='mimic3',outcome='ARF_4h',mode='test',metric='BalAcc'):
+
+    domains = ['age','ethnicity_coarse','time_season']
+
+    dfs = [results_to_table(data, domain, outcome, mode, metric) for domain in domains]
+    return pd.concat(dfs, axis=1)
+
 # %%

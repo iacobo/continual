@@ -19,19 +19,16 @@ SimpleMLP                                --
 ├─Sequential: 1-1                            
 │    └─Sequential: 2-1                   [n, hidden_dim]       
 │    │    └─Linear: 3-1                        
-│    │    └─Nonlinearity: 3-2                          
-│    │    └─Dropout: 3-3                       
+│    │    └─Nonlinearity: 3-2                  
 │    └─Sequential: 2-2                   [n, hidden_dim]       
-│    │    └─Linear: 3-4                              
-│    │    └─Non-linearity: 3-5                                
-│    │    └─Dropout: 3-6                            
+│    │    └─Linear: 3-3                              
+│    │    └─Non-linearity: 3-4                      
 |    |
                       ... (n_layers) ...
 |    |
 │    └─Sequential: 2-n                   [n, hidden_dim]                
-│    │    └─Linear: 3-3n+1                     
-│    │    └─Nonlinearity: 3-3n+2                           
-│    │    └─Dropout: 3-3n+3               
+│    │    └─Linear: 3-2n+1                     
+│    │    └─Nonlinearity: 3-2n+2          
 ├─Sequential: 1-2                        [n, hidden_dim//2]  
 │    └─Linear: 2-1                       
 |    └─Linear: 2-2                       [n, output_size]      
