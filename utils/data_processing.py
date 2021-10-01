@@ -26,7 +26,7 @@ from avalanche.benchmarks.generators import tensors_benchmark
 DATA_DIR = Path(__file__).parents[1] / 'data'
 
 # JA: Save as .json?
-demo_col_prefixes = {
+DEMO_COL_PREFIXES = {
     'mimic3':{
         "sex":"GENDER_value:F",
         "age":"AGE_value:",
@@ -241,7 +241,7 @@ def split_tasks_fiddle(data, demo, outcome):
     static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
     timevar_onehot_demos = []
 
-    cols = [c for c in s_feature_names if c.startswith(demo_col_prefixes[data][demo])]
+    cols = [c for c in s_feature_names if c.startswith(DEMO_COL_PREFIXES[data][demo])]
     
     if demo in static_onehot_demos:
         demo_onehots = [s_feature_names.index(col) for col in cols]
@@ -332,7 +332,7 @@ def get_demo_labels(data, demo, outcome):
     with open(data_dir / 'features' / outcome / 's.feature_names.json', encoding='utf-8') as s_file:
         s_feature_names = json.load(s_file)
         
-    cols = [col for col in s_feature_names if col.startswith(demo_col_prefixes[data][demo])]
+    cols = [col for col in s_feature_names if col.startswith(DEMO_COL_PREFIXES[data][demo])]
 
     return cols
 

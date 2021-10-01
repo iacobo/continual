@@ -6,6 +6,7 @@ Functions for plotting results and descriptive analysis of data.
 
 import time
 import json
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -276,8 +277,6 @@ def plot_demographics():
 # LATEX TABLES
 ########################
 
-import numpy as np
-
 def ci_bound(std, count, ci=0.95):
     """Return Confidence Interval radius."""
     return (1+ci)*std/np.sqrt(count)
@@ -304,15 +303,18 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
     stats = df.groupby(['Model','Strategy'])[METRIC_FULL_NAME[metric]].agg(['mean', 'count', 'std'])
 
     stats['ci95'] = ci_bound(stats['std'], stats['count'])
-    
+
     if verbose:
         stats['ci95_lo'] = stats['mean'] + stats['ci95']
         stats['ci95_hi'] = stats['mean'] - stats['ci95']
-        stats['latex'] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
+        stats[domain] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
     else:
-        stats['latex'] = stats.apply(lambda x: f'{x["mean"]:.3f} \\mp{x.ci95:.3f}', axis=1)
+        bold = "\\textbf"
+        stats[domain] = stats.apply(lambda x: f'{bold if x["mean"] == stats["mean"].nlargest(2)[-1] else ""}{{{x["mean"]:.3f}}} \\mp{x.ci95:.3f}', axis=1)
+        bold_best = stats["mean"] == stats["mean"].nlargest(2)[-1]
+        stats[domain] = bold if bold_best else "" + stats[domain]
 
-    stats = pd.DataFrame(stats['latex'])
+    stats = pd.DataFrame(stats[domain])
     stats.reset_index(inplace=True) 
 
     stats['Category'] = stats['Strategy'].apply(lambda x: STRATEGY_CATEGORY[x])
