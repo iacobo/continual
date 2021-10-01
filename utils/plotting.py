@@ -22,6 +22,17 @@ METRIC_FULL_NAME = {
     'Loss': 'Loss'
     }
 
+STRATEGY_CATEGORY = {'Naive':'Baseline',
+    'Cumulative':'Baseline',
+    'EWC':'Regularization',
+    'OnlineEWC':'Regularization',
+    'SI':'Regularization',
+    'LwF':'Regularization',
+    'Replay':'Rehearsal',
+    'GEM':'Rehearsal',
+    'AGEM':'Rehearsal',
+    'GDumb':'Rehearsal'}
+
 def get_timestamp():
     """
     Returns current timestamp as string.
@@ -261,4 +272,51 @@ def plot_demographics():
     plt.show()
     plt.close()
 
+########################
+# LATEX TABLES
+########################
+
+import numpy as np
+
+def ci_bound(std, count, ci=0.95):
+    """Return Confidence Interval radius."""
+    return (1+ci)*std/np.sqrt(count)
+
+def results_to_table(data, domain, outcome, mode, metric, verbose=False):
+    """Pairplot of all models vs strategies."""
+
+    # Load results
+    with open(RESULTS_DIR / f'results_{data}_{outcome}_{domain}.json', encoding='utf-8') as handle:
+        res = json.load(handle)
+
+    models = res.keys()
+    dfs = []
+
+    for model in models:
+        df = stack_avg_results(res[model], metric, mode)
+        df['Model'] = model
+        dfs.append(df)
+
+    df = pd.concat(dfs)
+    # Get final performance val
+    df = df[df['Epoch']==df['Epoch'].max()]
+
+    stats = df.groupby(['Model','Strategy'])[METRIC_FULL_NAME[metric]].agg(['mean', 'count', 'std'])
+
+    stats['ci95'] = ci_bound(stats['std'], stats['count'])
+    
+    if verbose:
+        stats['ci95_lo'] = stats['mean'] + stats['ci95']
+        stats['ci95_hi'] = stats['mean'] - stats['ci95']
+        stats['latex'] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
+    else:
+        stats['latex'] = stats.apply(lambda x: f'{x["mean"]:.3f} \\mp{x.ci95:.3f}', axis=1)
+
+    stats = pd.DataFrame(stats['latex'])
+    stats.reset_index(inplace=True) 
+
+    stats['Category'] = stats['Strategy'].apply(lambda x: STRATEGY_CATEGORY[x])
+    stats = stats.pivot(['Category','Strategy'], 'Model')
+
+    return stats
 # %%

@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_samples',
                         type=int,
-                        default=50,
+                        default=1,
                         help='Number of samples to draw during hyperparameter search.')
 
     args = parser.parse_args()
