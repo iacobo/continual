@@ -163,7 +163,7 @@ def recover_admission_time(data, outcome):
     df_outcome['stay_number'] = df_outcome['stay'].str.split('_', expand=True)[1].str.replace('episode','').astype(int)
 
     # load original MIMIC-III csv
-    df_mimic = pd.read_csv(DATA_DIR / 'mimic3' / 'ADMISSIONS.csv', parse_dates=['ADMITTIME'])
+    df_mimic = pd.read_csv(DATA_DIR / 'FIDDLE_mimic3' / 'ADMISSIONS.csv', parse_dates=['ADMITTIME'])
 
     # grab quarter (season) from data and id
     df_mimic['quarter'] = df_mimic['ADMITTIME'].dt.quarter
@@ -236,14 +236,10 @@ def split_tasks_fiddle(data, demo, outcome):
     else:
         features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, outcome)
 
-    timevar_categorical_demos = []
-    static_categorical_demos = []
     static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
-    timevar_onehot_demos = []
-
-    cols = [c for c in s_feature_names if c.startswith(DEMO_COL_PREFIXES[data][demo])]
     
     if demo in static_onehot_demos:
+        cols = [c for c in s_feature_names if c.startswith(DEMO_COL_PREFIXES[data][demo])]
         demo_onehots = [s_feature_names.index(col) for col in cols]
         tasks_idx = [features_s[:,i]==1 for i in demo_onehots]
     elif demo=='time_season':
