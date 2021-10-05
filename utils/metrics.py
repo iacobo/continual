@@ -12,7 +12,7 @@ from avalanche.evaluation import Metric, PluginMetric, GenericPluginMetric
 from avalanche.evaluation.metrics.mean import Mean
 from avalanche.evaluation.metric_utils import phase_and_task
 
-from sklearn.metrics import average_precision_score
+from sklearn.metrics import average_precision_score, roc_auc_score
 
 def confusion(prediction, truth):
     """ Returns the confusion matrix for the values in the `prediction` and `truth`
@@ -1797,6 +1797,348 @@ def AUPRC_metrics(*,
     return metrics
 
 
+class ROCAUC(Metric[float]):
+    """
+    The ROCAUC metric. This is a standalone metric.
+
+    The metric keeps a dictionary of <task_label, ROCAUC value> pairs.
+    and update the values through a running average over multiple
+    <prediction, target> pairs of Tensors, provided incrementally.
+    The "prediction" and "target" tensors may contain plain labels or
+    one-hot/logit vectors.
+
+    Each time `result` is called, this metric emits the average ROCAUC
+    across all predictions made since the last `reset`.
+
+    The reset method will bring the metric to its initial state. By default
+    this metric in its initial state will return an ROCAUC value of 0.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of the standalone ROCAUC metric.
+
+        By default this metric in its initial state will return a ROCAUC
+        value of 0. The metric can be updated by using the `update` method
+        while the running ROCAUC can be retrieved using the `result` method.
+        """
+        super().__init__()
+        self._mean_ROCAUC = defaultdict(Mean)
+        """
+        The mean utility that will be used to store the running ROCAUC
+        for each task label.
+        """
+
+    @torch.no_grad()
+    def update(self, predicted_y: Tensor, true_y: Tensor,
+               task_labels: Union[float, Tensor]) -> None:
+        """
+        Update the running ROCAUC given the true and predicted labels.
+        Parameter `task_labels` is used to decide how to update the inner
+        dictionary: if Float, only the dictionary value related to that task
+        is updated. If Tensor, all the dictionary elements belonging to the
+        task labels will be updated.
+
+        :param predicted_y: The model prediction. Both labels and logit vectors
+            are supported.
+        :param true_y: The ground truth. Both labels and one-hot vectors
+            are supported.
+        :param task_labels: the int task label associated to the current
+            experience or the task labels vector showing the task label
+            for each pattern.
+
+        :return: None.
+        """
+        if len(true_y) != len(predicted_y):
+            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+
+        if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
+            raise ValueError('Size mismatch for true_y and task_labels tensors')
+
+        true_y = torch.as_tensor(true_y)
+        predicted_y = torch.as_tensor(predicted_y)
+
+        assert (
+            len(predicted_y.size()) == 2
+        ), "Predictions need to be logits or scores, not labels"
+
+        if len(true_y.shape) > 1:
+            # Logits -> transform to labels
+            true_y = torch.max(true_y, 1)[1]
+
+        scores = predicted_y[arange(len(true_y)), true_y]
+
+        if isinstance(task_labels, int):
+            self._mean_ROCAUC[task_labels].update(
+                roc_auc_score(true_y, scores), len(predicted_y))
+        elif isinstance(task_labels, Tensor):
+            raise NotImplementedError
+        else:
+            raise ValueError(f"Task label type: {type(task_labels)}, "
+                             f"expected int/float or Tensor")
+
+
+    def result(self, task_label=None) -> Dict[int, float]:
+        """
+        Retrieves the running ROCAUC.
+
+        Calling this method will not change the internal state of the metric.
+
+        :param task_label: if None, return the entire dictionary of ROCAUCs
+            for each task. Otherwise return the dictionary
+            `{task_label: ROCAUC}`.
+        :return: A dict of running ROCAUCs for each task label,
+            where each value is a float value between 0 and 1.
+        """
+        assert(task_label is None or isinstance(task_label, int))
+        if task_label is None:
+            return {k: v.result() for k, v in self._mean_ROCAUC.items()}
+        else:
+            return {task_label: self._mean_ROCAUC[task_label].result()}
+
+
+    def reset(self, task_label=None) -> None:
+        """
+        Resets the metric.
+        :param task_label: if None, reset the entire dictionary.
+            Otherwise, reset the value associated to `task_label`.
+
+        :return: None.
+        """
+        assert(task_label is None or isinstance(task_label, int))
+        if task_label is None:
+            self._mean_ROCAUC = defaultdict(Mean)
+        else:
+            self._mean_ROCAUC[task_label].reset()
+
+class ROCAUCPluginMetric(GenericPluginMetric[float]):
+    """
+    Base class for all ROCAUCs plugin metrics
+    """
+    def __init__(self, reset_at, emit_at, mode):
+        self._ROCAUC = ROCAUC()
+        super(ROCAUCPluginMetric, self).__init__(
+            self._ROCAUC, reset_at=reset_at, emit_at=emit_at,
+            mode=mode)
+
+    def reset(self, strategy=None) -> None:
+        if self._reset_at == 'stream' or strategy is None:
+            self._metric.reset()
+        else:
+            self._metric.reset(phase_and_task(strategy)[1])
+
+    def result(self, strategy=None) -> float:
+        if self._emit_at == 'stream' or strategy is None:
+            return self._metric.result()
+        else:
+            return self._metric.result(phase_and_task(strategy)[1])
+
+    def update(self, strategy):
+        # task labels defined for each experience
+        task_labels = strategy.experience.task_labels
+        if len(task_labels) > 1:
+            # task labels defined for each pattern
+            task_labels = strategy.mb_task_id
+        else:
+            task_labels = task_labels[0]
+        self._ROCAUC.update(strategy.mb_output, strategy.mb_y, task_labels)
+
+
+class MinibatchROCAUC(ROCAUCPluginMetric):
+    """
+    The minibatch plugin ROCAUC metric.
+    This metric only works at training time.
+
+    This metric computes the average ROCAUC over patterns
+    from a single minibatch.
+    It reports the result after each iteration.
+
+    If a more coarse-grained logging is needed, consider using
+    :class:`EpochROCAUC` instead.
+    """
+    def __init__(self):
+        """
+        Creates an instance of the MinibatchROCAUC metric.
+        """
+        super(MinibatchROCAUC, self).__init__(
+            reset_at='iteration', emit_at='iteration', mode='train')
+
+    def __str__(self):
+        return "ROCAUC_MB"
+
+
+
+class EpochROCAUC(ROCAUCPluginMetric):
+    """
+    The average ROCAUC over a single training epoch.
+    This plugin metric only works at training time.
+
+    The ROCAUC will be logged after each training epoch by computing
+    the number of correctly predicted patterns during the epoch divided by
+    the overall number of patterns encountered in that epoch.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of the EpochROCAUC metric.
+        """
+
+        super(EpochROCAUC, self).__init__(
+            reset_at='epoch', emit_at='epoch', mode='train')
+
+    def __str__(self):
+        return "ROCAUC_Epoch"
+
+
+
+class RunningEpochROCAUC(ROCAUCPluginMetric):
+    """
+    The average ROCAUC across all minibatches up to the current
+    epoch iteration.
+    This plugin metric only works at training time.
+
+    At each iteration, this metric logs the ROCAUC averaged over all patterns
+    seen so far in the current epoch.
+    The metric resets its state after each training epoch.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of the RunningEpochROCAUC metric.
+        """
+
+        super(RunningEpochROCAUC, self).__init__(
+            reset_at='epoch', emit_at='iteration', mode='train')
+
+    def __str__(self):
+        return "RunningROCAUC_Epoch"
+
+
+
+class ExperienceROCAUC(ROCAUCPluginMetric):
+    """
+    At the end of each experience, this plugin metric reports
+    the average ROCAUC over all patterns seen in that experience.
+    This metric only works at eval time.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of ExperienceROCAUC metric
+        """
+        super(ExperienceROCAUC, self).__init__(
+            reset_at='experience', emit_at='experience', mode='eval')
+
+    def __str__(self):
+        return "ROCAUC_Exp"
+
+
+
+class StreamROCAUC(ROCAUCPluginMetric):
+    """
+    At the end of the entire stream of experiences, this plugin metric
+    reports the average ROCAUC over all patterns seen in all experiences.
+    This metric only works at eval time.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of StreamROCAUC metric
+        """
+        super(StreamROCAUC, self).__init__(
+            reset_at='stream', emit_at='stream', mode='eval')
+
+    def __str__(self):
+        return "ROCAUC_Stream"
+
+
+
+class TrainedExperienceROCAUC(ROCAUCPluginMetric):
+    """
+    At the end of each experience, this plugin metric reports the average
+    ROCAUC for only the experiences that the model has been trained on so far.
+
+    This metric only works at eval time.
+    """
+
+    def __init__(self):
+        """
+        Creates an instance of TrainedExperienceROCAUC metric by first 
+        constructing ROCAUCPluginMetric
+        """
+        super(TrainedExperienceROCAUC, self).__init__(
+            reset_at='stream', emit_at='stream', mode='eval')
+        self._current_experience = 0
+
+    def after_training_exp(self, strategy) -> None:
+        self._current_experience = strategy.experience.current_experience
+        # Reset average after learning from a new experience 
+        ROCAUCPluginMetric.reset(self, strategy)
+        return ROCAUCPluginMetric.after_training_exp(self, strategy)
+
+        
+    def update(self, strategy):
+        """
+        Only update the ROCAUC with results from experiences that have been 
+        trained on
+        """
+        if strategy.experience.current_experience <= self._current_experience:
+            ROCAUCPluginMetric.update(self, strategy)
+
+
+    def __str__(self):
+        return "ROCAUC_On_Trained_Experiences"
+
+
+
+def ROCAUC_metrics(*, 
+                     minibatch=False,
+                     epoch=False,
+                     epoch_running=False,
+                     experience=False,
+                     stream=False,
+                     trained_experience=False) -> List[PluginMetric]:
+    """
+    Helper method that can be used to obtain the desired set of
+    plugin metrics.
+
+    :param minibatch: If True, will return a metric able to log
+        the minibatch ROCAUC at training time.
+    :param epoch: If True, will return a metric able to log
+        the epoch ROCAUC at training time.
+    :param epoch_running: If True, will return a metric able to log
+        the running epoch ROCAUC at training time.
+    :param experience: If True, will return a metric able to log
+        the ROCAUC on each evaluation experience.
+    :param stream: If True, will return a metric able to logROCAUCperiences.
+    :param trained_experience: If True, will return a metric able to log
+        the average evaluation ROCAUC only for experiences that the
+        model has been trained on         
+
+    :return: A list of plugin metrics.
+    """
+
+    metrics = []
+    if minibatch:
+        metrics.append(MinibatchROCAUC())
+
+    if epoch:
+        metrics.append(EpochROCAUC())
+
+    if epoch_running:
+        metrics.append(RunningEpochROCAUC())
+
+    if experience:
+        metrics.append(ExperienceROCAUC())
+
+    if stream:
+        metrics.append(StreamROCAUC())
+
+    if trained_experience:
+        metrics.append(TrainedExperienceROCAUC())
+
+    return metrics
+
 
 __all__ = [
     'BalancedAccuracy',
@@ -1806,5 +2148,45 @@ __all__ = [
     'ExperienceBalancedAccuracy',
     'StreamBalancedAccuracy',
     'TrainedExperienceBalancedAccuracy',
-    'balancedaccuracy_metrics'
+    'balancedaccuracy_metrics',
+    'Sensitivity',
+    'MinibatchSensitivity',
+    'EpochSensitivity',
+    'RunningEpochSensitivity',
+    'ExperienceSensitivity',
+    'StreamSensitivity',
+    'TrainedExperienceSensitivity',
+    'Sensitivity_metrics',
+    'Specificity',
+    'MinibatchSpecificity',
+    'EpochSpecificity',
+    'RunningEpochSpecificity',
+    'ExperienceSpecificity',
+    'StreamSpecificity',
+    'TrainedExperienceSpecificity',
+    'Specificity_metrics',
+    'Precision',
+    'MinibatchPrecision',
+    'EpochPrecision',
+    'RunningEpochPrecision',
+    'ExperiencePrecision',
+    'StreamPrecision',
+    'TrainedExperiencePrecision',
+    'Precision_metrics',
+    'AUPRC',
+    'MinibatchAUPRC',
+    'EpochAUPRC',
+    'RunningEpochAUPRC',
+    'ExperienceAUPRC',
+    'StreamAUPRC',
+    'TrainedExperienceAUPRC',
+    'AUPRC_metrics',
+    'ROCAUC',
+    'MinibatchROCAUC',
+    'EpochROCAUC',
+    'RunningEpochROCAUC',
+    'ExperienceROCAUC',
+    'StreamROCAUC',
+    'TrainedExperienceROCAUC',
+    'ROCAUC_metrics'
 ]
