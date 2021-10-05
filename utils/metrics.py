@@ -7,6 +7,7 @@ from typing import List, Union, Dict
 from collections import defaultdict
 
 import torch
+import numpy as np
 from torch import Tensor, arange
 from avalanche.evaluation import Metric, PluginMetric, GenericPluginMetric
 from avalanche.evaluation.metrics.mean import Mean
@@ -122,12 +123,12 @@ class BalancedAccuracy(Metric[float]):
             try:
                 tpr = true_positives / (true_positives + false_negatives)
             except ZeroDivisionError:
-                tpr = 0
+                tpr = 1
 
             try:
                 tnr = true_negatives / (true_negatives + false_positives)
             except ZeroDivisionError:
-                tnr = 0
+                tnr = 1
                 
             self._mean_balancedaccuracy[task_labels].update(
                 (tpr+tnr) / 2, len(predicted_y))
@@ -478,7 +479,7 @@ class Sensitivity(Metric[float]):
             try:
                 tpr = true_positives / (true_positives + false_negatives)
             except ZeroDivisionError:
-                tpr = 0
+                tpr = 1
                 
             self._mean_Sensitivity[task_labels].update(
                 tpr, len(predicted_y))
@@ -702,7 +703,7 @@ class TrainedExperienceSensitivity(SensitivityPluginMetric):
 
 
 
-def Sensitivity_metrics(*, 
+def sensitivity_metrics(*, 
                      minibatch=False,
                      epoch=False,
                      epoch_running=False,
@@ -829,7 +830,7 @@ class Specificity(Metric[float]):
             try:
                 tnr = true_negatives / (true_negatives + false_positives)
             except ZeroDivisionError:
-                tnr = 0
+                tnr = 1
                 
             self._mean_Specificity[task_labels].update(
                 tnr, len(predicted_y))
@@ -1053,7 +1054,7 @@ class TrainedExperienceSpecificity(SpecificityPluginMetric):
 
 
 
-def Specificity_metrics(*, 
+def specificity_metrics(*, 
                      minibatch=False,
                      epoch=False,
                      epoch_running=False,
@@ -1180,7 +1181,7 @@ class Precision(Metric[float]):
             try:
                 ppv = true_positives / (true_positives + false_positives)
             except ZeroDivisionError:
-                ppv = 0
+                ppv = 1
                 
             self._mean_Precision[task_labels].update(
                 ppv, len(predicted_y))
@@ -1404,7 +1405,7 @@ class TrainedExperiencePrecision(PrecisionPluginMetric):
 
 
 
-def Precision_metrics(*, 
+def precision_metrics(*, 
                      minibatch=False,
                      epoch=False,
                      epoch_running=False,
@@ -1525,9 +1526,15 @@ class AUPRC(Metric[float]):
 
         scores = predicted_y[arange(len(true_y)), true_y]
 
+        with np.errstate(divide='ignore',invalid='ignore'):
+            average_precision_score_val = average_precision_score(true_y.cpu(), scores.cpu())
+
+            if np.isnan(average_precision_score_val):
+                average_precision_score_val = 0
+
         if isinstance(task_labels, int):
             self._mean_AUPRC[task_labels].update(
-                average_precision_score(true_y, scores), len(predicted_y))
+                average_precision_score_val, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
@@ -1748,7 +1755,7 @@ class TrainedExperienceAUPRC(AUPRCPluginMetric):
 
 
 
-def AUPRC_metrics(*, 
+def auprc_metrics(*, 
                      minibatch=False,
                      epoch=False,
                      epoch_running=False,
@@ -1868,9 +1875,14 @@ class ROCAUC(Metric[float]):
 
         scores = predicted_y[arange(len(true_y)), true_y]
 
+        try:
+            roc_auc_score_val = roc_auc_score(true_y.cpu(), scores.cpu())
+        except ValueError:
+            roc_auc_score_val = 1
+
         if isinstance(task_labels, int):
             self._mean_ROCAUC[task_labels].update(
-                roc_auc_score(true_y, scores), len(predicted_y))
+                roc_auc_score_val, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
@@ -2091,7 +2103,7 @@ class TrainedExperienceROCAUC(ROCAUCPluginMetric):
 
 
 
-def ROCAUC_metrics(*, 
+def rocauc_metrics(*, 
                      minibatch=False,
                      epoch=False,
                      epoch_running=False,
@@ -2156,7 +2168,7 @@ __all__ = [
     'ExperienceSensitivity',
     'StreamSensitivity',
     'TrainedExperienceSensitivity',
-    'Sensitivity_metrics',
+    'sensitivity_metrics',
     'Specificity',
     'MinibatchSpecificity',
     'EpochSpecificity',
@@ -2164,7 +2176,7 @@ __all__ = [
     'ExperienceSpecificity',
     'StreamSpecificity',
     'TrainedExperienceSpecificity',
-    'Specificity_metrics',
+    'specificity_metrics',
     'Precision',
     'MinibatchPrecision',
     'EpochPrecision',
@@ -2172,7 +2184,7 @@ __all__ = [
     'ExperiencePrecision',
     'StreamPrecision',
     'TrainedExperiencePrecision',
-    'Precision_metrics',
+    'precision_metrics',
     'AUPRC',
     'MinibatchAUPRC',
     'EpochAUPRC',
@@ -2180,7 +2192,7 @@ __all__ = [
     'ExperienceAUPRC',
     'StreamAUPRC',
     'TrainedExperienceAUPRC',
-    'AUPRC_metrics',
+    'auprc_metrics',
     'ROCAUC',
     'MinibatchROCAUC',
     'EpochROCAUC',
@@ -2188,5 +2200,5 @@ __all__ = [
     'ExperienceROCAUC',
     'StreamROCAUC',
     'TrainedExperienceROCAUC',
-    'ROCAUC_metrics'
+    'rocauc_metrics'
 ]

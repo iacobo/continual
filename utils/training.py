@@ -18,7 +18,7 @@ from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamC
 
 # Local imports
 from utils import models, plotting, data_processing, cl_strategies
-from utils.metrics import balancedaccuracy_metrics
+from utils.metrics import balancedaccuracy_metrics, sensitivity_metrics, specificity_metrics, precision_metrics, rocauc_metrics, auprc_metrics
 
 # Suppressing erroneous MaxPool1d named tensors warning
 warnings.filterwarnings("once", category=UserWarning)
@@ -83,6 +83,11 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
         loss_metrics(stream=True, experience=not validate),
         accuracy_metrics(stream=True, experience=not validate),
         balancedaccuracy_metrics(stream=True, experience=not validate),
+        specificity_metrics(stream=True, experience=not validate),
+        sensitivity_metrics(stream=True, experience=not validate),
+        precision_metrics(stream=True, experience=not validate),
+        rocauc_metrics(stream=True, experience=not validate),
+        auprc_metrics(stream=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
 
@@ -91,10 +96,10 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
         optimizer=optimizer,
         device=DEVICE,
         criterion=criterion,
-        #eval_mb_size=1024,
+        eval_mb_size=1024,
         eval_every=0, #if validate or n_tasks > 5 else 1,
         evaluator=eval_plugin,
-        train_epochs=30, #config['generic']['train_epochs'],
+        train_epochs=20, #config['generic']['train_epochs'],
         train_mb_size=config['generic']['train_mb_size'],
         **config['strategy']
     )
@@ -147,9 +152,19 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
         accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
         balancedaccuracy = results['BalAcc_Stream/eval_phase/test_stream/Task000']
+        #sensitivity = results['Sens_Stream/eval_phase/test_stream/Task000']
+        #specificity = results['Spec_Stream/eval_phase/test_stream/Task000']
+        #precision = results['Prec_Stream/eval_phase/test_stream/Task000']
+        #rocauc = results['ROCAUC_Stream/eval_phase/test_stream/Task000']
+        #auprc = results['AUPRC_Stream/eval_phase/test_stream/Task000']
 
         # WARNING: `return` overwrites raytune report
-        tune.report(loss=loss, accuracy=accuracy, balancedaccuracy=balancedaccuracy)
+        tune.report(loss=loss, 
+                    accuracy=accuracy, 
+                    balancedaccuracy=balancedaccuracy,
+                    #auprc=auprc,
+                    #rocauc=rocauc
+        )
 
     else:
         return results
@@ -160,7 +175,12 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
     Runs over the validation data for the first 2 tasks.
     """
 
-    reporter = tune.CLIReporter(metric_columns=['loss', 'accuracy', 'balancedaccuracy'])
+    reporter = tune.CLIReporter(metric_columns=['loss', 
+                                                'accuracy', 
+                                                'balancedaccuracy',
+                                                #'auprc',
+                                                #'rocauc'
+                                                ])
     resources = {'cpu':4, 'gpu':0.5} if CUDA else {'cpu':1}
 
     result = tune.run(
@@ -221,7 +241,8 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
                 config = load_params(data, domain, outcome, model, strategy)
 
                 # Multiple runs for Confidence Intervals
-                for i in range(5): 
+                n_repeats=5
+                for _ in range(n_repeats): 
                     curr_results = training_loop(config, data, domain, outcome, model, strategy)
                     res[model][strategy].append(curr_results)
 

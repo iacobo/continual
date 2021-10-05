@@ -62,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument('--strategies',
                         type=str,
                         default='all',
-                        choices=['Naive','Cumulative','EWC','OnlineEWC','SI','LwF','Replay','GDumb','GEM','AGEM'],
+                        choices=['Naive','Cumulative','Joint','EWC','OnlineEWC','SI','LwF','Replay','GDumb','GEM','AGEM'],
                         nargs='+',
                         help='Continual learning strategy(s) to evaluate.')
 

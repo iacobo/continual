@@ -309,10 +309,7 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
         stats['ci95_hi'] = stats['mean'] - stats['ci95']
         stats[domain] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
     else:
-        bold = "\\textbf"
-        stats[domain] = stats.apply(lambda x: f'{{{x["mean"]:.3f}}} \\mp{x.ci95:.3f}', axis=1)
-        #bold_best = stats["mean"] == stats["mean"].nlargest(2)[-1]
-        #stats[domain][bold_best] = bold + stats[domain][bold_best]
+        stats[domain] = stats.apply(lambda x: f'{100*x["mean"]:.1f}$_{{\pm{100*x.ci95:.1f}}}$', axis=1)
 
     stats = pd.DataFrame(stats[domain])
     stats.reset_index(inplace=True) 
@@ -322,11 +319,16 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
 
     return stats
 
-def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='BalAcc'):
-
+def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='BalAcc', latex=False):
+    """
+    Latex table of main results
+    """
     domains = ['age','ethnicity_coarse','time_season']
     dfs = [results_to_table(data, domain, outcome, mode, metric) for domain in domains]
 
-    return pd.concat(dfs, axis=1)
+    if latex:
+        return pd.concat(dfs, axis=1).to_latex(multirow=True, escape=False)
+    else:
+        return pd.concat(dfs, axis=1)
 
 # %%

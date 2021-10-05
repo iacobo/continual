@@ -6,7 +6,7 @@ from ray import tune
 import numpy as np
 
 N_SAMPLES = [128] #[32,64,128]
-DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9]
+DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9,1]
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
 HIDDEN_DIMS = [32,64,128]
 N_LAYERS = [2,3,4]
@@ -28,7 +28,7 @@ config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
        'optimizer':'SGD', #tune.choice(['Adam','SGD']),
        'momentum':0.9, #tune.grid_search(DECAY_WEIGHTS),
-       'train_epochs':30,
+       'train_epochs':20,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
 
@@ -75,7 +75,9 @@ config_model = {
 
 config_cl = {
        'Replay':{
-              'mem_size':tune.grid_search(N_SAMPLES)
+              'mem_size':tune.grid_search([5*n for n in N_SAMPLES])
+              # JA: Have edited this in replay definition
+              #'storage_policy':storage_policy.ClassBalancedStoragePolicy()
               },
        'GDumb':{
               'mem_size':tune.grid_search(N_SAMPLES)
