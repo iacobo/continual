@@ -322,11 +322,11 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
 
     return stats
 
-def generate_table1(data='mimic3',outcome='ARF_4h',mode='test',metric='BalAcc'):
+def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='BalAcc'):
 
-    domains = ['age','ethnicity_coarse'] #,'time_season']
-
+    domains = ['age','ethnicity_coarse','time_season']
     dfs = [results_to_table(data, domain, outcome, mode, metric) for domain in domains]
+
     return pd.concat(dfs, axis=1)
 
 # %%

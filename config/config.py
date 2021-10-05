@@ -28,7 +28,7 @@ config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
        'optimizer':'SGD', #tune.choice(['Adam','SGD']),
        'momentum':0.9, #tune.grid_search(DECAY_WEIGHTS),
-       'train_epochs':10,
+       'train_epochs':30,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
 
