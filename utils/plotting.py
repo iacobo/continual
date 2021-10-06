@@ -281,7 +281,7 @@ def ci_bound(std, count, ci=0.95):
     """Return Confidence Interval radius."""
     return (1+ci)*std/np.sqrt(count)
 
-def results_to_table(data, domain, outcome, mode, metric, verbose=False):
+def results_to_table(data, domain, outcome, mode, metric, verbose=False, n='max'):
     """Pairplot of all models vs strategies."""
 
     # Load results
@@ -298,7 +298,12 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
 
     df = pd.concat(dfs)
     # Get final performance val
-    df = df[df['Epoch']==df['Epoch'].max()]
+    if n=='max':
+        df = df[df['Epoch']==df['Epoch'].max()]
+        domain_col = domain
+    else:
+        df = df[df['Epoch']==n]
+        domain_col = f'{domain} ({n})'
 
     stats = df.groupby(['Model','Strategy'])[METRIC_FULL_NAME[metric]].agg(['mean', 'count', 'std'])
 
@@ -307,11 +312,11 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False):
     if verbose:
         stats['ci95_lo'] = stats['mean'] + stats['ci95']
         stats['ci95_hi'] = stats['mean'] - stats['ci95']
-        stats[domain] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
+        stats[domain_col] = stats.apply(lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1)
     else:
-        stats[domain] = stats.apply(lambda x: f'{100*x["mean"]:.1f}$_{{\pm{100*x.ci95:.1f}}}$', axis=1)
+        stats[domain_col] = stats.apply(lambda x: f'{100*x["mean"]:.1f}$_{{\pm{100*x.ci95:.1f}}}$', axis=1)
 
-    stats = pd.DataFrame(stats[domain])
+    stats = pd.DataFrame(stats[domain_col])
     stats.reset_index(inplace=True) 
 
     stats['Category'] = stats['Strategy'].apply(lambda x: STRATEGY_CATEGORY[x])
@@ -326,9 +331,39 @@ def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='Ba
     domains = ['age','ethnicity_coarse','time_season']
     dfs = [results_to_table(data, domain, outcome, mode, metric) for domain in domains]
 
+    df = pd.concat(dfs, axis=1)
+
     if latex:
-        return pd.concat(dfs, axis=1).to_latex(multirow=True, escape=False)
+        idx = pd.IndexSlice
+        sub_idx = idx['Regularization':'Rehearsal',:]
+        df = df.style.highlight_max(
+            axis=0, 
+            props='bfseries: ;',
+            subset=sub_idx,
+            ).to_latex()
+        return df
     else:
-        return pd.concat(dfs, axis=1)
+        return df
+
+def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', latex=False):
+    """
+    Latex table of main results
+    """
+    hospitals=[5,10,15,20] #50, 100]
+    dfs = [results_to_table('eicu', 'hospital', outcome, mode, metric, n=hospital) for hospital in hospitals]
+
+    df = pd.concat(dfs, axis=1)
+
+    if latex:
+        idx = pd.IndexSlice
+        sub_idx = idx['Regularization':'Rehearsal',:]
+        df = df.style.highlight_max(
+            axis=0, 
+            props='bfseries: ;',
+            subset=sub_idx,
+            ).to_latex()
+        return df
+    else:
+        return df
 
 # %%
