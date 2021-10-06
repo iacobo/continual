@@ -349,7 +349,7 @@ def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', latex
     """
     Latex table of main results
     """
-    hospitals=[5,10,15,20] #50, 100]
+    hospitals=[6,12,18,24] #50, 100]
     dfs = [results_to_table('eicu', 'hospital', outcome, mode, metric, n=hospital) for hospital in hospitals]
 
     df = pd.concat(dfs, axis=1)
