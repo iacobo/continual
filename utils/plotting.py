@@ -15,7 +15,8 @@ from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 
-RESULTS_DIR = Path(__file__).parents[1] / 'results'
+ROOT_DIR = Path(__file__).parents[1]
+RESULTS_DIR = ROOT_DIR / 'results'
 
 METRIC_FULL_NAME = {
     'Top1_Acc': 'Accuracy',
@@ -170,8 +171,10 @@ def clean_subplot(i, j, axes, metric):
 
     if metric=='Loss':
         ylim = (0,4)
+    elif metric=='BalAcc':
+        ylim = (0.5,0.7)
     else:
-        ylim = (0.45,0.9)
+        ylim = (0.5,1)
     
     plt.setp(axes, ylim=ylim)
 
@@ -365,5 +368,32 @@ def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', latex
         return df
     else:
         return df
+
+def generate_hp_table(data='mimic3',outcome='mortality_48h',domain='age'):
+
+    models = ['MLP','CNN','LSTM','Transformer']
+    strategies = ['EWC', 'OnlineEWC', 'LwF', 'SI', 'Replay','AGEM','GEM']
+    dfs = []
+    col_rename_map = {'ewc_lambda':'lambda', 'alpha':'lambda', 'si_lambda':'lambda'}
+
+    for model in models:
+        for strategy in strategies:
+            try:
+                with open(ROOT_DIR / 'config' / data / outcome / domain / f'config_{model}_{strategy}.json', encoding='utf-8') as handle:
+                    res = json.load(handle)['strategy']
+                
+                df = pd.DataFrame([res]).rename(columns=col_rename_map)
+                df['Model'] = model
+                df['Strategy'] = strategy
+
+                dfs.append(df)
+            except:
+                pass
+    df = pd.concat(dfs)
+    df = df.set_index(['Model','Strategy'])
+    df = df.replace(np.NaN, '')
+    df = df.drop('mode', axis=1)
+
+    return df
 
 # %%
