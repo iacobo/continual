@@ -352,7 +352,7 @@ def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', latex
     """
     Latex table of main results
     """
-    hospitals=[6,12,18,24] #50, 100]
+    hospitals=[6,12,18,24,30,36] #50, 100]
     dfs = [results_to_table('eicu', 'hospital', outcome, mode, metric, n=hospital) for hospital in hospitals]
 
     df = pd.concat(dfs, axis=1)
@@ -374,7 +374,8 @@ def generate_hp_table(data='mimic3',outcome='mortality_48h',domain='age'):
     models = ['MLP','CNN','LSTM','Transformer']
     strategies = ['EWC', 'OnlineEWC', 'LwF', 'SI', 'Replay','AGEM','GEM']
     dfs = []
-    col_rename_map = {'ewc_lambda':'lambda', 'alpha':'lambda', 'si_lambda':'lambda'}
+    col_rename_map = {'ewc_lambda':'lambda', 'alpha':'lambda', 'si_lambda':'lambda',
+    'memory_strength':'temperature', 'mem_size':'sample_size'}
 
     for model in models:
         for strategy in strategies:
