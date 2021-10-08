@@ -13,6 +13,8 @@ Loads:
 - random    - sequential data
 """
 
+#%%
+
 import copy
 import json
 import pandas as pd
@@ -24,6 +26,7 @@ import sparse
 from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
+SEED = 12345
 
 # JA: Save as .json?
 DEMO_COL_PREFIXES = {
@@ -68,6 +71,35 @@ def cache_processed_dataset():
     # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
     # Load numpy arrays
     return NotImplementedError
+
+def generate_data_tables(data, demo, outcome, seed=SEED):
+    """Generate latex tables describing data."""
+
+    tasks = split_tasks_fiddle(data, demo, outcome)
+
+    for i in range(len(tasks)):
+        if 'partition' not in tasks[i][1]:
+            # Reproducible RNG
+            rng = np.random.default_rng(seed)
+
+            n = len(tasks[i][1])
+            partition = rng.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
+            tasks[i][1]['partition'] = partition
+
+    dfs = get_task_partition_sizes(tasks)
+
+    for i, df in enumerate(dfs):
+        df['task'] = i
+
+    df = pd.concat(dfs)
+    df = df.set_index(['task'], append=True)
+    df = df.unstack()
+    df = df.reorder_levels([-1,-2], axis=1)
+    df = df.sort_index(axis=1, level=0)
+    
+    return df
+        
+
 
 def load_data(data, demo, outcome, validate=False):
     """
@@ -277,7 +309,7 @@ def concat_timevar_static_feats(features_X, features_s):
     return all_feats
 
 
-def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True, seed=12345):
+def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=True, seed=SEED):
     """
     Takes a dataset of multiple tasks/experiences and splits it into train and val/test sets.
     Assumes FIDDLE style outcome/partition cols in df of outcome values.
@@ -301,7 +333,9 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=Tru
             tasks[i][1]['partition'] = partition
 
     if print_task_partitions:
-        print_task_partition_sizes(tasks)
+        partitions = get_task_partition_sizes(tasks)
+        for p in partitions:
+            print(p)
     
     if val_as_test:
         tasks_train = [(
@@ -338,16 +372,20 @@ def get_demo_labels(data, demo, outcome):
 
     return cols
 
-def print_task_partition_sizes(tasks):
+def get_task_partition_sizes(tasks):
     """
     Prints the number of positive and negative samples in each train/val/test split
     for each task.
     """
 
+    tables = []
+
     for t in tasks:
-        print(
+        tables.append(
             t[1][['partition', 'y_true']].groupby('partition').agg(
                 Total=('y_true','count'),
                 Outcome=('y_true','sum')
                 )
             )
+    return tables
+        
