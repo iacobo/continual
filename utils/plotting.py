@@ -35,6 +35,17 @@ STRATEGY_CATEGORY = {'Naive':'Baseline',
     'AGEM':'Rehearsal',
     'GDumb':'Rehearsal'}
 
+STRATEGY_COLOURS = {'Naive':'dodgerblue',
+    'Cumulative':'deepskyblue',
+    'EWC':'orange',
+    'OnlineEWC':'gold',
+    'SI':'tomato',
+    'LwF':'peru',
+    'Replay':'forestgreen',
+    'GEM':'limegreen',
+    'AGEM':'yellowgreen',
+    'GDumb':'palegreen'}
+
 def get_timestamp():
     """
     Returns current timestamp as string.
@@ -136,7 +147,7 @@ def plot_avg_metric(model, results, mode, metric, ax=None):
 
     stacked = stack_avg_results(results, metric, mode)
 
-    sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Strategy', ax=ax)
+    sns.lineplot(data=stacked, x='Epoch', y=METRIC_FULL_NAME[metric], hue='Strategy', ax=ax, palette=STRATEGY_COLOURS)
     ax.set_title('Average performance over all tasks', size=10)
     ax.set_ylabel(model)
     ax.set_xlabel('')
@@ -147,7 +158,7 @@ def barplot_avg_metric(model, results, mode, metric, ax=None):
     stacked = stack_avg_results(results, metric, mode)
     stacked = stacked[stacked['Epoch']==stacked['Epoch'].max()]
 
-    sns.barplot(data=stacked, x='Strategy', y=METRIC_FULL_NAME[metric], ax=ax)
+    sns.barplot(data=stacked, x='Strategy', y=METRIC_FULL_NAME[metric], ax=ax, palette=STRATEGY_COLOURS)
     ax.set_title('Final average performance over all tasks', size=10)
     ax.set_xlabel('')
 
@@ -176,7 +187,7 @@ def clean_subplot(i, j, axes, metric):
     else:
         ylim = (0.5,1)
     
-    plt.setp(axes, ylim=ylim)
+    #plt.setp(axes, ylim=ylim)
 
 def clean_plot(fig, axes, metric):
     """Cleans all subpots. Removes duplicate legends."""
@@ -348,12 +359,12 @@ def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='Ba
     else:
         return df
 
-def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', latex=False):
+def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', hospitals=[6,12,18,24,30,36], latex=False):
     """
     Latex table of main results
     """
-    hospitals=[6,12,18,24,30,36] #50, 100]
-    dfs = [results_to_table('eicu', 'hospital', outcome, mode, metric, n=hospital) for hospital in hospitals]
+    
+    dfs = [results_to_table('eicu', 'hospital', outcome, mode, metric, n=n) for n in hospitals]
 
     df = pd.concat(dfs, axis=1)
 

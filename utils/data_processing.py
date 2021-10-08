@@ -108,6 +108,12 @@ def load_data(data, demo, outcome, validate=False):
         # Cap n tasks
         experiences = experiences[:20]
         test_experiences = test_experiences[:20]
+    
+    # Do not use validation sets for training
+    if not validate and len(experiences) > 5:
+        experiences = experiences[2:]
+        test_experiences = test_experiences[2:]
+
 
     n_tasks = len(experiences)
     n_timesteps = experiences[0][0].shape[-2]
@@ -236,7 +242,7 @@ def split_tasks_fiddle(data, demo, outcome):
     else:
         features_X, features_s, X_feature_names, s_feature_names, df_outcome = load_fiddle(data, outcome)
 
-    static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital']
+    static_onehot_demos = ['sex','age','ethnicity','ethnicity_coarse','hospital','ward']
     
     if demo in static_onehot_demos:
         cols = [c for c in s_feature_names if c.startswith(DEMO_COL_PREFIXES[data][demo])]
