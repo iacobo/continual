@@ -96,6 +96,8 @@ def generate_data_tables(data, demo, outcome, seed=SEED):
     df = df.unstack()
     df = df.reorder_levels([-1,-2], axis=1)
     df = df.sort_index(axis=1, level=0)
+
+    df = df.reindex(columns= df.columns.reindex(['Total', 'Outcome'], level = 1)[0])
     
     return df
         
