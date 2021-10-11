@@ -246,7 +246,9 @@ def load_fiddle(data, outcome, n=None, vitals_only=True):
         X_feature_names = [X_feature_names[i] for i in vital_col_ids]
         features_X_subset_ids = vital_col_ids
     else:
-        features_X_subset_ids = list(set(range(400)).union(set(vital_col_ids)))
+        X_n = len(X_feature_names)
+        #X_n = 400
+        features_X_subset_ids = list(set(range(X_n)).union(set(vital_col_ids)))
 
     # Loading np arrays
     features_X = sparse.load_npz(data_dir / 'features' / outcome / 'X.npz')[:n,:,features_X_subset_ids].todense()
