@@ -226,7 +226,7 @@ def plot_all_model_strats(data, domain, outcome, mode, metric, timestamp, savefi
     n_cols = len(strategies)
 
     # Experience plots
-    fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(20*4/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
+    fig, axes = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(2*20*4/n_cols,20*n_rows/n_cols), squeeze=False, dpi=250)
 
     for i, model in enumerate(models):
         for j, strategy in enumerate(strategies):
@@ -365,6 +365,44 @@ def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='Ba
         return df
     else:
         return df
+
+def generate_hp_table_super(outcome='mortality_48h'):
+    """
+    Combines all tables into a nice latex format.
+    """
+
+    prefix = r"""
+\begin{table}[h]
+\centering
+
+"""
+
+    box_prefix = r"""
+\begin{adjustbox}{max width=\columnwidth}
+
+"""
+    old = r"""\begin{tabular}{lllllll}"""
+    repl = r"""\begin{tabular}{lllllll}
+\multicolumn{7}{c}{\textsc{Age}} \\
+
+"""
+    box_suffix = r"""
+\end{adjustbox}
+
+"""
+    suffix = fr"""
+\caption{{Tuned hyperparameters for main experiments (outcome of {outcome}).}}
+\label{{tab:hyperparameters}}
+\end{{table}}
+
+"""
+
+    latex = prefix + box_prefix + generate_hp_table(outcome=outcome, domain='age').to_latex().replace(old, repl) \
+    + generate_hp_table(outcome=outcome, domain='ethnicity_coarse').to_latex().replace(old, repl.replace('Age','Ethnicity (broad)')) + box_suffix \
+    + box_prefix + generate_hp_table(outcome=outcome, domain='time_season').to_latex().replace(old, repl.replace('Age','Time (season)')) \
+    + generate_hp_table(outcome=outcome, domain='ward').to_latex().replace(old, repl.replace('Age','ICU Ward')) + box_suffix + suffix
+
+    return latex
 
 def generate_table_hospitals(outcome='ARF_4h',mode='test',metric='BalAcc', hospitals=[6,12,18,24,30,36], latex=False):
     """

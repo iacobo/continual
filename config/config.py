@@ -7,6 +7,7 @@ import numpy as np
 
 N_SAMPLES = [256]
 DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9,1]
+TEMPERATURES = [0.5,1.0,1.5,2.0,2.5,3.0]
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
 HIDDEN_DIMS = [32,64,128]
 N_LAYERS = [2,3,4]
@@ -96,7 +97,7 @@ config_cl = {
               },
        'LwF':{
               'alpha':tune.grid_search(LOG_WEIGHTS),
-              'temperature':tune.grid_search([0.5,1.0,1.5,2.0,2.5,3.0])
+              'temperature':tune.grid_search(TEMPERATURES)
               },
        'LFL':{
               'lambda_e':tune.grid_search([LOG_WEIGHTS])
