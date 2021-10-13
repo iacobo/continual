@@ -5,7 +5,7 @@ Hyperparameter search-space configuration.
 from ray import tune
 import numpy as np
 
-N_SAMPLES = [128] #[32,64,128]
+N_SAMPLES = [256]
 DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9,1]
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
 HIDDEN_DIMS = [32,64,128]
@@ -107,7 +107,7 @@ config_cl = {
               },
        'AGEM':{
               'patterns_per_exp':tune.grid_search(N_SAMPLES),
-              'sample_size':tune.grid_search(N_SAMPLES)
+              'sample_size':tune.grid_search([i*max(N_SAMPLES) for i in range(1,3)])
               }
        #'CoPE':
        }

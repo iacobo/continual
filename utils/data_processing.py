@@ -34,7 +34,8 @@ DEMO_COL_PREFIXES = {
         "sex":"GENDER_value:F",
         "age":"AGE_value:",
         "ethnicity":"ETHNICITY_value:",
-        "ethnicity_coarse":"ETHNICITY_COARSE_value:"
+        "ethnicity_coarse":"ETHNICITY_COARSE_value:",
+        "ward":"FIRST_CAREUNIT_value:"
         },
     
     'eicu':{
@@ -42,8 +43,7 @@ DEMO_COL_PREFIXES = {
         "age":"age_value:",
         "ethnicity":"ethnicity_value:",
         "hospital":"hospitalid_value:",
-        "unit":"unittype_value:",
-        "ward":"wardid_value:"
+        "ward":"unittype_value:"
         }
     }
 
@@ -71,36 +71,6 @@ def cache_processed_dataset():
     # Save as numpy arrays in data/preprocessed/dataset/outcome/demo
     # Load numpy arrays
     return NotImplementedError
-
-def generate_data_tables(data, demo, outcome, seed=SEED):
-    """Generate latex tables describing data."""
-
-    tasks = split_tasks_fiddle(data, demo, outcome)
-
-    for i in range(len(tasks)):
-        if 'partition' not in tasks[i][1]:
-            # Reproducible RNG
-            rng = np.random.default_rng(seed)
-
-            n = len(tasks[i][1])
-            partition = rng.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
-            tasks[i][1]['partition'] = partition
-
-    dfs = get_task_partition_sizes(tasks)
-
-    for i, df in enumerate(dfs):
-        df['task'] = i
-
-    df = pd.concat(dfs)
-    df = df.set_index(['task'], append=True)
-    df = df.unstack()
-    df = df.reorder_levels([-1,-2], axis=1)
-    df = df.sort_index(axis=1, level=0)
-
-    df = df.reindex(columns= df.columns.reindex(['Total', 'Outcome'], level = 1)[0])
-    
-    return df
-        
 
 
 def load_data(data, demo, outcome, validate=False):
@@ -392,4 +362,32 @@ def get_task_partition_sizes(tasks):
                 )
             )
     return tables
-        
+
+def generate_data_tables(data, demo, outcome, seed=SEED):
+    """Generate latex tables describing data."""
+
+    tasks = split_tasks_fiddle(data, demo, outcome)
+
+    for i in range(len(tasks)):
+        if 'partition' not in tasks[i][1]:
+            # Reproducible RNG
+            rng = np.random.default_rng(seed)
+
+            n = len(tasks[i][1])
+            partition = rng.choice(['train', 'val', 'test'], n, p=[0.7, 0.15, 0.15])
+            tasks[i][1]['partition'] = partition
+
+    dfs = get_task_partition_sizes(tasks)
+
+    for i, df in enumerate(dfs):
+        df['task'] = i
+
+    df = pd.concat(dfs)
+    df = df.set_index(['task'], append=True)
+    df = df.unstack()
+    df = df.reorder_levels([-1,-2], axis=1)
+    df = df.sort_index(axis=1, level=0)
+
+    df = df.reindex(columns= df.columns.reindex(['Total', 'Outcome'], level = 1)[0])
+    
+    return df

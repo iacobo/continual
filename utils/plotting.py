@@ -183,7 +183,8 @@ def clean_subplot(i, j, axes, metric):
     if metric=='Loss':
         ylim = (0,4)
     elif metric=='BalAcc':
-        ylim = (0.5,0.7)
+        ylim = (0.5,1)
+        plt.setp(axes, ylim=ylim)
     else:
         ylim = (0.5,1)
     
@@ -342,8 +343,14 @@ def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='Ba
     """
     Latex table of main results
     """
-    domains = ['age','ethnicity_coarse','time_season']
-    dfs = [results_to_table(data, domain, outcome, mode, metric) for domain in domains]
+    domains = ['age','ethnicity_coarse','ward','time_season']
+    dfs = []
+    
+    for domain in domains:
+        try:
+            dfs.append(results_to_table(data, domain, outcome, mode, metric))
+        except:
+            pass
 
     df = pd.concat(dfs, axis=1)
 

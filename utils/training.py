@@ -99,7 +99,7 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
         eval_mb_size=1024,
         eval_every=0, #if validate or n_tasks > 5 else 1,
         evaluator=eval_plugin,
-        train_epochs=5, #config['generic']['train_epochs'],
+        train_epochs=40, #config['generic']['train_epochs'],
         train_mb_size=config['generic']['train_mb_size'],
         **config['strategy']
     )
