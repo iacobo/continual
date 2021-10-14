@@ -339,7 +339,7 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False, n='max'
 
     return stats
 
-def generate_table1(data='mimic3',outcome='mortality_48h',mode='test',metric='BalAcc', latex=False):
+def generate_table_results(data='mimic3',outcome='mortality_48h',mode='test',metric='BalAcc', latex=False):
     """
     Latex table of main results
     """

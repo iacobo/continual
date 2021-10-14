@@ -80,14 +80,14 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
 
     eval_plugin = EvaluationPlugin(
         StreamConfusionMatrix(save_image=False),
-        loss_metrics(stream=True, trained_experience=not validate),
-        accuracy_metrics(stream=True, trained_experience=not validate),
-        balancedaccuracy_metrics(stream=True, trained_experience=not validate),
-        specificity_metrics(stream=True, trained_experience=not validate),
-        sensitivity_metrics(stream=True, trained_experience=not validate),
-        precision_metrics(stream=True, trained_experience=not validate),
-        #rocauc_metrics(stream=True, trained_experience=not validate),
-        #auprc_metrics(stream=True, trained_experience=not validate),
+        loss_metrics(stream=True, experience=not validate),
+        accuracy_metrics(trained_experience=True, experience=not validate),
+        balancedaccuracy_metrics(trained_experience=True, experience=not validate),
+        specificity_metrics(trained_experience=True, experience=not validate),
+        sensitivity_metrics(trained_experience=True, experience=not validate),
+        precision_metrics(trained_experience=True, experience=not validate),
+        #rocauc_metrics(trained_experience=True, experience=not validate),
+        #auprc_metrics(trained_experience=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
 
@@ -150,8 +150,8 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
 
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
-        accuracy = results['Top1_Acc_Stream/eval_phase/test_stream/Task000']
-        balancedaccuracy = results['BalAcc_Stream/eval_phase/test_stream/Task000']
+        accuracy = results['Accuracy_On_Trained_Experiences/eval_phase/test_stream/Task000']
+        balancedaccuracy = results['BalancedAccuracy_On_Trained_Experiences/eval_phase/test_stream/Task000']
         #sensitivity = results['Sens_Stream/eval_phase/test_stream/Task000']
         #specificity = results['Spec_Stream/eval_phase/test_stream/Task000']
         #precision = results['Prec_Stream/eval_phase/test_stream/Task000']
