@@ -81,13 +81,13 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
     eval_plugin = EvaluationPlugin(
         StreamConfusionMatrix(save_image=False),
         loss_metrics(stream=True, experience=not validate),
-        accuracy_metrics(trained_experience=True, experience=not validate),
-        balancedaccuracy_metrics(trained_experience=True, experience=not validate),
-        specificity_metrics(trained_experience=True, experience=not validate),
-        sensitivity_metrics(trained_experience=True, experience=not validate),
-        precision_metrics(trained_experience=True, experience=not validate),
-        #rocauc_metrics(trained_experience=True, experience=not validate),
-        #auprc_metrics(trained_experience=True, experience=not validate),
+        accuracy_metrics(trained_experience=True, stream=True, experience=not validate),
+        balancedaccuracy_metrics(trained_experience=True, stream=True, experience=not validate),
+        specificity_metrics(trained_experience=True, stream=True, experience=not validate),
+        sensitivity_metrics(trained_experience=True, stream=True, experience=not validate),
+        precision_metrics(trained_experience=True, stream=True, experience=not validate),
+        #rocauc_metrics(trained_experience=True, stream=True, experience=not validate),
+        #auprc_metrics(trained_experience=True, stream=True, experience=not validate),
         loggers=loggers,
         benchmark=benchmark)
 

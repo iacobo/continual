@@ -100,7 +100,11 @@ def stack_avg_results(results_strats, metric, mode):
         # Get avg (stream) metrics for each strategy
         for strat, metrics in results_strats.items():
             for k, v in metrics[i].items():
-                if f'{metric}_Stream/eval_phase/{mode}_stream' in k:
+                # if train stream in keys "BalancedAccuracy_On_Trained_Experiences"
+                if f'{METRIC_FULL_NAME[metric].replace(" ","")}_On_Trained_Experiences/eval_phase/{mode}_stream' in k:
+                    metric_dict[strat] = v[1]
+                    break
+                elif f'{metric}_Stream/eval_phase/{mode}_stream' in k:
                     metric_dict[strat] = v[1]
 
         df = pd.DataFrame.from_dict(metric_dict)
@@ -312,6 +316,7 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False, n='max'
         dfs.append(df)
 
     df = pd.concat(dfs)
+ 
     # Get final performance val
     if n=='max':
         df = df[df['Epoch']==df['Epoch'].max()]
@@ -347,10 +352,10 @@ def generate_table_results(data='mimic3',outcome='mortality_48h',mode='test',met
     dfs = []
     
     for domain in domains:
-        try:
-            dfs.append(results_to_table(data, domain, outcome, mode, metric))
-        except:
-            pass
+        #try:
+        dfs.append(results_to_table(data, domain, outcome, mode, metric))
+        #except:
+        #    pass
 
     df = pd.concat(dfs, axis=1)
 
