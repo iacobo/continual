@@ -20,7 +20,7 @@ Experiments evaluate various continual learning strategies on standard ICU predi
    ```
 5. Install dependencies:
    ```posh
-   pip install -U wheel
+   pip install -U wheel buildtools
    pip install -r requirements.txt
    ```
 
@@ -29,13 +29,13 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 To reproduce main results:
 
 ```posh
-python3 main.py
+python3 main.py --train
 ```
 
 Figures will be saved to `/results/figs`. Instructions to reproduce supplementary experiments can be found [here](/results/README.md). Bespoke experiments can be specified with appropriate flags e.g:
 
 ```posh
-python3 main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
+python3 main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay --validate --train
 ```
 
 A complete list of available options can be found [here](/config/README.md) or with `python3 main.py --help`.

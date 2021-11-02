@@ -69,7 +69,9 @@ def stack_results(results, metric, mode, type='experience'):
     results_dfs = []
 
     # Get metrics for each training "experience"'s test set
-    for i in range(5):
+    n_repeats = len(results)
+
+    for i in range(n_repeats):
         metric_dict = defaultdict(list)
         for k,v in results[i].items():
             if f'{metric}_Exp/eval_phase/{mode}_stream' in k:
@@ -94,7 +96,8 @@ def stack_avg_results(results_strats, metric, mode):
     results_dfs = []
 
     # Get metrics for each training "experience"'s test set
-    for i in range(5):
+    n_repeats = len(list(results_strats.values())[0])
+    for i in range(n_repeats):
         metric_dict = defaultdict(list)
 
         # Get avg (stream) metrics for each strategy
@@ -102,6 +105,7 @@ def stack_avg_results(results_strats, metric, mode):
             for k, v in metrics[i].items():
                 # if train stream in keys "BalancedAccuracy_On_Trained_Experiences"
                 if f'{METRIC_FULL_NAME[metric].replace(" ","")}_On_Trained_Experiences/eval_phase/{mode}_stream' in k:
+                    # JA: early stopping means uneven length arrays. Must subsample at n_tasks
                     metric_dict[strat] = v[1]
                     break
                 elif f'{metric}_Stream/eval_phase/{mode}_stream' in k:
@@ -352,10 +356,10 @@ def generate_table_results(data='mimic3',outcome='mortality_48h',mode='test',met
     dfs = []
     
     for domain in domains:
-        #try:
-        dfs.append(results_to_table(data, domain, outcome, mode, metric))
-        #except:
-        #    pass
+        try:
+            dfs.append(results_to_table(data, domain, outcome, mode, metric))
+        except:
+            pass
 
     df = pd.concat(dfs, axis=1)
 

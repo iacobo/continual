@@ -32,11 +32,12 @@ def main(args):
                       validate=True)
 
     # Train and test over all tasks (using optimised hyperparams)
-    training.main(data=args.data,
-                  domain=args.domain_shift,
-                  outcome=args.outcome,
-                  models=args.models,
-                  strategies=args.strategies)
+    if args.train:
+        training.main(data=args.data,
+                    domain=args.domain_shift,
+                    outcome=args.outcome,
+                    models=args.models,
+                    strategies=args.strategies)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('--domain_shift',
                         type=str,
                         default='age',
-                        choices=['time_season','region','hospital','unit','ward','age','sex','ethnicity','ethnicity_coarse'],
+                        choices=['time_season','region','hospital','ward','age','sex','ethnicity','ethnicity_coarse'],
                         help='Domain shift exhibited in tasks.')
 
     parser.add_argument('--strategies',
@@ -74,16 +75,16 @@ if __name__ == "__main__":
                         help='Model(s) to evaluate.')
 
     parser.add_argument('--dropout',
-                        action='store_const',
-                        const=True,
-                        default=False,
+                        action='store_true',
                         help='Add dropout to model(s).')
 
     parser.add_argument('--validate',
-                        action='store_const',
-                        const=True,
-                        default=False,
+                        action='store_true',
                         help='Tune hyperparameters.')
+
+    parser.add_argument('--train',
+                        action='store_true',
+                        help='Train and test validated models.')
 
     parser.add_argument('--num_samples',
                         type=int,

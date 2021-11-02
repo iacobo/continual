@@ -8,12 +8,16 @@ import warnings
 from pathlib import Path
 from functools import partial
 
+#import random
+#import numpy as np
+
 import torch
 from ray import tune
 from torch import nn, optim
 
 from avalanche.logging import InteractiveLogger, TensorboardLogger
 from avalanche.training.plugins import EvaluationPlugin
+from avalanche.training.plugins.early_stopping import EarlyStoppingPlugin
 from avalanche.evaluation.metrics import accuracy_metrics, loss_metrics, StreamConfusionMatrix
 
 # Local imports
@@ -28,6 +32,12 @@ RESULTS_DIR = Path(__file__).parents[1] / 'results'
 CONFIG_DIR = Path(__file__).parents[1] / 'config'
 CUDA = torch.cuda.is_available()
 DEVICE = 'cuda' if CUDA else 'cpu'
+
+# Reproducibility
+SEED = 12345
+#random.seed(SEED)
+#np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 def save_params(data, domain, outcome, model, strategy, best_params):
     """Save hyper-param config to json."""
@@ -55,7 +65,7 @@ def save_results(data, outcome, domain, res):
                                                 for m, strats in res.items()}
         json.dump(res_no_tensors, handle)
 
-def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=0, weight=None, validate=False, config=None, benchmark=None):
+def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=0, weight=None, validate=False, config=None, benchmark=None, early_stopping=False):
     """
     - `stream`     Avg accuracy over all experiences (may rely on tasks being roughly same size?)
     - `experience` Accuracy for each experience
@@ -91,6 +101,19 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
         loggers=loggers,
         benchmark=benchmark)
 
+    if early_stopping:
+        early_stopping = EarlyStoppingPlugin(
+            patience=5, 
+            val_stream_name='train_stream/Task000',
+            metric_name='BalancedAccuracy_On_Trained_Experiences'
+            )
+        plugins = [early_stopping]
+    else:
+        plugins = None
+
+    if strategy_name == 'Joint':        
+        eval_every = None
+
     cl_strategy = strategy(
         model,
         optimizer=optimizer,
@@ -99,14 +122,15 @@ def load_strategy(model, model_name, strategy_name, data='', domain='', n_tasks=
         eval_mb_size=1024,
         eval_every=0, #if validate or n_tasks > 5 else 1,
         evaluator=eval_plugin,
-        train_epochs=40, #config['generic']['train_epochs'],
+        train_epochs=15,
         train_mb_size=config['generic']['train_mb_size'],
+        plugins=plugins,
         **config['strategy']
     )
 
     return cl_strategy
 
-def train_cl_method(cl_strategy, scenario, validate=False):
+def train_cl_method(cl_strategy, scenario, strategy_name, validate=False):
     """
     Avalanche Cl training loop. For each 'experience' in scenario's train_stream:
 
@@ -115,10 +139,16 @@ def train_cl_method(cl_strategy, scenario, validate=False):
     """
     if not validate: print('Starting experiment...')
 
-    for experience in scenario.train_stream:
-        if not validate: print(f'Start of experience: {experience.current_experience}')
-        cl_strategy.train(experience, eval_streams=[scenario.train_stream, scenario.test_stream])
+    if strategy_name == 'Joint':
+        if not validate: print(f'Joint training:')
+        cl_strategy.train(scenario.train_stream, eval_streams=[scenario.train_stream, scenario.test_stream])
         if not validate: print('Training completed', '\n\n')
+
+    else:
+        for experience in scenario.train_stream:
+            if not validate: print(f'{strategy_name} - Start of experience: {experience.current_experience}')
+            cl_strategy.train(experience, eval_streams=[scenario.train_stream, scenario.test_stream])
+            if not validate: print('Training completed', '\n\n')
 
     if validate:
         return cl_strategy.evaluator.get_last_metrics()
@@ -146,7 +176,7 @@ def training_loop(config, data, domain, outcome, model_name, strategy_name, vali
 
     model = models.MODELS[model_name](n_channels, n_timesteps, **config['model'])
     cl_strategy = load_strategy(model, model_name, strategy_name, data, domain, n_tasks=n_tasks, weight=weight, validate=validate, config=config, benchmark=scenario)
-    results = train_cl_method(cl_strategy, scenario, validate=validate)
+    results = train_cl_method(cl_strategy, scenario, strategy_name, validate=validate)
 
     if validate:
         loss = results['Loss_Stream/eval_phase/test_stream/Task000']
@@ -208,7 +238,7 @@ def hyperparam_opt(config, data, domain, outcome, model_name, strategy_name, num
 
     return best_trial.config
 
-def main(data, domain, outcome, models, strategies, dropout=False, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50):
+def main(data, domain, outcome, models, strategies, dropout=False, config_generic={}, config_model={}, config_cl={}, validate=False, num_samples=50, freeze_model_hp=False):
     """
     Main training loop. Defines dataset given outcome/domain 
     and evaluates model/strategies over given hyperparams over this problem.
@@ -224,7 +254,7 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
 
             if validate: # Hyperparam opt over first 2 tasks
                 # Load generic tuned hyper-params
-                if strategy == 'Naive':
+                if strategy == 'Naive' or not freeze_model_hp:
                     config = {'generic':config_generic, 'model':config_model[model], 'strategy':config_cl.get(strategy,{})}
                 else:
                     naive_params = load_params(data, domain, outcome, model, 'Naive')
@@ -241,7 +271,7 @@ def main(data, domain, outcome, models, strategies, dropout=False, config_generi
                 config = load_params(data, domain, outcome, model, strategy)
 
                 # Multiple runs for Confidence Intervals
-                n_repeats=5
+                n_repeats=1
                 for _ in range(n_repeats): 
                     curr_results = training_loop(config, data, domain, outcome, model, strategy)
                     res[model][strategy].append(curr_results)

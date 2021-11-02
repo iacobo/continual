@@ -9,9 +9,9 @@ N_SAMPLES = [256]
 DECAY_WEIGHTS = [0.2,0.4,0.6,0.8,0.9,1]
 TEMPERATURES = [0.5,1.0,1.5,2.0,2.5,3.0]
 LOG_WEIGHTS = [1e-3,1e-2,1e-1,1e0,1e1,1e2]
-HIDDEN_DIMS = [32,64,128]
-N_LAYERS = [2,3,4]
-N_HEADS = [4,8,16]
+HIDDEN_DIMS = [64,128,256]
+N_LAYERS = [3,4]
+N_HEADS = [12,16,24]
 
 # Conditional hyper-param functions
 def get_dropout_from_n_layers(spec):
@@ -29,7 +29,7 @@ config_generic = {
        'lr':tune.grid_search([1e-4,1e-3,1e-2]),
        'optimizer':'SGD', #tune.choice(['Adam','SGD']),
        'momentum':0.9, #tune.grid_search(DECAY_WEIGHTS),
-       'train_epochs':20,
+       'train_epochs':100,
        'train_mb_size':tune.grid_search([16,32,64,128]),
        }
 

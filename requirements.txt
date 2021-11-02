@@ -9,10 +9,11 @@ matplotlib==3.4.2
 torch==1.9.0
 torchvision==0.10.0
 
+
 # Ray[tune]
-ray==1.6.0
+ray==1.7.0
 ray[tune]
 
 # Avalanche + Avalanche specific library versions not included in its requirements
-git+https://github.com/ContinualAI/avalanche.git@fa9201f1a38dc57621f3a5b02f833aa7cdc8b6ca
+git+https://github.com/ContinualAI/avalanche.git@39b092590bd2180f8d0b1dd4c167a76d79c45e1b
 gdown==3.3.1

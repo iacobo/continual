@@ -23,10 +23,16 @@ from pathlib import Path
 
 import torch
 import sparse
+import random
 from avalanche.benchmarks.generators import tensors_benchmark
 
 DATA_DIR = Path(__file__).parents[1] / 'data'
+
+# Reproducibility
 SEED = 12345
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
 
 # JA: Save as .json?
 DEMO_COL_PREFIXES = {
@@ -237,7 +243,7 @@ def get_modes(x,feat,seq_dim=1):
     # JA: Check conversion to tnsor, dtype etc
     return torch.LongTensor(x[:,:,feat]).mode(dim=seq_dim)[0].clone().detach().numpy()
 
-def split_tasks_fiddle(data, demo, outcome):
+def split_tasks_fiddle(data, demo, outcome, order='random', seed=SEED):
     """
     Takes FIDDLE format data and given an outcome and demographic,
     splits the input data across that demographic into multiple
@@ -261,6 +267,13 @@ def split_tasks_fiddle(data, demo, outcome):
         raise NotImplementedError
 
     all_features = concat_timevar_static_feats(features_X, features_s)
+
+    # Reproducible RNG
+    if order == 'random':
+        rng = np.random.default_rng(seed)
+        rng.shuffle(tasks_idx)
+    elif order == 'reverse':
+        tasks_idx = reversed(tasks_idx)
 
     tasks = [(all_features[idx], df_outcome[idx]) for idx in tasks_idx]
 
@@ -333,6 +346,10 @@ def split_trainvaltest_fiddle(tasks, val_as_test=True, print_task_partitions=Tru
 # Helper funcs for figs, data, info for paper
 #############################
 
+def get_corr_feats_target(df, target):
+    cols = df.columns.drop(target)
+    df[cols].corr()[target][:]
+
 def get_demo_labels(data, demo, outcome):
     """
     Gets labels for demo splits from feature col names.
@@ -342,9 +359,32 @@ def get_demo_labels(data, demo, outcome):
     with open(data_dir / 'features' / outcome / 's.feature_names.json', encoding='utf-8') as s_file:
         s_feature_names = json.load(s_file)
         
-    cols = [col for col in s_feature_names if col.startswith(DEMO_COL_PREFIXES[data][demo])]
+    cols = [col.split(':')[-1] for col in s_feature_names if col.startswith(DEMO_COL_PREFIXES[data][demo])]
 
     return cols
+
+def get_demo_labels_table(demo, datasets = ['mimic3', 'eicu']):
+
+    # pd.options.display.max_colwidth = 1000
+
+    # Domainshifts present (over outcomes)
+    task_data = []
+    outcomes = ['mortality_48h','ARF_4h', 'Shock_4h', 'ARF_12h', 'Shock_12h']
+    all_tasks = set.union(*[set(get_demo_labels(data, demo, outcome)) for outcome in outcomes for data in datasets])
+    cols = ['Dataset', 'Outcome'] + list(all_tasks)
+
+    for data in datasets:
+        for outcome in outcomes:
+            tasks = get_demo_labels(data, demo, outcome)
+            task_data.append([data, outcome.replace('_',' ')] + ["\checkmark" if task in tasks else " " for task in all_tasks])
+
+    df = pd.DataFrame(columns=cols, data=task_data)
+    df = df.set_index(['Dataset','Outcome'])
+
+    s = df.sum()
+    df = df[s.sort_values(ascending=False).index[:]]
+    
+    return df
 
 def get_task_partition_sizes(tasks):
     """
@@ -391,3 +431,4 @@ def generate_data_tables(data, demo, outcome, seed=SEED):
     df = df.reindex(columns= df.columns.reindex(['Total', 'Outcome'], level = 1)[0])
     
     return df
+# %%
