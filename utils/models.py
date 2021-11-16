@@ -8,7 +8,7 @@ Consists of simple parameterised:
 - RNN:         Recurrent Neural network
 - GRU:         Gated Recurrent Unit
 - LSTM:        Long-short term memory RNN
-- Transformer: 
+- Transformer: Transformer encoder
 
 Models generally of format:
 
