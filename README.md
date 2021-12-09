@@ -54,7 +54,7 @@ If you use any of this code in your work, please reference us:
 
 ---
 
-![Python versions](https://img.shields.io/badge/python-3.7+-1177AA.svg?logo=python) [![Tests](https://github.com/iacobo/continual/workflows/Tests/badge.svg)](https://github.com/iacobo/continual/actions)
+![Python versions](https://img.shields.io/badge/python-3.7+-1177AA.svg?logo=python)
 
 <sup>
 
