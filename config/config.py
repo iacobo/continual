@@ -1,7 +1,7 @@
 """
 Hyperparameter search-space configuration.
 """
-
+#%%
 from ray import tune
 import numpy as np
 
@@ -112,3 +112,39 @@ config_cl = {
               }
        #'CoPE':
        }
+#%%
+import pandas as pd
+
+vals = {'mem_size': N_SAMPLES,
+'ewc_lambda': LOG_WEIGHTS,
+'decay_factor': DECAY_WEIGHTS,
+'si_lambda': LOG_WEIGHTS,
+'alpha': LOG_WEIGHTS,
+'temperature': TEMPERATURES,
+'lambda_e': LOG_WEIGHTS,
+'patterns_per_exp': N_SAMPLES,
+'memory_strength': DECAY_WEIGHTS,
+'sample_size': [i*max(N_SAMPLES) for i in range(1,3)]}
+
+vals2 = {'hidden_dim': HIDDEN_DIMS, 
+'n_layers': N_LAYERS,
+'nonlinearity': ['tanh','relu', 'gelu*'],
+'n_heads': N_HEADS,
+'bidirectional': ['True','False']}
+
+models = ['MLP', 'CNN', 'LSTM', 'Transformer']
+for k in vals2.keys():
+       vals2[k] = (vals2[k], *[k in config_model[model] for model in models])
+
+df_hp = pd.DataFrame(vals.items(), columns=['Hyperparameter', 'Values'])
+df_hp = df_hp.set_index(['Hyperparameter'])
+
+#print(df_hp.to_latex())
+
+df_hp = pd.DataFrame(((k,*v) for k,v in vals2.items()), columns=['Hyperparameter', 'Values', *models])
+df_hp = df_hp.set_index(['Hyperparameter'])
+
+#print(df_hp.to_latex())
+
+
+# %%
