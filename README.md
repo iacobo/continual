@@ -45,10 +45,13 @@ A complete list of available options can be found [here](/config/README.md) or w
 If you use any of this code in your work, please reference us:
 
 ```latex
-@article{armstrong2021continual,
-  title={Continual Learning of Longitudinal Health Records},
-  author={Armstrong, Jacob},
-  year={2021}
+@misc{armstrong2021continual,
+      title={Continual learning of longitudinal health records}, 
+      author={J. Armstrong and D. Clifton},
+      year={2021},
+      eprint={2112.11944},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 ```
 
