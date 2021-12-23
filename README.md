@@ -1,11 +1,11 @@
-[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 <!-- [![License](https://img.shields.io/github/license/iacobo/continual.svg)](https://opensource.org/licenses/MIT) -->
 
 
 # Continual Learning of Longitudinal Health Records
 
-Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/XXXX.XXXXX) (2021). Release [v1.0](releases/v1.0) of the project corresponds to published results.
+Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/2112.11944) (2021). Release [v0.1](releases/v0.1) of the project corresponds to published results.
 
 Experiments evaluate various continual learning strategies on standard ICU predictive tasks exhibiting covariate shift. Task outcomes are binary, and input data are multi-modal time-series from patient ICU admissions.
 
