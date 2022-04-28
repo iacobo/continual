@@ -1,4 +1,4 @@
-[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+![Python versions](https://img.shields.io/badge/python-3.7+-1177AA.svg?logo=python) [![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 <!-- [![License](https://img.shields.io/github/license/iacobo/continual.svg)](https://opensource.org/licenses/MIT) -->
 
@@ -56,8 +56,6 @@ If you use any of this code in your work, please reference us:
 ```
 
 ---
-
-![Python versions](https://img.shields.io/badge/python-3.7+-1177AA.svg?logo=python)
 
 <sup>
 
