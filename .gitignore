@@ -3,5 +3,8 @@ data/*
 results/*
 config/**/config_*.json
 
+# cPython files
+*/__pycache__/*
+
 # Exceptions
 !README.md

@@ -46,16 +46,27 @@ Model specific parameters:
 
 from torch import nn
 
+
 class SimpleMLP(nn.Module):
     """
     Feed-forward network ("multi-layer perceptron")
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, dropout=0, nonlinearity='relu'):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        output_size=2,
+        dropout=0,
+        nonlinearity="relu",
+    ):
         super().__init__()
 
-        if nonlinearity == 'relu':
+        if nonlinearity == "relu":
             nonlinearity = nn.ReLU
-        elif nonlinearity == 'tanh':
+        elif nonlinearity == "tanh":
             nonlinearity = nn.Tanh
 
         layers = []
@@ -63,22 +74,28 @@ class SimpleMLP(nn.Module):
         for i in range(n_layers):
             if i == 0:
                 current_layer = nn.Sequential(
-                    nn.Linear(in_features=seq_len*n_channels, out_features=hidden_dim, bias=True),
+                    nn.Linear(
+                        in_features=seq_len * n_channels,
+                        out_features=hidden_dim,
+                        bias=True,
+                    ),
                     nonlinearity(),
-                    nn.Dropout(p=dropout)
+                    nn.Dropout(p=dropout),
                 )
             else:
                 current_layer = nn.Sequential(
-                    nn.Linear(in_features=hidden_dim, out_features=hidden_dim, bias=True),
+                    nn.Linear(
+                        in_features=hidden_dim, out_features=hidden_dim, bias=True
+                    ),
                     nonlinearity(),
-                    nn.Dropout(p=dropout)
+                    nn.Dropout(p=dropout),
                 )
             layers.append(current_layer)
 
         self.features = nn.Sequential(*layers)
         self.fc = nn.Sequential(
-            nn.Linear(in_features=hidden_dim, out_features=hidden_dim//2, bias=True),
-            nn.Linear(in_features=hidden_dim//2, out_features=output_size, bias=True)
+            nn.Linear(in_features=hidden_dim, out_features=hidden_dim // 2, bias=True),
+            nn.Linear(in_features=hidden_dim // 2, out_features=output_size, bias=True),
         )
 
     def forward(self, x):
@@ -97,15 +114,42 @@ class SimpleRNN(nn.Module):
     """
     RNN
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, nonlinearity='tanh', dropout=0):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        output_size=2,
+        bidirectional=True,
+        nonlinearity="tanh",
+        dropout=0,
+    ):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
-        self.rnn = nn.RNN(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout, nonlinearity=nonlinearity)
+        self.rnn = nn.RNN(
+            n_channels,
+            hidden_dim,
+            n_layers,
+            batch_first=True,
+            bidirectional=bidirectional,
+            dropout=dropout,
+            nonlinearity=nonlinearity,
+        )
         self.fc = nn.Sequential(
-            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
-            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim,
+                out_features=scalar * seq_len * hidden_dim // 2,
+                bias=True,
+            ),
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim // 2,
+                out_features=output_size,
+                bias=True,
+            ),
         )
 
     def forward(self, x):
@@ -124,15 +168,40 @@ class SimpleLSTM(nn.Module):
     """
     LSTM
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, dropout=0):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        output_size=2,
+        bidirectional=True,
+        dropout=0,
+    ):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
-        self.lstm = nn.LSTM(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
+        self.lstm = nn.LSTM(
+            n_channels,
+            hidden_dim,
+            n_layers,
+            batch_first=True,
+            bidirectional=bidirectional,
+            dropout=dropout,
+        )
         self.fc = nn.Sequential(
-            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
-            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim,
+                out_features=scalar * seq_len * hidden_dim // 2,
+                bias=True,
+            ),
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim // 2,
+                out_features=output_size,
+                bias=True,
+            ),
         )
 
     def forward(self, x):
@@ -151,15 +220,40 @@ class SimpleGRU(nn.Module):
     """
     GRU
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, bidirectional=True, dropout=0):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        output_size=2,
+        bidirectional=True,
+        dropout=0,
+    ):
         super().__init__()
 
         scalar = 2 if bidirectional else 1
 
-        self.lstm = nn.GRU(n_channels, hidden_dim, n_layers, batch_first=True, bidirectional=bidirectional, dropout=dropout)
+        self.lstm = nn.GRU(
+            n_channels,
+            hidden_dim,
+            n_layers,
+            batch_first=True,
+            bidirectional=bidirectional,
+            dropout=dropout,
+        )
         self.fc = nn.Sequential(
-            nn.Linear(in_features=scalar*seq_len*hidden_dim, out_features=scalar*seq_len*hidden_dim//2, bias=True),
-            nn.Linear(in_features=scalar*seq_len*hidden_dim//2, out_features=output_size, bias=True)
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim,
+                out_features=scalar * seq_len * hidden_dim // 2,
+                bias=True,
+            ),
+            nn.Linear(
+                in_features=scalar * seq_len * hidden_dim // 2,
+                out_features=output_size,
+                bias=True,
+            ),
         )
 
     def forward(self, x):
@@ -180,37 +274,61 @@ class SimpleCNN(nn.Module):
 
     `kernel_size` must be odd for `padding` to work as expected.
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, output_size=2, kernel_size=3, nonlinearity='relu'):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        output_size=2,
+        kernel_size=3,
+        nonlinearity="relu",
+    ):
         super().__init__()
 
-        if nonlinearity == 'relu':
+        if nonlinearity == "relu":
             nonlinearity = nn.ReLU
-        elif nonlinearity == 'tanh':
+        elif nonlinearity == "tanh":
             nonlinearity = nn.Tanh
 
         layers = []
-        n_pools=0
+        n_pools = 0
 
         for i in range(n_layers):
-            in_channels = n_channels if i==0 else hidden_dim
+            in_channels = n_channels if i == 0 else hidden_dim
 
             current_layer = nn.Sequential(
-                nn.Conv1d(in_channels, hidden_dim, kernel_size, stride=1, padding=kernel_size//2),
+                nn.Conv1d(
+                    in_channels,
+                    hidden_dim,
+                    kernel_size,
+                    stride=1,
+                    padding=kernel_size // 2,
+                ),
                 # JA: Investigate removing BatchNorm as bad for CL
-                #nn.BatchNorm1d(hidden_dim),
-                nonlinearity()
-                )
+                # nn.BatchNorm1d(hidden_dim),
+                nonlinearity(),
+            )
             layers.append(current_layer)
 
             # Ensure MaxPools don't wash out entire sequence
-            if seq_len // 2**(n_pools+1) > 2:
+            if seq_len // 2 ** (n_pools + 1) > 2:
                 n_pools += 1
                 layers.append(nn.MaxPool1d(kernel_size=2, stride=2))
 
         self.cnn_layers = nn.Sequential(*layers)
         self.fc = nn.Sequential(
-            nn.Linear(in_features=hidden_dim * (seq_len // 2**n_pools), out_features=(hidden_dim * (seq_len // 2**n_pools))//2, bias=True),
-            nn.Linear(in_features=(hidden_dim * (seq_len // 2**n_pools))//2, out_features=output_size, bias=True)
+            nn.Linear(
+                in_features=hidden_dim * (seq_len // 2 ** n_pools),
+                out_features=(hidden_dim * (seq_len // 2 ** n_pools)) // 2,
+                bias=True,
+            ),
+            nn.Linear(
+                in_features=(hidden_dim * (seq_len // 2 ** n_pools)) // 2,
+                out_features=output_size,
+                bias=True,
+            ),
         )
 
     def forward(self, x):
@@ -219,26 +337,45 @@ class SimpleCNN(nn.Module):
         """
         batch_size = x.shape[0]
 
-        out = x.swapdims(1,2)
+        out = x.swapdims(1, 2)
         out = self.cnn_layers(out)
         out = out.reshape(batch_size, -1)
         out = self.fc(out)
         return out
 
+
 class SimpleTransformer(nn.Module):
     """
     Transformer.
     """
-    def __init__(self, n_channels, seq_len, hidden_dim, n_layers, n_heads=8, output_size=2, nonlinearity='relu', dropout=0):
+
+    def __init__(
+        self,
+        n_channels,
+        seq_len,
+        hidden_dim,
+        n_layers,
+        n_heads=8,
+        output_size=2,
+        nonlinearity="relu",
+        dropout=0,
+    ):
         super().__init__()
 
         # JA: need to make this more elegant
         while seq_len % n_heads != 0:
-            n_heads -=1
+            n_heads -= 1
 
-        transformer_layer = nn.TransformerEncoderLayer(d_model=seq_len, dim_feedforward=hidden_dim, nhead=n_heads, activation=nonlinearity, dropout=dropout, batch_first=True)
+        transformer_layer = nn.TransformerEncoderLayer(
+            d_model=seq_len,
+            dim_feedforward=hidden_dim,
+            nhead=n_heads,
+            activation=nonlinearity,
+            dropout=dropout,
+            batch_first=True,
+        )
         self.transformer = nn.TransformerEncoder(transformer_layer, num_layers=n_layers)
-        self.fc = nn.Linear(seq_len*n_channels, output_size)
+        self.fc = nn.Linear(seq_len * n_channels, output_size)
 
     def forward(self, x):
         """
@@ -246,15 +383,19 @@ class SimpleTransformer(nn.Module):
         """
         batch_size = x.shape[0]
 
-        out = x.swapdims(1,2)
+        out = x.swapdims(1, 2)
         out = self.transformer(out)
         out = out.reshape(batch_size, -1)
         out = self.fc(out)
         return out
 
+
 MODELS = {
-    'MLP':SimpleMLP,
-    'CNN':SimpleCNN,
-    'RNN':SimpleRNN,'LSTM':SimpleLSTM,'GRU':SimpleGRU,
-    'Transformer':SimpleTransformer
-    }
+    "MLP": SimpleMLP,
+    "CNN": SimpleCNN,
+    "RNN": SimpleRNN,
+    "LSTM": SimpleLSTM,
+    "GRU": SimpleGRU,
+    "Transformer": SimpleTransformer,
+}
+

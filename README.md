@@ -1,7 +1,6 @@
-[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT) ![Python versions](https://img.shields.io/badge/​-3.7+-1177AA.svg?logo=python) 
+[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT) ![Python versions](https://img.shields.io/badge/​-3.7+-1177AA.svg?logo=python) ![conda](https://img.shields.io/badge/%E2%80%8B-conda-%2344A833.svg?style=flat&logo=anaconda&logoColor=44A833)
 
 <!-- [![License](https://img.shields.io/github/license/iacobo/continual.svg)](https://opensource.org/licenses/MIT) -->
-
 
 # Continual Learning of Longitudinal Health Records
 
@@ -14,14 +13,11 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 1. Clone this repo to your local machine.
 2. Request access to [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/).<sup>1</sup>
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/0) to the `/data` subfolder.
-4. *(Recommended)* [Create](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/) and [activate](https://docs.python.org/3/library/venv.html) a new virtual environment:
+4. Create and activate a virtual environment:
+
    ```posh
-   python3 -m venv .venv --upgrade-deps
-   ```
-5. Install dependencies:
-   ```posh
-   pip install -U wheel buildtools
-   pip install -r requirements.txt
+   conda env create -f environment.yml
+   conda activate env-continual
    ```
 
 ## Results
@@ -57,12 +53,9 @@ If you use any of this code in your work, please reference us:
 
 ---
 
-<sup>
-
 ### Notes
 
 Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III dataset. Requires downloading `ADMISSIONS.csv` from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/) to the `/data/mimic3/` folder.
-
 
 ### Stack
 
@@ -73,5 +66,3 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 |ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) |
 | Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/) |
 |Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
-
-</sup>

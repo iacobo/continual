@@ -15,6 +15,7 @@ from avalanche.evaluation.metric_utils import phase_and_task
 
 from sklearn.metrics import average_precision_score, roc_auc_score
 
+
 def confusion(prediction, truth):
     """ Returns the confusion matrix for the values in the `prediction` and `truth`
     tensors, i.e. the amount of positions where the values of `prediction`
@@ -36,7 +37,7 @@ def confusion(prediction, truth):
     #   0     where prediction is 0 and truth is 1 (False Negative)
 
     true_positives = torch.sum(confusion_vector == 1).item()
-    false_positives = torch.sum(confusion_vector == float('inf')).item()
+    false_positives = torch.sum(confusion_vector == float("inf")).item()
     true_negatives = torch.sum(torch.isnan(confusion_vector)).item()
     false_negatives = torch.sum(confusion_vector == 0).item()
 
@@ -45,6 +46,7 @@ def confusion(prediction, truth):
 
 # https://github.com/ContinualAI/avalanche/blob/master/avalanche/evaluation/metrics/mean_scores.py
 # Use above for AUPRC etc templates.
+
 
 class BalancedAccuracy(Metric[float]):
     """
@@ -79,8 +81,9 @@ class BalancedAccuracy(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running balancedaccuracy given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -99,10 +102,10 @@ class BalancedAccuracy(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -118,7 +121,12 @@ class BalancedAccuracy(Metric[float]):
 
         if isinstance(task_labels, int):
 
-            true_positives, false_positives, true_negatives, false_negatives = confusion(predicted_y, true_y)
+            (
+                true_positives,
+                false_positives,
+                true_negatives,
+                false_negatives,
+            ) = confusion(predicted_y, true_y)
 
             try:
                 tpr = true_positives / (true_positives + false_negatives)
@@ -129,15 +137,17 @@ class BalancedAccuracy(Metric[float]):
                 tnr = true_negatives / (true_negatives + false_positives)
             except ZeroDivisionError:
                 tnr = 1
-                
+
             self._mean_balancedaccuracy[task_labels].update(
-                (tpr+tnr) / 2, len(predicted_y))
+                (tpr + tnr) / 2, len(predicted_y)
+            )
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -151,12 +161,11 @@ class BalancedAccuracy(Metric[float]):
         :return: A dict of running balanced accuracies for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_balancedaccuracy.items()}
         else:
             return {task_label: self._mean_balancedaccuracy[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -166,30 +175,32 @@ class BalancedAccuracy(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_balancedaccuracy = defaultdict(Mean)
         else:
             self._mean_balancedaccuracy[task_label].reset()
 
+
 class BalancedAccuracyPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all balanced accuracies plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._balancedaccuracy = BalancedAccuracy()
         super(BalancedAccuracyPluginMetric, self).__init__(
-            self._balancedaccuracy, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._balancedaccuracy, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -217,16 +228,17 @@ class MinibatchBalancedAccuracy(BalancedAccuracyPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochBalancedAccuracy` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchBalancedAccuracy metric.
         """
         super(MinibatchBalancedAccuracy, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "BalAcc_MB"
-
 
 
 class EpochBalancedAccuracy(BalancedAccuracyPluginMetric):
@@ -245,11 +257,11 @@ class EpochBalancedAccuracy(BalancedAccuracyPluginMetric):
         """
 
         super(EpochBalancedAccuracy, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "BalAcc_Epoch"
-
 
 
 class RunningEpochBalancedAccuracy(BalancedAccuracyPluginMetric):
@@ -269,11 +281,11 @@ class RunningEpochBalancedAccuracy(BalancedAccuracyPluginMetric):
         """
 
         super(RunningEpochBalancedAccuracy, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningBalAcc_Epoch"
-
 
 
 class ExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
@@ -288,11 +300,11 @@ class ExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
         Creates an instance of ExperienceBalancedAccuracy metric
         """
         super(ExperienceBalancedAccuracy, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "BalAcc_Exp"
-
 
 
 class StreamBalancedAccuracy(BalancedAccuracyPluginMetric):
@@ -307,11 +319,11 @@ class StreamBalancedAccuracy(BalancedAccuracyPluginMetric):
         Creates an instance of StreamBalancedAccuracy metric
         """
         super(StreamBalancedAccuracy, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "BalAcc_Stream"
-
 
 
 class TrainedExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
@@ -328,16 +340,16 @@ class TrainedExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
         constructing BalancedAccuracyPluginMetric
         """
         super(TrainedExperienceBalancedAccuracy, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         BalancedAccuracyPluginMetric.reset(self, strategy)
         return BalancedAccuracyPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the balancedaccuracy with results from experiences that have been 
@@ -346,19 +358,19 @@ class TrainedExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             BalancedAccuracyPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "BalancedAccuracy_On_Trained_Experiences"
 
 
-
-def balancedaccuracy_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def balancedaccuracy_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -435,8 +447,9 @@ class Sensitivity(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running Sensitivity given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -455,10 +468,10 @@ class Sensitivity(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -474,21 +487,26 @@ class Sensitivity(Metric[float]):
 
         if isinstance(task_labels, int):
 
-            true_positives, false_positives, true_negatives, false_negatives = confusion(predicted_y, true_y)
+            (
+                true_positives,
+                false_positives,
+                true_negatives,
+                false_negatives,
+            ) = confusion(predicted_y, true_y)
 
             try:
                 tpr = true_positives / (true_positives + false_negatives)
             except ZeroDivisionError:
                 tpr = 1
-                
-            self._mean_Sensitivity[task_labels].update(
-                tpr, len(predicted_y))
+
+            self._mean_Sensitivity[task_labels].update(tpr, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -502,12 +520,11 @@ class Sensitivity(Metric[float]):
         :return: A dict of running sensitivities for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_Sensitivity.items()}
         else:
             return {task_label: self._mean_Sensitivity[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -517,30 +534,32 @@ class Sensitivity(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_Sensitivity = defaultdict(Mean)
         else:
             self._mean_Sensitivity[task_label].reset()
 
+
 class SensitivityPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all sensitivities plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._Sensitivity = Sensitivity()
         super(SensitivityPluginMetric, self).__init__(
-            self._Sensitivity, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._Sensitivity, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -568,16 +587,17 @@ class MinibatchSensitivity(SensitivityPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochSensitivity` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchSensitivity metric.
         """
         super(MinibatchSensitivity, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "Sens_MB"
-
 
 
 class EpochSensitivity(SensitivityPluginMetric):
@@ -596,11 +616,11 @@ class EpochSensitivity(SensitivityPluginMetric):
         """
 
         super(EpochSensitivity, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "Sens_Epoch"
-
 
 
 class RunningEpochSensitivity(SensitivityPluginMetric):
@@ -620,11 +640,11 @@ class RunningEpochSensitivity(SensitivityPluginMetric):
         """
 
         super(RunningEpochSensitivity, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningSens_Epoch"
-
 
 
 class ExperienceSensitivity(SensitivityPluginMetric):
@@ -639,11 +659,11 @@ class ExperienceSensitivity(SensitivityPluginMetric):
         Creates an instance of ExperienceSensitivity metric
         """
         super(ExperienceSensitivity, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "Sens_Exp"
-
 
 
 class StreamSensitivity(SensitivityPluginMetric):
@@ -658,11 +678,11 @@ class StreamSensitivity(SensitivityPluginMetric):
         Creates an instance of StreamSensitivity metric
         """
         super(StreamSensitivity, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "Sens_Stream"
-
 
 
 class TrainedExperienceSensitivity(SensitivityPluginMetric):
@@ -679,16 +699,16 @@ class TrainedExperienceSensitivity(SensitivityPluginMetric):
         constructing SensitivityPluginMetric
         """
         super(TrainedExperienceSensitivity, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         SensitivityPluginMetric.reset(self, strategy)
         return SensitivityPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the Sensitivity with results from experiences that have been 
@@ -697,19 +717,19 @@ class TrainedExperienceSensitivity(SensitivityPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             SensitivityPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "Sensitivity_On_Trained_Experiences"
 
 
-
-def sensitivity_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def sensitivity_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -786,8 +806,9 @@ class Specificity(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running Specificity given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -806,10 +827,10 @@ class Specificity(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -825,21 +846,26 @@ class Specificity(Metric[float]):
 
         if isinstance(task_labels, int):
 
-            true_positives, false_positives, true_negatives, false_negatives = confusion(predicted_y, true_y)
+            (
+                true_positives,
+                false_positives,
+                true_negatives,
+                false_negatives,
+            ) = confusion(predicted_y, true_y)
 
             try:
                 tnr = true_negatives / (true_negatives + false_positives)
             except ZeroDivisionError:
                 tnr = 1
-                
-            self._mean_Specificity[task_labels].update(
-                tnr, len(predicted_y))
+
+            self._mean_Specificity[task_labels].update(tnr, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -853,12 +879,11 @@ class Specificity(Metric[float]):
         :return: A dict of running specificities for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_Specificity.items()}
         else:
             return {task_label: self._mean_Specificity[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -868,30 +893,32 @@ class Specificity(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_Specificity = defaultdict(Mean)
         else:
             self._mean_Specificity[task_label].reset()
 
+
 class SpecificityPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all specificities plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._Specificity = Specificity()
         super(SpecificityPluginMetric, self).__init__(
-            self._Specificity, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._Specificity, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -919,16 +946,17 @@ class MinibatchSpecificity(SpecificityPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochSpecificity` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchSpecificity metric.
         """
         super(MinibatchSpecificity, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "Spec_MB"
-
 
 
 class EpochSpecificity(SpecificityPluginMetric):
@@ -947,11 +975,11 @@ class EpochSpecificity(SpecificityPluginMetric):
         """
 
         super(EpochSpecificity, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "Spec_Epoch"
-
 
 
 class RunningEpochSpecificity(SpecificityPluginMetric):
@@ -971,11 +999,11 @@ class RunningEpochSpecificity(SpecificityPluginMetric):
         """
 
         super(RunningEpochSpecificity, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningSpec_Epoch"
-
 
 
 class ExperienceSpecificity(SpecificityPluginMetric):
@@ -990,11 +1018,11 @@ class ExperienceSpecificity(SpecificityPluginMetric):
         Creates an instance of ExperienceSpecificity metric
         """
         super(ExperienceSpecificity, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "Spec_Exp"
-
 
 
 class StreamSpecificity(SpecificityPluginMetric):
@@ -1009,11 +1037,11 @@ class StreamSpecificity(SpecificityPluginMetric):
         Creates an instance of StreamSpecificity metric
         """
         super(StreamSpecificity, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "Spec_Stream"
-
 
 
 class TrainedExperienceSpecificity(SpecificityPluginMetric):
@@ -1030,16 +1058,16 @@ class TrainedExperienceSpecificity(SpecificityPluginMetric):
         constructing SpecificityPluginMetric
         """
         super(TrainedExperienceSpecificity, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         SpecificityPluginMetric.reset(self, strategy)
         return SpecificityPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the Specificity with results from experiences that have been 
@@ -1048,19 +1076,19 @@ class TrainedExperienceSpecificity(SpecificityPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             SpecificityPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "Specificity_On_Trained_Experiences"
 
 
-
-def specificity_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def specificity_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -1137,8 +1165,9 @@ class Precision(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running Precision given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -1157,10 +1186,10 @@ class Precision(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -1176,21 +1205,26 @@ class Precision(Metric[float]):
 
         if isinstance(task_labels, int):
 
-            true_positives, false_positives, true_negatives, false_negatives = confusion(predicted_y, true_y)
+            (
+                true_positives,
+                false_positives,
+                true_negatives,
+                false_negatives,
+            ) = confusion(predicted_y, true_y)
 
             try:
                 ppv = true_positives / (true_positives + false_positives)
             except ZeroDivisionError:
                 ppv = 1
-                
-            self._mean_Precision[task_labels].update(
-                ppv, len(predicted_y))
+
+            self._mean_Precision[task_labels].update(ppv, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -1204,12 +1238,11 @@ class Precision(Metric[float]):
         :return: A dict of running precisions for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_Precision.items()}
         else:
             return {task_label: self._mean_Precision[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -1219,30 +1252,32 @@ class Precision(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_Precision = defaultdict(Mean)
         else:
             self._mean_Precision[task_label].reset()
 
+
 class PrecisionPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all precisions plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._Precision = Precision()
         super(PrecisionPluginMetric, self).__init__(
-            self._Precision, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._Precision, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -1270,16 +1305,17 @@ class MinibatchPrecision(PrecisionPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochPrecision` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchPrecision metric.
         """
         super(MinibatchPrecision, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "Prec_MB"
-
 
 
 class EpochPrecision(PrecisionPluginMetric):
@@ -1298,11 +1334,11 @@ class EpochPrecision(PrecisionPluginMetric):
         """
 
         super(EpochPrecision, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "Prec_Epoch"
-
 
 
 class RunningEpochPrecision(PrecisionPluginMetric):
@@ -1322,11 +1358,11 @@ class RunningEpochPrecision(PrecisionPluginMetric):
         """
 
         super(RunningEpochPrecision, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningPrec_Epoch"
-
 
 
 class ExperiencePrecision(PrecisionPluginMetric):
@@ -1341,11 +1377,11 @@ class ExperiencePrecision(PrecisionPluginMetric):
         Creates an instance of ExperiencePrecision metric
         """
         super(ExperiencePrecision, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "Prec_Exp"
-
 
 
 class StreamPrecision(PrecisionPluginMetric):
@@ -1360,11 +1396,11 @@ class StreamPrecision(PrecisionPluginMetric):
         Creates an instance of StreamPrecision metric
         """
         super(StreamPrecision, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "Prec_Stream"
-
 
 
 class TrainedExperiencePrecision(PrecisionPluginMetric):
@@ -1381,16 +1417,16 @@ class TrainedExperiencePrecision(PrecisionPluginMetric):
         constructing PrecisionPluginMetric
         """
         super(TrainedExperiencePrecision, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         PrecisionPluginMetric.reset(self, strategy)
         return PrecisionPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the Precision with results from experiences that have been 
@@ -1399,19 +1435,19 @@ class TrainedExperiencePrecision(PrecisionPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             PrecisionPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "Precision_On_Trained_Experiences"
 
 
-
-def precision_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def precision_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -1488,8 +1524,9 @@ class AUPRC(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running AUPRC given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -1508,10 +1545,10 @@ class AUPRC(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -1526,21 +1563,25 @@ class AUPRC(Metric[float]):
 
         scores = predicted_y[arange(len(true_y)), true_y]
 
-        with np.errstate(divide='ignore',invalid='ignore'):
-            average_precision_score_val = average_precision_score(true_y.cpu(), scores.cpu())
+        with np.errstate(divide="ignore", invalid="ignore"):
+            average_precision_score_val = average_precision_score(
+                true_y.cpu(), scores.cpu()
+            )
 
             if np.isnan(average_precision_score_val):
                 average_precision_score_val = 0
 
         if isinstance(task_labels, int):
             self._mean_AUPRC[task_labels].update(
-                average_precision_score_val, len(predicted_y))
+                average_precision_score_val, len(predicted_y)
+            )
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -1554,12 +1595,11 @@ class AUPRC(Metric[float]):
         :return: A dict of running AUPRCs for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_AUPRC.items()}
         else:
             return {task_label: self._mean_AUPRC[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -1569,30 +1609,32 @@ class AUPRC(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_AUPRC = defaultdict(Mean)
         else:
             self._mean_AUPRC[task_label].reset()
 
+
 class AUPRCPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all AUPRCs plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._AUPRC = AUPRC()
         super(AUPRCPluginMetric, self).__init__(
-            self._AUPRC, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._AUPRC, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -1620,16 +1662,17 @@ class MinibatchAUPRC(AUPRCPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochAUPRC` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchAUPRC metric.
         """
         super(MinibatchAUPRC, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "AUPRC_MB"
-
 
 
 class EpochAUPRC(AUPRCPluginMetric):
@@ -1648,11 +1691,11 @@ class EpochAUPRC(AUPRCPluginMetric):
         """
 
         super(EpochAUPRC, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "AUPRC_Epoch"
-
 
 
 class RunningEpochAUPRC(AUPRCPluginMetric):
@@ -1672,11 +1715,11 @@ class RunningEpochAUPRC(AUPRCPluginMetric):
         """
 
         super(RunningEpochAUPRC, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningAUPRC_Epoch"
-
 
 
 class ExperienceAUPRC(AUPRCPluginMetric):
@@ -1691,11 +1734,11 @@ class ExperienceAUPRC(AUPRCPluginMetric):
         Creates an instance of ExperienceAUPRC metric
         """
         super(ExperienceAUPRC, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "AUPRC_Exp"
-
 
 
 class StreamAUPRC(AUPRCPluginMetric):
@@ -1710,11 +1753,11 @@ class StreamAUPRC(AUPRCPluginMetric):
         Creates an instance of StreamAUPRC metric
         """
         super(StreamAUPRC, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "AUPRC_Stream"
-
 
 
 class TrainedExperienceAUPRC(AUPRCPluginMetric):
@@ -1731,16 +1774,16 @@ class TrainedExperienceAUPRC(AUPRCPluginMetric):
         constructing AUPRCPluginMetric
         """
         super(TrainedExperienceAUPRC, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         AUPRCPluginMetric.reset(self, strategy)
         return AUPRCPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the AUPRC with results from experiences that have been 
@@ -1749,19 +1792,19 @@ class TrainedExperienceAUPRC(AUPRCPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             AUPRCPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "AUPRC_On_Trained_Experiences"
 
 
-
-def auprc_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def auprc_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -1837,8 +1880,9 @@ class ROCAUC(Metric[float]):
         """
 
     @torch.no_grad()
-    def update(self, predicted_y: Tensor, true_y: Tensor,
-               task_labels: Union[float, Tensor]) -> None:
+    def update(
+        self, predicted_y: Tensor, true_y: Tensor, task_labels: Union[float, Tensor]
+    ) -> None:
         """
         Update the running ROCAUC given the true and predicted labels.
         Parameter `task_labels` is used to decide how to update the inner
@@ -1857,10 +1901,10 @@ class ROCAUC(Metric[float]):
         :return: None.
         """
         if len(true_y) != len(predicted_y):
-            raise ValueError('Size mismatch for true_y and predicted_y tensors')
+            raise ValueError("Size mismatch for true_y and predicted_y tensors")
 
         if isinstance(task_labels, Tensor) and len(task_labels) != len(true_y):
-            raise ValueError('Size mismatch for true_y and task_labels tensors')
+            raise ValueError("Size mismatch for true_y and task_labels tensors")
 
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
@@ -1881,14 +1925,14 @@ class ROCAUC(Metric[float]):
             roc_auc_score_val = 1
 
         if isinstance(task_labels, int):
-            self._mean_ROCAUC[task_labels].update(
-                roc_auc_score_val, len(predicted_y))
+            self._mean_ROCAUC[task_labels].update(roc_auc_score_val, len(predicted_y))
         elif isinstance(task_labels, Tensor):
             raise NotImplementedError
         else:
-            raise ValueError(f"Task label type: {type(task_labels)}, "
-                             f"expected int/float or Tensor")
-
+            raise ValueError(
+                f"Task label type: {type(task_labels)}, "
+                f"expected int/float or Tensor"
+            )
 
     def result(self, task_label=None) -> Dict[int, float]:
         """
@@ -1902,12 +1946,11 @@ class ROCAUC(Metric[float]):
         :return: A dict of running ROCAUCs for each task label,
             where each value is a float value between 0 and 1.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             return {k: v.result() for k, v in self._mean_ROCAUC.items()}
         else:
             return {task_label: self._mean_ROCAUC[task_label].result()}
-
 
     def reset(self, task_label=None) -> None:
         """
@@ -1917,30 +1960,32 @@ class ROCAUC(Metric[float]):
 
         :return: None.
         """
-        assert(task_label is None or isinstance(task_label, int))
+        assert task_label is None or isinstance(task_label, int)
         if task_label is None:
             self._mean_ROCAUC = defaultdict(Mean)
         else:
             self._mean_ROCAUC[task_label].reset()
 
+
 class ROCAUCPluginMetric(GenericPluginMetric[float]):
     """
     Base class for all ROCAUCs plugin metrics
     """
+
     def __init__(self, reset_at, emit_at, mode):
         self._ROCAUC = ROCAUC()
         super(ROCAUCPluginMetric, self).__init__(
-            self._ROCAUC, reset_at=reset_at, emit_at=emit_at,
-            mode=mode)
+            self._ROCAUC, reset_at=reset_at, emit_at=emit_at, mode=mode
+        )
 
     def reset(self, strategy=None) -> None:
-        if self._reset_at == 'stream' or strategy is None:
+        if self._reset_at == "stream" or strategy is None:
             self._metric.reset()
         else:
             self._metric.reset(phase_and_task(strategy)[1])
 
     def result(self, strategy=None) -> float:
-        if self._emit_at == 'stream' or strategy is None:
+        if self._emit_at == "stream" or strategy is None:
             return self._metric.result()
         else:
             return self._metric.result(phase_and_task(strategy)[1])
@@ -1968,16 +2013,17 @@ class MinibatchROCAUC(ROCAUCPluginMetric):
     If a more coarse-grained logging is needed, consider using
     :class:`EpochROCAUC` instead.
     """
+
     def __init__(self):
         """
         Creates an instance of the MinibatchROCAUC metric.
         """
         super(MinibatchROCAUC, self).__init__(
-            reset_at='iteration', emit_at='iteration', mode='train')
+            reset_at="iteration", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "ROCAUC_MB"
-
 
 
 class EpochROCAUC(ROCAUCPluginMetric):
@@ -1996,11 +2042,11 @@ class EpochROCAUC(ROCAUCPluginMetric):
         """
 
         super(EpochROCAUC, self).__init__(
-            reset_at='epoch', emit_at='epoch', mode='train')
+            reset_at="epoch", emit_at="epoch", mode="train"
+        )
 
     def __str__(self):
         return "ROCAUC_Epoch"
-
 
 
 class RunningEpochROCAUC(ROCAUCPluginMetric):
@@ -2020,11 +2066,11 @@ class RunningEpochROCAUC(ROCAUCPluginMetric):
         """
 
         super(RunningEpochROCAUC, self).__init__(
-            reset_at='epoch', emit_at='iteration', mode='train')
+            reset_at="epoch", emit_at="iteration", mode="train"
+        )
 
     def __str__(self):
         return "RunningROCAUC_Epoch"
-
 
 
 class ExperienceROCAUC(ROCAUCPluginMetric):
@@ -2039,11 +2085,11 @@ class ExperienceROCAUC(ROCAUCPluginMetric):
         Creates an instance of ExperienceROCAUC metric
         """
         super(ExperienceROCAUC, self).__init__(
-            reset_at='experience', emit_at='experience', mode='eval')
+            reset_at="experience", emit_at="experience", mode="eval"
+        )
 
     def __str__(self):
         return "ROCAUC_Exp"
-
 
 
 class StreamROCAUC(ROCAUCPluginMetric):
@@ -2058,11 +2104,11 @@ class StreamROCAUC(ROCAUCPluginMetric):
         Creates an instance of StreamROCAUC metric
         """
         super(StreamROCAUC, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
 
     def __str__(self):
         return "ROCAUC_Stream"
-
 
 
 class TrainedExperienceROCAUC(ROCAUCPluginMetric):
@@ -2079,16 +2125,16 @@ class TrainedExperienceROCAUC(ROCAUCPluginMetric):
         constructing ROCAUCPluginMetric
         """
         super(TrainedExperienceROCAUC, self).__init__(
-            reset_at='stream', emit_at='stream', mode='eval')
+            reset_at="stream", emit_at="stream", mode="eval"
+        )
         self._current_experience = 0
 
     def after_training_exp(self, strategy) -> None:
         self._current_experience = strategy.experience.current_experience
-        # Reset average after learning from a new experience 
+        # Reset average after learning from a new experience
         ROCAUCPluginMetric.reset(self, strategy)
         return ROCAUCPluginMetric.after_training_exp(self, strategy)
 
-        
     def update(self, strategy):
         """
         Only update the ROCAUC with results from experiences that have been 
@@ -2097,19 +2143,19 @@ class TrainedExperienceROCAUC(ROCAUCPluginMetric):
         if strategy.experience.current_experience <= self._current_experience:
             ROCAUCPluginMetric.update(self, strategy)
 
-
     def __str__(self):
         return "ROCAUC_On_Trained_Experiences"
 
 
-
-def rocauc_metrics(*, 
-                     minibatch=False,
-                     epoch=False,
-                     epoch_running=False,
-                     experience=False,
-                     stream=False,
-                     trained_experience=False) -> List[PluginMetric]:
+def rocauc_metrics(
+    *,
+    minibatch=False,
+    epoch=False,
+    epoch_running=False,
+    experience=False,
+    stream=False,
+    trained_experience=False,
+) -> List[PluginMetric]:
     """
     Helper method that can be used to obtain the desired set of
     plugin metrics.
@@ -2153,52 +2199,52 @@ def rocauc_metrics(*,
 
 
 __all__ = [
-    'BalancedAccuracy',
-    'MinibatchBalancedAccuracy',
-    'EpochBalancedAccuracy',
-    'RunningEpochBalancedAccuracy',
-    'ExperienceBalancedAccuracy',
-    'StreamBalancedAccuracy',
-    'TrainedExperienceBalancedAccuracy',
-    'balancedaccuracy_metrics',
-    'Sensitivity',
-    'MinibatchSensitivity',
-    'EpochSensitivity',
-    'RunningEpochSensitivity',
-    'ExperienceSensitivity',
-    'StreamSensitivity',
-    'TrainedExperienceSensitivity',
-    'sensitivity_metrics',
-    'Specificity',
-    'MinibatchSpecificity',
-    'EpochSpecificity',
-    'RunningEpochSpecificity',
-    'ExperienceSpecificity',
-    'StreamSpecificity',
-    'TrainedExperienceSpecificity',
-    'specificity_metrics',
-    'Precision',
-    'MinibatchPrecision',
-    'EpochPrecision',
-    'RunningEpochPrecision',
-    'ExperiencePrecision',
-    'StreamPrecision',
-    'TrainedExperiencePrecision',
-    'precision_metrics',
-    'AUPRC',
-    'MinibatchAUPRC',
-    'EpochAUPRC',
-    'RunningEpochAUPRC',
-    'ExperienceAUPRC',
-    'StreamAUPRC',
-    'TrainedExperienceAUPRC',
-    'auprc_metrics',
-    'ROCAUC',
-    'MinibatchROCAUC',
-    'EpochROCAUC',
-    'RunningEpochROCAUC',
-    'ExperienceROCAUC',
-    'StreamROCAUC',
-    'TrainedExperienceROCAUC',
-    'rocauc_metrics'
+    "BalancedAccuracy",
+    "MinibatchBalancedAccuracy",
+    "EpochBalancedAccuracy",
+    "RunningEpochBalancedAccuracy",
+    "ExperienceBalancedAccuracy",
+    "StreamBalancedAccuracy",
+    "TrainedExperienceBalancedAccuracy",
+    "balancedaccuracy_metrics",
+    "Sensitivity",
+    "MinibatchSensitivity",
+    "EpochSensitivity",
+    "RunningEpochSensitivity",
+    "ExperienceSensitivity",
+    "StreamSensitivity",
+    "TrainedExperienceSensitivity",
+    "sensitivity_metrics",
+    "Specificity",
+    "MinibatchSpecificity",
+    "EpochSpecificity",
+    "RunningEpochSpecificity",
+    "ExperienceSpecificity",
+    "StreamSpecificity",
+    "TrainedExperienceSpecificity",
+    "specificity_metrics",
+    "Precision",
+    "MinibatchPrecision",
+    "EpochPrecision",
+    "RunningEpochPrecision",
+    "ExperiencePrecision",
+    "StreamPrecision",
+    "TrainedExperiencePrecision",
+    "precision_metrics",
+    "AUPRC",
+    "MinibatchAUPRC",
+    "EpochAUPRC",
+    "RunningEpochAUPRC",
+    "ExperienceAUPRC",
+    "StreamAUPRC",
+    "TrainedExperienceAUPRC",
+    "auprc_metrics",
+    "ROCAUC",
+    "MinibatchROCAUC",
+    "EpochROCAUC",
+    "RunningEpochROCAUC",
+    "ExperienceROCAUC",
+    "StreamROCAUC",
+    "TrainedExperienceROCAUC",
+    "rocauc_metrics",
 ]
