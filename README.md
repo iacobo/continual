@@ -51,10 +51,6 @@ If you use any of this code in your work, please reference us:
 
 ---
 
-### Notes
-
-Note that Temporal Domain Incremental learning experiments require linkage with original MIMIC-III dataset. Requires downloading `ADMISSIONS.csv` from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/) to the `/data/mimic3/` folder.
-
 ### Stack
 
 For standardisation of ICU predictive task definitions, feature pre-processing, and Continual Learning method implementations, we use the following tools:
@@ -62,5 +58,8 @@ For standardisation of ICU predictive task definitions, feature pre-processing, 
 | Tool                        | Source               |
 |-----------------------------|----------------------|
 |ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) |
-| Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/) |
+|Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/) |
 |Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
+
+> [!NOTE]
+> Temporal Domain Incremental learning experiments require linkage with original MIMIC-III dataset. Requires downloading `ADMISSIONS.csv` from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/) to the `/data/mimic3/` folder.
