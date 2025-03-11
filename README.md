@@ -32,7 +32,7 @@ Figures will be saved to `/results/figs`. Instructions to reproduce supplementar
 uv run main.py --domain_shift "hospital" --outcome "mortality_48h" --models "CNN" --strategies "EWC" "Replay" --validate --train
 ```
 
-A complete list of available options can be found [here](/config/README.md) or with `python3 main.py --help`.
+A complete list of available options can be found [here](/config/README.md) or with `uv run main.py --help`.
 
 ## Citation
 
