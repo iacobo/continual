@@ -261,7 +261,7 @@ def training_loop(
     if not validate:
         print("Data loaded.\n")
     if not validate:
-        print(f"N timesteps: {n_timesteps}\n" f"N features:  {n_channels}")
+        print(f"N timesteps: {n_timesteps}\nN features:  {n_channels}")
 
     model = models.MODELS[model_name](n_channels, n_timesteps, **config["model"])
     cl_strategy = load_strategy(
@@ -347,13 +347,13 @@ def hyperparam_opt(
     best_trial = result.get_best_trial("balancedaccuracy", "max", "last")
     print(f"Best trial config:                             {best_trial.config}")
     print(
-        f'Best trial final validation loss:              {best_trial.last_result["loss"]}'
+        f"Best trial final validation loss:              {best_trial.last_result['loss']}"
     )
     print(
-        f'Best trial final validation accuracy:          {best_trial.last_result["accuracy"]}'
+        f"Best trial final validation accuracy:          {best_trial.last_result['accuracy']}"
     )
     print(
-        f'Best trial final validation balanced accuracy: {best_trial.last_result["balancedaccuracy"]}'
+        f"Best trial final validation balanced accuracy: {best_trial.last_result['balancedaccuracy']}"
     )
 
     return best_trial.config
@@ -374,7 +374,7 @@ def main(
     freeze_model_hp=False,
 ):
     """
-    Main training loop. Defines dataset given outcome/domain 
+    Main training loop. Defines dataset given outcome/domain
     and evaluates model/strategies over given hyperparams over this problem.
     """
 

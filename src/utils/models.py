@@ -13,25 +13,25 @@ Consists of simple parameterised:
 Models generally of format:
 
 =================================================================
-Layer (type:depth-idx)                   Output Shape             
+Layer (type:depth-idx)                   Output Shape
 =================================================================
-SimpleMLP                                --                      
-├─Sequential: 1-1                            
-│    └─Sequential: 2-1                   [n, hidden_dim]       
-│    │    └─Linear: 3-1                        
-│    │    └─Nonlinearity: 3-2                  
-│    └─Sequential: 2-2                   [n, hidden_dim]       
-│    │    └─Linear: 3-3                              
-│    │    └─Non-linearity: 3-4                      
+SimpleMLP                                --
+├─Sequential: 1-1
+│    └─Sequential: 2-1                   [n, hidden_dim]
+│    │    └─Linear: 3-1
+│    │    └─Nonlinearity: 3-2
+│    └─Sequential: 2-2                   [n, hidden_dim]
+│    │    └─Linear: 3-3
+│    │    └─Non-linearity: 3-4
 |    |
                       ... (n_layers) ...
 |    |
-│    └─Sequential: 2-n                   [n, hidden_dim]                
-│    │    └─Linear: 3-2n+1                     
-│    │    └─Nonlinearity: 3-2n+2          
-├─Sequential: 1-2                        [n, hidden_dim//2]  
-│    └─Linear: 2-1                       
-|    └─Linear: 2-2                       [n, output_size]      
+│    └─Sequential: 2-n                   [n, hidden_dim]
+│    │    └─Linear: 3-2n+1
+│    │    └─Nonlinearity: 3-2n+2
+├─Sequential: 1-2                        [n, hidden_dim//2]
+│    └─Linear: 2-1
+|    └─Linear: 2-2                       [n, output_size]
 =================================================================
 
 Where the number of layers, layer width, nonlinearity, and degree of dropout are parameterised.
@@ -320,12 +320,12 @@ class SimpleCNN(nn.Module):
         self.cnn_layers = nn.Sequential(*layers)
         self.fc = nn.Sequential(
             nn.Linear(
-                in_features=hidden_dim * (seq_len // 2 ** n_pools),
-                out_features=(hidden_dim * (seq_len // 2 ** n_pools)) // 2,
+                in_features=hidden_dim * (seq_len // 2**n_pools),
+                out_features=(hidden_dim * (seq_len // 2**n_pools)) // 2,
                 bias=True,
             ),
             nn.Linear(
-                in_features=(hidden_dim * (seq_len // 2 ** n_pools)) // 2,
+                in_features=(hidden_dim * (seq_len // 2**n_pools)) // 2,
                 out_features=output_size,
                 bias=True,
             ),
@@ -398,4 +398,3 @@ MODELS = {
     "GRU": SimpleGRU,
     "Transformer": SimpleTransformer,
 }
-

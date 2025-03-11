@@ -2,8 +2,6 @@
 Functions for plotting results and descriptive analysis of data.
 """
 
-#%%
-
 import time
 import json
 import numpy as np
@@ -117,7 +115,7 @@ def stack_avg_results(results_strats, metric, mode):
             for k, v in metrics[i].items():
                 # if train stream in keys "BalancedAccuracy_On_Trained_Experiences"
                 if (
-                    f'{METRIC_FULL_NAME[metric].replace(" ","")}_On_Trained_Experiences/eval_phase/{mode}_stream'
+                    f"{METRIC_FULL_NAME[metric].replace(' ', '')}_On_Trained_Experiences/eval_phase/{mode}_stream"
                     in k
                 ):
                     # JA: early stopping means uneven length arrays. Must subsample at n_tasks
@@ -414,11 +412,11 @@ def results_to_table(data, domain, outcome, mode, metric, verbose=False, n="max"
         stats["ci95_lo"] = stats["mean"] + stats["ci95"]
         stats["ci95_hi"] = stats["mean"] - stats["ci95"]
         stats[domain_col] = stats.apply(
-            lambda x: f'{x["mean"]:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})', axis=1
+            lambda x: f"{x['mean']:.3f} ({x.ci95_lo:.3f}, {x.ci95_hi:.3f})", axis=1
         )
     else:
         stats[domain_col] = stats.apply(
-            lambda x: f'{100*x["mean"]:.1f}$_{{\pm{100*x.ci95:.1f}}}$', axis=1
+            lambda x: f"{100 * x['mean']:.1f}$_{{\pm{100 * x.ci95:.1f}}}$", axis=1
         )
 
     stats = pd.DataFrame(stats[domain_col])
@@ -451,7 +449,9 @@ def generate_table_results(
         idx = pd.IndexSlice
         sub_idx = idx["Regularization":"Rehearsal", :]
         df = df.style.highlight_max(
-            axis=0, props="bfseries: ;", subset=sub_idx,
+            axis=0,
+            props="bfseries: ;",
+            subset=sub_idx,
         ).to_latex()
         return df
     else:
@@ -482,7 +482,7 @@ def generate_hp_table_super(outcome="mortality_48h"):
 \end{adjustbox}
 
 """
-    suffix = fr"""
+    suffix = rf"""
 \caption{{Tuned hyperparameters for main experiments (outcome of {outcome}).}}
 \label{{tab:hyperparameters}}
 \end{{table}}
@@ -533,7 +533,9 @@ def generate_table_hospitals(
         idx = pd.IndexSlice
         sub_idx = idx["Regularization":"Rehearsal", :]
         df = df.style.highlight_max(
-            axis=0, props="bfseries: ;", subset=sub_idx,
+            axis=0,
+            props="bfseries: ;",
+            subset=sub_idx,
         ).to_latex()
         return df
     else:
@@ -541,7 +543,6 @@ def generate_table_hospitals(
 
 
 def generate_hp_table(data="mimic3", outcome="mortality_48h", domain="age"):
-
     models = ["MLP", "CNN", "LSTM", "Transformer"]
     strategies = ["EWC", "OnlineEWC", "LwF", "SI", "Replay", "AGEM", "GEM"]
     dfs = []
@@ -580,6 +581,3 @@ def generate_hp_table(data="mimic3", outcome="mortality_48h", domain="age"):
     df = df.drop("mode", axis=1)
 
     return df
-
-
-# %%

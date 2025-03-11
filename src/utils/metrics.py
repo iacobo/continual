@@ -17,7 +17,7 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 
 def confusion(prediction, truth):
-    """ Returns the confusion matrix for the values in the `prediction` and `truth`
+    """Returns the confusion matrix for the values in the `prediction` and `truth`
     tensors, i.e. the amount of positions where the values of `prediction`
     and `truth` are
     - 1 and 1 (True Positive)
@@ -120,7 +120,6 @@ class BalancedAccuracy(Metric[float]):
             true_y = torch.max(true_y, 1)[1]
 
         if isinstance(task_labels, int):
-
             (
                 true_positives,
                 false_positives,
@@ -145,8 +144,7 @@ class BalancedAccuracy(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -336,7 +334,7 @@ class TrainedExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperienceBalancedAccuracy metric by first 
+        Creates an instance of TrainedExperienceBalancedAccuracy metric by first
         constructing BalancedAccuracyPluginMetric
         """
         super(TrainedExperienceBalancedAccuracy, self).__init__(
@@ -352,7 +350,7 @@ class TrainedExperienceBalancedAccuracy(BalancedAccuracyPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the balancedaccuracy with results from experiences that have been 
+        Only update the balancedaccuracy with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -387,7 +385,7 @@ def balancedaccuracy_metrics(
         the balancedaccuracy averaged over the entire evaluation stream of experiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation balancedaccuracy only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """
@@ -486,7 +484,6 @@ class Sensitivity(Metric[float]):
             true_y = torch.max(true_y, 1)[1]
 
         if isinstance(task_labels, int):
-
             (
                 true_positives,
                 false_positives,
@@ -504,8 +501,7 @@ class Sensitivity(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -695,7 +691,7 @@ class TrainedExperienceSensitivity(SensitivityPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperienceSensitivity metric by first 
+        Creates an instance of TrainedExperienceSensitivity metric by first
         constructing SensitivityPluginMetric
         """
         super(TrainedExperienceSensitivity, self).__init__(
@@ -711,7 +707,7 @@ class TrainedExperienceSensitivity(SensitivityPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the Sensitivity with results from experiences that have been 
+        Only update the Sensitivity with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -746,7 +742,7 @@ def sensitivity_metrics(
         the Sensitivity averaged over the entire evaluation stream of experiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation Sensitivity only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """
@@ -845,7 +841,6 @@ class Specificity(Metric[float]):
             true_y = torch.max(true_y, 1)[1]
 
         if isinstance(task_labels, int):
-
             (
                 true_positives,
                 false_positives,
@@ -863,8 +858,7 @@ class Specificity(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -1054,7 +1048,7 @@ class TrainedExperienceSpecificity(SpecificityPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperienceSpecificity metric by first 
+        Creates an instance of TrainedExperienceSpecificity metric by first
         constructing SpecificityPluginMetric
         """
         super(TrainedExperienceSpecificity, self).__init__(
@@ -1070,7 +1064,7 @@ class TrainedExperienceSpecificity(SpecificityPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the Specificity with results from experiences that have been 
+        Only update the Specificity with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -1105,7 +1099,7 @@ def specificity_metrics(
         the Specificity averaged over the entire evaluation stream of experiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation Specificity only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """
@@ -1204,7 +1198,6 @@ class Precision(Metric[float]):
             true_y = torch.max(true_y, 1)[1]
 
         if isinstance(task_labels, int):
-
             (
                 true_positives,
                 false_positives,
@@ -1222,8 +1215,7 @@ class Precision(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -1413,7 +1405,7 @@ class TrainedExperiencePrecision(PrecisionPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperiencePrecision metric by first 
+        Creates an instance of TrainedExperiencePrecision metric by first
         constructing PrecisionPluginMetric
         """
         super(TrainedExperiencePrecision, self).__init__(
@@ -1429,7 +1421,7 @@ class TrainedExperiencePrecision(PrecisionPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the Precision with results from experiences that have been 
+        Only update the Precision with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -1464,7 +1456,7 @@ def precision_metrics(
         the Precision averaged over the entire evaluation stream of experiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation Precision only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """
@@ -1553,9 +1545,9 @@ class AUPRC(Metric[float]):
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
 
-        assert (
-            len(predicted_y.size()) == 2
-        ), "Predictions need to be logits or scores, not labels"
+        assert len(predicted_y.size()) == 2, (
+            "Predictions need to be logits or scores, not labels"
+        )
 
         if len(true_y.shape) > 1:
             # Logits -> transform to labels
@@ -1579,8 +1571,7 @@ class AUPRC(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -1770,7 +1761,7 @@ class TrainedExperienceAUPRC(AUPRCPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperienceAUPRC metric by first 
+        Creates an instance of TrainedExperienceAUPRC metric by first
         constructing AUPRCPluginMetric
         """
         super(TrainedExperienceAUPRC, self).__init__(
@@ -1786,7 +1777,7 @@ class TrainedExperienceAUPRC(AUPRCPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the AUPRC with results from experiences that have been 
+        Only update the AUPRC with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -1820,7 +1811,7 @@ def auprc_metrics(
     :param stream: If True, will return a metric able to logAUPRCperiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation AUPRC only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """
@@ -1909,9 +1900,9 @@ class ROCAUC(Metric[float]):
         true_y = torch.as_tensor(true_y)
         predicted_y = torch.as_tensor(predicted_y)
 
-        assert (
-            len(predicted_y.size()) == 2
-        ), "Predictions need to be logits or scores, not labels"
+        assert len(predicted_y.size()) == 2, (
+            "Predictions need to be logits or scores, not labels"
+        )
 
         if len(true_y.shape) > 1:
             # Logits -> transform to labels
@@ -1930,8 +1921,7 @@ class ROCAUC(Metric[float]):
             raise NotImplementedError
         else:
             raise ValueError(
-                f"Task label type: {type(task_labels)}, "
-                f"expected int/float or Tensor"
+                f"Task label type: {type(task_labels)}, expected int/float or Tensor"
             )
 
     def result(self, task_label=None) -> Dict[int, float]:
@@ -2121,7 +2111,7 @@ class TrainedExperienceROCAUC(ROCAUCPluginMetric):
 
     def __init__(self):
         """
-        Creates an instance of TrainedExperienceROCAUC metric by first 
+        Creates an instance of TrainedExperienceROCAUC metric by first
         constructing ROCAUCPluginMetric
         """
         super(TrainedExperienceROCAUC, self).__init__(
@@ -2137,7 +2127,7 @@ class TrainedExperienceROCAUC(ROCAUCPluginMetric):
 
     def update(self, strategy):
         """
-        Only update the ROCAUC with results from experiences that have been 
+        Only update the ROCAUC with results from experiences that have been
         trained on
         """
         if strategy.experience.current_experience <= self._current_experience:
@@ -2171,7 +2161,7 @@ def rocauc_metrics(
     :param stream: If True, will return a metric able to logROCAUCperiences.
     :param trained_experience: If True, will return a metric able to log
         the average evaluation ROCAUC only for experiences that the
-        model has been trained on         
+        model has been trained on
 
     :return: A list of plugin metrics.
     """

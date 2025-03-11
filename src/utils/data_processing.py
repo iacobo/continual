@@ -13,8 +13,6 @@ Loads:
 - random    - sequential data
 """
 
-#%%
-
 import copy
 import json
 import pandas as pd
@@ -282,7 +280,7 @@ def load_fiddle(data, outcome, n=None, vitals_only=True):
     ].todense()
 
     df_outcome = pd.read_csv(data_dir / "population" / f"{outcome}.csv")[:n]
-    df_outcome["y_true"] = df_outcome[f'{outcome.split("_")[0]}_LABEL']
+    df_outcome["y_true"] = df_outcome[f"{outcome.split('_')[0]}_LABEL"]
 
     return features_X, features_s, X_feature_names, s_feature_names, df_outcome
 
@@ -357,7 +355,7 @@ def split_tasks_fiddle(data, demo, outcome, order="random", seed=SEED):
 def concat_timevar_static_feats(features_X, features_s):
     """
     Concatenates time-varying features with static features.
-    Static features padded to length of sequence, 
+    Static features padded to length of sequence,
     and appended along feature axis.
     """
 
@@ -466,7 +464,6 @@ def get_demo_labels(data, demo, outcome):
 
 
 def get_demo_labels_table(demo, datasets=["mimic3", "eicu"]):
-
     # pd.options.display.max_colwidth = 1000
 
     # Domainshifts present (over outcomes)
@@ -543,6 +540,3 @@ def generate_data_tables(data, demo, outcome, seed=SEED):
     df = df.reindex(columns=df.columns.reindex(["Total", "Outcome"], level=1)[0])
 
     return df
-
-
-# %%

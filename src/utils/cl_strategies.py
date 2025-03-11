@@ -8,6 +8,7 @@ Contains:
 - Rehearsal methods
 - Misc
 """
+
 from avalanche.training import Naive, JointTraining, Cumulative  # Baselines
 from avalanche.training import EWC, LwF, SynapticIntelligence  # Regularisation
 from avalanche.training import Replay, GDumb, GEM, AGEM  # Rehearsal
