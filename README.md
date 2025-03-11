@@ -1,6 +1,6 @@
 # Continual Learning of Longitudinal Health Records
 
-![Python](https://badges.aleen42.com/src/python.svg) ![conda](https://img.shields.io/badge/%E2%80%8B-conda-%2344A833.svg?style=flat&logo=anaconda&logoColor=44A833) [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944)
+![Python](https://badges.aleen42.com/src/python.svg) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944)
 
 Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/2112.11944) (2021). Release [v0.1](releases/v0.1) of the project corresponds to published results.
 
@@ -11,11 +11,11 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 1. Clone this repo to your local machine.
 2. Request access to [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/).<sup>1</sup>
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/) to the `/data` subfolder.
-4. Create and activate a virtual environment:
+4. Create and activate a [virtual environment](https://docs.astral.sh/uv/pip/environments/):
 
    ```posh
-   conda env create -f environment.yml
-   conda activate env-continual
+   uv venv
+   source .venv/bin/activate
    ```
 
 ## Results
@@ -23,13 +23,13 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 To reproduce main results:
 
 ```posh
-python3 main.py --train
+uv run main.py --train
 ```
 
 Figures will be saved to `/results/figs`. Instructions to reproduce supplementary experiments can be found [here](/results/README.md). Bespoke experiments can be specified with appropriate flags e.g:
 
 ```posh
-python3 main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay --validate --train
+uv run main.py --domain_shift "hospital" --outcome "mortality_48h" --models "CNN" --strategies "EWC" "Replay" --validate --train
 ```
 
 A complete list of available options can be found [here](/config/README.md) or with `python3 main.py --help`.
