@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 
-ROOT_DIR = Path(__file__).parents[1]
+ROOT_DIR = Path(__file__).parents[2]
 RESULTS_DIR = ROOT_DIR / "results"
 
 METRIC_FULL_NAME = {

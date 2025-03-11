@@ -4,8 +4,8 @@ Main training script.
 
 import argparse
 
-from utils import training
-from config import config
+from src.utils import training
+from src.config import config
 
 
 def main(args):

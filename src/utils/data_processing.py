@@ -26,7 +26,7 @@ import sparse
 import random
 from avalanche.benchmarks.generators import tensors_benchmark
 
-DATA_DIR = Path(__file__).parents[1] / "data"
+DATA_DIR = Path(__file__).parents[2] / "data"
 
 # Reproducibility
 SEED = 12345
