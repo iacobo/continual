@@ -1,6 +1,6 @@
 # Continual Learning of Longitudinal Health Records
 
-![Python](https://badges.aleen42.com/src/python.svg) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944)
+![Python](https://badges.aleen42.com/src/python.svg) [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) 
 
 Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/2112.11944) (2021). Release [v0.1](releases/v0.1) of the project corresponds to published results.
 
@@ -13,7 +13,7 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/) to the `/data` subfolder.
 4. Create and activate a [virtual environment](https://docs.astral.sh/uv/pip/environments/):
 
-   ```posh
+   ```zsh
    uv venv
    source .venv/bin/activate
    ```
@@ -22,7 +22,7 @@ Experiments evaluate various continual learning strategies on standard ICU predi
 
 To reproduce main results:
 
-```posh
+```zsh
 uv run main.py --train
 ```
 
