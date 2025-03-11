@@ -11,7 +11,7 @@ Individual experiments can be specified with a combination of `--domain_shift` a
 Example:
 
 ```posh
-python main.py --domain_shift hospital --outcome mortality_48h --models CNN --strategies EWC Replay
+uv run main.py --domain_shift "hospital" --outcome "mortality_48h" --models "CNN" --strategies "EWC" "Replay"
 ```
 
 Flag             | Arg(s)      | Meaning
