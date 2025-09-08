@@ -1,6 +1,10 @@
+<div align="center">
+
 # Continual Learning of Longitudinal Health Records
 
-[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![PyTorch](https://img.shields.io/badge/​-PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch)](https://pytorch.org/) [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![Python](https://badges.aleen42.com/src/python.svg)](https://www.python.org/) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) 
+[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![PyTorch](https://img.shields.io/badge/​-PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch)](https://pytorch.org/) [![License: GPLv3](https://img.shields.io/badge/⚖️-GPL_3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![Python](https://badges.aleen42.com/src/python.svg)](https://www.python.org/) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) 
+
+</div>
 
 Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/2112.11944) (2021). Release [v0.1](releases/v0.1) of the project corresponds to published results.
 

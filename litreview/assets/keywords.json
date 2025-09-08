@@ -1,0 +1,18 @@
+{
+    "medical": [
+        "mortality",
+        "aki|acute kidney injury",
+        "sepsis|septic|septicemia",
+        "arf|ards|respiratory distress|respiratory failure",
+        "length of stay",
+        "readmission"
+    ],
+    "ml": [
+        "random forest",
+        "logistic regression",
+        "neural network",
+        "gradient boost(ed|ing)",
+        "svm|support(-)?(\\s)?vector machine"
+    ],
+    "db": ["mimic|medical information mart", "eicu", "amsterdamumcdb", "hirid"]
+}

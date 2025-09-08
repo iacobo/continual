@@ -8,3 +8,6 @@ config/**/config_*.json
 
 # Exceptions
 !README.md
+
+# venv
+.venv
