@@ -1,63 +1,35 @@
 <div align="center">
 
-# Continual Learning of Longitudinal Health Records
+<img src="https://nogithub.codeberg.page/icon.svg" height=128 width=128>
 
-[![arXiv](https://img.shields.io/badge/arXiv-2112.11944-b31b1b.svg)](https://arxiv.org/abs/2112.11944) [![PyTorch](https://img.shields.io/badge/​-PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch)](https://pytorch.org/) [![License: GPLv3](https://img.shields.io/badge/⚖️-GPL_3-green.svg)](https://opensource.org/licenses/gpl-3-0) [![Python](https://badges.aleen42.com/src/python.svg)](https://www.python.org/) ![uv](https://img.shields.io/badge/%E2%80%8B-uv-%23A100FF.svg?style=flat&logo=uv&logoColor=A100FF) 
+## Repository Migration Notice
+
+[![Please don't upload to GitHub](https://nogithub.codeberg.page/badge.svg)](https://nogithub.codeberg.page)
 
 </div>
 
-Repo for reproducing the experiments in [*Continual Learning of Longitudinal Health Records*](https://arxiv.org/abs/2112.11944) (2021). Release [v0.1](releases/v0.1) of the project corresponds to published results.
+This repository has been removed from GitHub and migrated to Codeberg as an act of principled boycott of Microsoft’s stewardship of GitHub.
 
-Experiments evaluate various continual learning strategies on standard ICU predictive tasks exhibiting covariate shift. Task outcomes are binary, and input data are multi-modal time-series from patient ICU admissions.
+Microsoft’s Azure services have been used to power mass surveillance and targeting operations by Israeli intelligence, materially enabling the ongoing genocide against the Palestinians.<sup>1 2 3</sup>
 
-## Setup
+Our stance is moral and intentional: we refuse to participate in an ecosystem that profits from or enables harm, oppression, and exploitation. Migrating to Codeberg aligns this project with a community-oriented, privacy-respecting platform.
 
-1. Clone this repo locally.
-2. Request access to [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/) and [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/).<sup>1</sup>
-3. Download the [preprocessed datasets](https://physionet.org/files/mimic-eicu-fiddle-feature/1.0.0/) to the `/data` directory.
+New repository URL:
 
-## Results
+- https://codeberg.org/ged/continual
 
-To reproduce main results:
-
-```zsh
-uv run main.py --train
-```
-
-Figures will be saved to `/results/figs`. Instructions to reproduce supplementary experiments can be found [here](/results/README.md). Bespoke experiments can be specified with appropriate flags e.g:
-
-```posh
-uv run main.py --domain_shift "hospital" --outcome "mortality_48h" --models "CNN" --strategies "EWC" "Replay" --validate --train
-```
-
-A complete list of available options can be found [here](/config/README.md) or with `uv run main.py --help`.
-
-## Citation
-
-If you use any of this code in your work, please reference us:
-
-```latex
-@misc{armstrong2021continual,
-      title={Continual learning of longitudinal health records}, 
-      author={J. Armstrong and D. Clifton},
-      year={2021},
-      eprint={2112.11944},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
-}
-```
+If you contributed to or depend on this project, please update your remotes and forks to the new URL. Thank you for supporting software that reflects ethical practice and respect for human rights.
 
 ---
 
-### Stack
+<sup>  
+1. https://www.theguardian.com/world/2025/jan/23/israeli-military-gaza-war-microsoft  
+2. https://www.aljazeera.com/news/2025/8/7/microsoft-cloud-used-in-israeli-mass-surveillance-of-palestinians-report  
+3. https://www.middleeastmonitor.com/20250410-microsoft-must-be-held-accountable-for-its-complicity-in-gaza-genocide-rights-group-says/  
+</sup>
 
-For standardisation of ICU predictive task definitions, feature pre-processing, and Continual Learning method implementations, we use the following tools:
+<div align="center">
 
-| Tool                        | Source               |
-|-----------------------------|----------------------|
-|ICU Data                     | [MIMIC-III](https://www.physionet.org/content/mimiciii/1.4/)<br> [eICU-CRD](https://www.physionet.org/content/eicu-crd/2.0/) |
-|Data preprocessing / task definition | [FIDDLE](https://www.physionet.org/content/mimic-eicu-fiddle-feature/1.0.0/) |
-|Continual Learning strategies| [Avalanche](https://avalanche.continualai.org/)
+[![BDS Microsoft](https://upload.wikimedia.org/wikipedia/en/5/59/BDS_Movement_logo.png)](https://bdsmovement.net/microsoft)
 
-> [!NOTE]
-> Temporal Domain Incremental learning experiments require linkage with original MIMIC-III dataset. Requires downloading `ADMISSIONS.csv` from [MIMIC-III](https://physionet.org/content/mimiciii/1.4/) to the `/data/mimic3/` folder.
+</div>

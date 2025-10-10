@@ -1,5 +1,0 @@
-{
-    "continual_med": "((\"continual learning\") OR (\"incremental learning\") OR (\"Lifelong Learning\")) AND ((\"deep learning\") OR (\"machine learning\")) AND (\"hospital\" OR \"healthcare\" OR \"medical\" OR \"clinical\" OR \"ICU\" OR \"critical care\" OR \"intensive care\")",
-    "domain_shift_medical": "\"domain adaptation\" AND (hospital OR healthcare OR medical OR clinical OR ICU)",
-    "icu_ml": "(\"deep learning\" OR \"machine learning\") AND (\"ICU\" OR \"critical care\" OR \"intensive care\") AND (predict OR prediction)"
-}
